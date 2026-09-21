@@ -18,4 +18,10 @@ GitNexus 已刷新索引并定位 validate_transcript → complete。transcribe 
 
 本地验证通过：后端 38 项（新增 8 项）、前端 30 项单测、8 项公共页面浏览器检查、6 项第一阶段演示回归、类型/构建和文档导航检查。新增后端用例在修复前已重现无语音误入分析、空结果校验不足等失败。
 
-证据在 `.local-data/evidence/no-speech/`。公网部署与两条记录恢复将在本次发布验证后补充，不以本地通过代替线上结果。
+证据在 `.local-data/evidence/no-speech/`。公网已发布到 `/opt/yanxu/releases/20260921-no-speech`，来自 release 合并提交 `ab1f366`；旧版 `/opt/yanxu/releases/20260921-2` 保留。发布前 SQLite 一致性备份在 `/var/lib/yanxu/backups/no-speech-20260921/before.sqlite3`，切换后 API/分析/云同步三个服务均 active，Mac 转写服务已重启。
+
+仅重试 `c87e2fc1-8dc8-4aaf-8e74-7d36409b6c18`（2秒）和 `dff77df2-e21a-43bd-8d57-bf90643f0726`（7秒），17:26 两条均由新 worker 经 complete 接口完成。公网读回 `status=no-speech`、error=null、analysis=null，任务 stage=asr/status=complete，2秒记录的 interrupted=true 保留。两条原音下载 SHA256 均与记录一致；服务器比对备份确认另外5条记录全部字段未变、AI用量行数和tokens未变。
+
+模拟器5560继续使用公网地址，刷新后的列表/详情截图位于同一证据目录；页面展示无语音结果、跳过AI与原音播放器，未开启麦克风或重新安装APK。首次公网页面复核发现列表缺少中性样式class绑定，追加绑定并补充浏览器断言；详情与任务状态已正确。
+
+回退时可切回旧代码目录；旧版不认识no-speech状态，因此须按上述备份对这两个ID定向恢复状态/转写/任务字段，或保留支持新终态的前端。不可整库覆盖后续新录音。
