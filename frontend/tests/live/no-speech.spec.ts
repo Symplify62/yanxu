@@ -62,6 +62,8 @@ test("无语音是已处理结果：筛选、中断提示、跳过AI和原音入
   });
   await page.goto("/?app=1");
   await expect(page.locator(".p1-result-row")).toHaveCount(3);
+  await expect(page.locator(".p1-status.no-speech")).toHaveText("未检测到语音");
+  await expect(page.locator(".p1-status.failed")).toHaveCount(1);
   await page.getByRole("button", { name: "已完成", exact: true }).click();
   await expect(page.locator(".p1-result-row")).toHaveCount(2);
   await page.getByRole("button", { name: /静音测试记录/ }).click();

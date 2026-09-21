@@ -134,6 +134,7 @@ const items = computed(() =>
           class="p1-status"
           :class="{
             done: stageOf(r, now) === 'complete',
+            'no-speech': stageOf(r, now) === 'no-speech',
             failed: stageOf(r, now).includes('error'),
           }"
           >{{ stageLabels[stageOf(r, now)] }}</span
