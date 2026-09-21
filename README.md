@@ -1,5 +1,7 @@
 # 言序项目
 
+> 当前第一阶段已调整为[免登录录音、自动转写/AI分析与公网公共结果](docs/phases/phase-01.md)；第一阶段页面已实现，真实录音/AI/公网尚未接入。
+
 - [AI协作入口](AGENTS.md)：按任务渐进式读取规范。
 - [当前文档地图](docs/README.md)：业务/权限/技术来源。
 - [前端任务与设计规范](frontend/docs/frontend-guides/README.md)：A方案视觉、布局、组件、交互、工程与验收。
@@ -7,7 +9,7 @@
 
 # 当前可运行前端：A方案正式组件原型
 
-- [打开本地原型](http://127.0.0.1:5178/prototype.html)
+- [打开本地原型](http://127.0.0.1:5178/phase-one.html)
 - [组件与状态展示](http://127.0.0.1:5178/prototype.html?surface=components)
 - [工程说明与启动方法](frontend/README.md)
 - [技术选择](frontend/docs/technical-choice.md)与[原型验证记录](frontend/docs/design-lab/verification.md)

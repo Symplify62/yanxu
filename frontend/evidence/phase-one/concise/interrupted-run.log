@@ -1,0 +1,100 @@
+
+Running 6 tests using 1 worker
+
+(node:10272) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 tests/e2e/phase-one.spec.ts:29:1 › 阶段一页面: 根入口免登录录音，分步结果、详情链接与刷新保留 (19.1s)
+(node:11061) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  2 tests/e2e/phase-one.spec.ts:79:1 › 阶段一页面: 录音不可用和保存失败不假成功 (3.1s)
+  ✓  3 tests/e2e/phase-one.spec.ts:113:3 › 阶段一页面: 上传等待网络恢复且不伪造结果 (7.0s)
+  ✓  4 tests/e2e/phase-one.spec.ts:113:3 › 阶段一页面: 转写失败恢复且不伪造结果 (9.9s)
+  ✘  5 tests/e2e/phase-one.spec.ts:113:3 › 阶段一页面: AI 分析失败恢复且不伪造结果 (2.5s)
+
+
+  1) tests/e2e/phase-one.spec.ts:29:1 › 阶段一页面: 根入口免登录录音，分步结果、详情链接与刷新保留 ─────────────────────────────
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByRole('dialog')
+    Expected substring: "暂不支持跨设备"
+    Received string:    "结果链接 当前是本地页面演示。这个链接可在同一浏览器中打开；跨设备公共访问等待服务接入。 关闭复制演示链接"
+    Timeout: 12000ms
+
+    Call log:
+      - Expect "toContainText" getByRole('dialog') with timeout 12000ms
+      - waiting for getByRole('dialog')
+        28 × locator resolved to <div role="dialog" aria-modal="true" aria-label="结果链接" class="el-overlay-dialog" aria-describedby="el-id-2588-2">…</div>
+           - unexpected value "结果链接 当前是本地页面演示。这个链接可在同一浏览器中打开；跨设备公共访问等待服务接入。 关闭复制演示链接"
+
+
+      68 |     .inputValue();
+      69 |   expect(link).toBe(page.url());
+    > 70 |   await expect(page.getByRole("dialog")).toContainText("暂不支持跨设备");
+         |                                          ^
+      71 |   await page.getByRole("button", { name: "关闭", exact: true }).click();
+      72 |   await page.reload();
+      73 |   await expect(page.locator(".p1-summary")).toBeVisible();
+        at /Users/alec/嘉谏言序/frontend/tests/e2e/phase-one.spec.ts:70:42
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/phase-one-阶段一页面-根入口免登录录音，分步结果、详情链接与刷新保留/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/phase-one-阶段一页面-根入口免登录录音，分步结果、详情链接与刷新保留/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/phase-one-阶段一页面-根入口免登录录音，分步结果、详情链接与刷新保留/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/phase-one-阶段一页面-根入口免登录录音，分步结果、详情链接与刷新保留/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) tests/e2e/phase-one.spec.ts:113:3 › 阶段一页面: AI 分析失败恢复且不伪造结果 ────────────────────────────────────
+
+    Test was interrupted.
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: locator('.p1-detail-aside')
+    Expected substring: "分析未完成"
+    Received string:    "记录信息处理状态正在上传查看范围公共可见"
+
+    Call log:
+      - Expect "toContainText" locator('.p1-detail-aside') with timeout 12000ms
+      - waiting for locator('.p1-detail-aside')
+        6 × locator resolved to <aside class="p1-detail-aside">…</aside>
+          - unexpected value "记录信息处理状态正在上传查看范围公共可见"
+      - Test ended.
+
+
+      115 |     await scenario(page, label!);
+      116 |     await record(page);
+    > 117 |     await expect(page.locator(".p1-detail-aside")).toContainText(status!);
+          |                                                    ^
+      118 |     await expect(page.locator(".p1-summary")).toHaveCount(0);
+      119 |     await snap(page, file!);
+      120 |     if (file === "analysis-error") {
+        at /Users/alec/嘉谏言序/frontend/tests/e2e/phase-one.spec.ts:117:52
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/phase-one-阶段一页面-AI-分析失败恢复且不伪造结果/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/phase-one-阶段一页面-AI-分析失败恢复且不伪造结果/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/phase-one-阶段一页面-AI-分析失败恢复且不伪造结果/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/phase-one-阶段一页面-AI-分析失败恢复且不伪造结果/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    tests/e2e/phase-one.spec.ts:29:1 › 阶段一页面: 根入口免登录录音，分步结果、详情链接与刷新保留 ──────────────────────────────
+  1 interrupted
+    tests/e2e/phase-one.spec.ts:113:3 › 阶段一页面: AI 分析失败恢复且不伪造结果 ─────────────────────────────────────
+  1 did not run
+  3 passed (43.5s)

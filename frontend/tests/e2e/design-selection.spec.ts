@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
-test("A方案确认: 根入口固定A，录音与手机后台联通", async ({ page }) => {
-  await page.goto("/");
+test("A方案确认: 历史入口固定A，录音与手机后台联通", async ({ page }) => {
+  await page.goto("/prototype.html");
   await expect(page).toHaveURL(/\/prototype.html$/);
   await expect(
     page.getByRole("heading", { name: "言序 · 正式组件原型" }),

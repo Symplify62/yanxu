@@ -1,0 +1,13 @@
+
+Running 6 tests using 1 worker
+
+(node:13338) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 tests/e2e/phase-one.spec.ts:29:1 › 阶段一页面: 根入口免登录录音，分步结果、详情链接与刷新保留 (7.5s)
+  ✓  2 tests/e2e/phase-one.spec.ts:79:1 › 阶段一页面: 录音不可用和保存失败不假成功 (2.9s)
+  ✓  3 tests/e2e/phase-one.spec.ts:113:3 › 阶段一页面: 上传等待网络恢复且不伪造结果 (7.0s)
+  ✓  4 tests/e2e/phase-one.spec.ts:113:3 › 阶段一页面: 转写失败恢复且不伪造结果 (10.3s)
+  ✓  5 tests/e2e/phase-one.spec.ts:113:3 › 阶段一页面: AI 分析失败恢复且不伪造结果 (9.9s)
+  ✓  6 tests/e2e/phase-one.spec.ts:134:1 › 阶段一页面: 搜索、筛选、空态、无效链接和手机布局 (907ms)
+
+  6 passed (39.5s)

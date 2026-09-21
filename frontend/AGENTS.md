@@ -1,6 +1,8 @@
 # 前端补充入口
 
-继承[项目AGENTS](../AGENTS.md)。当前正式入口是`prototype.html`，A方案实现位于`src/design-lab/`；目录名保留历史原因，不表示它仍是待选方案。
+当前实施范围优先读[第一阶段：免登录录音与公共结果](../docs/phases/phase-01.md)。v1.3的登录、个人/共享范围、组织角色与发群在本期暂缓，不能据此重新增加本期前置步骤。
+
+继承[项目AGENTS](../AGENTS.md)。当前第一阶段入口是`phase-one.html`，页面在`src/phase-one/`，复用A主题。`prototype.html`和`src/design-lab/`保留完整方案历史参考。
 
 | 要改什么 | 读取什么 |
 | --- | --- |
@@ -14,3 +16,5 @@
 复合任务先读[任务导航](docs/frontend-guides/README.md)对应行；不要求全读六份规范。具体页面位置/动作查DES-10，状态/权限查STATE/ACL，测试用例由这些规格导出。
 
 运行命令和依赖以[package.json](package.json)为准。选定A入口和旧v0.4路由同时存在，修改前确认目标；保留旧路径的历史回归，不把mock成功报告为真实服务成功。
+
+页面精简遵循[根AGENTS的页面简洁原则](../AGENTS.md)：提交前检查重复标题、宣传语和解释段落；详细规则按需读[文案规范](docs/frontend-guides/04-交互状态与文案.md)。

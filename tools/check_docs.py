@@ -12,6 +12,9 @@ GUIDES = ROOT / 'frontend/docs/frontend-guides'
 SOURCES = [
     ROOT / 'AGENTS.md', ROOT / 'frontend/AGENTS.md', ROOT / 'frontend/CLAUDE.md',
     ROOT / 'README.md', ROOT / 'frontend/README.md', ROOT / 'docs/README.md',
+    ROOT / 'docs/phases/phase-01.md',
+    ROOT / 'docs/phases/phase-01-pages.md',
+    ROOT / 'docs/phases/phase-01-backend.md',
     ROOT / 'docs/repository/workflow.md', ROOT / 'frontend/docs/technical-choice.md',
     ROOT / 'frontend/docs/design-lab/selection.md',
     ROOT / '会议室录音系统_PRD_v1.3/AGENTS.md',

@@ -1,12 +1,19 @@
 # 言序 · A方案正式组件原型
 
+> 当前第一阶段已调整为[免登录录音、自动转写/AI分析与公网公共结果](../docs/phases/phase-01.md)；第一阶段页面已实现，真实录音/AI/公网尚未接入。
+
 开发前按任务读取[前端规范导航](docs/frontend-guides/README.md)；局部工作入口见[AGENTS.md](AGENTS.md)。
 
 A方案已于2026-09-21确认，作为后续前端设计基线。当前正式原型使用Vue 3 / TypeScript与Element Plus，覆盖平板、员工手机和管理后台，沿用PRD v1.3 U-11全自动业务基线。接口由MSW提供合成数据。详见[方案确认](docs/design-lab/selection.md)。
 
-## 当前原型入口
+## 第一阶段页面入口
 
-- **[打开A方案正式原型](http://127.0.0.1:5178/prototype.html)**（根地址也进入此页）
+- **[快速录音与公共结果](http://127.0.0.1:5178/phase-one.html)**（根地址进入此页）
+- [第一阶段页面范围与验证](../docs/phases/phase-01-pages.md)
+
+## 此前完整A方案入口
+
+- **[打开A方案正式原型](http://127.0.0.1:5178/prototype.html)**（完整方案历史对照）
 - [员工手机](http://127.0.0.1:5178/prototype.html?surface=employee) · [管理后台](http://127.0.0.1:5178/prototype.html?surface=admin) · [组件状态](http://127.0.0.1:5178/prototype.html?surface=components)
 
 ## 历史对照

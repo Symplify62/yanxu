@@ -6,7 +6,7 @@ import "./styles/tokens.css";
 import "./styles/app.css";
 async function boot() {
   if (location.pathname === "/") {
-    location.replace("/prototype.html");
+    location.replace("/phase-one.html");
     return;
   }
   if (import.meta.env.VITE_MOCKS !== "true")

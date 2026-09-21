@@ -41,6 +41,7 @@ export default defineConfig({
       input: {
         main: "index.html",
         prototype: "prototype.html",
+        phaseOne: "phase-one.html",
         lab: "design-lab.html",
         option: "design-option.html",
       },

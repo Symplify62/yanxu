@@ -1,0 +1,35 @@
+
+  GitNexus Detect Changes (1.6.12)
+Changes: 78 files, 99 symbols
+Affected processes: 10
+Risk level: high
+
+Changed symbols:
+  Function boot → frontend/src/main.ts
+  Const props → frontend/src/phase-one/DetailPage.vue
+  Const copyMessage → frontend/src/phase-one/DetailPage.vue
+  Const linkDialog → frontend/src/phase-one/DetailPage.vue
+  Const tab → frontend/src/phase-one/DetailPage.vue
+  Function stage → frontend/src/phase-one/DetailPage.vue
+  Function textReady → frontend/src/phase-one/DetailPage.vue
+  Function analysisReady → frontend/src/phase-one/DetailPage.vue
+  Function progress → frontend/src/phase-one/DetailPage.vue
+  Function url → frontend/src/phase-one/DetailPage.vue
+  Function copy → frontend/src/phase-one/DetailPage.vue
+  Const demo → frontend/src/phase-one/PhaseOneApp.vue
+  Const controls → frontend/src/phase-one/PhaseOneApp.vue
+  Const hash → frontend/src/phase-one/PhaseOneApp.vue
+  Function readRoute → frontend/src/phase-one/PhaseOneApp.vue
+... and 84 more
+
+Affected execution flows:
+  • Message → Seed (4 steps) — changed: reset, seed
+  • Message → Persist (4 steps) — changed: reset, persist
+  • Boot → Start (3 steps) — changed: start
+  • Boot → ClearSession (3 steps) — changed: boot
+  • Reset → Seed (3 steps) — changed: reset, seed
+  • Reset → Persist (3 steps) — changed: reset, persist
+  • Message → Seed (3 steps) — changed: reset, seed
+  • Message → Persist (3 steps) — changed: reset, persist
+  • Save → Persist (3 steps) — changed: recover, persist
+  • Recover → Persist (3 steps) — changed: recover, persist

@@ -1,0 +1,8 @@
+
+Running 1 test using 1 worker
+
+(node:90814) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 tests/e2e/phase-one.spec.ts:136:1 › 阶段一页面: 搜索、筛选、空态、无效链接和手机布局 (1.3s)
+
+  1 passed (4.4s)
