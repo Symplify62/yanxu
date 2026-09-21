@@ -21,6 +21,8 @@
 - 分支合并、推送和部署仍按用户授权分别执行；合入`release`不等于服务器或APK自动更新，本次不新增自动部署流水线。
 - 本次首次迁入GitHub，将原本地`main`改名为`release`，已有提交完整保留；仓库约定经本地功能分支验证后快进合入，再首次推送。
 
+远程仓库为[Symplify62/yanxu](https://github.com/Symplify62/yanxu)，保持私有；默认分支`release`，已开启PR合并后自动删除分支。2026-09-21尝试启用强制PR、禁止强推/删除时，GitHub返回403并要求升级Pro或改公开。因此当前PR流程属于协作约定，不能宣称已获得平台硬性分支保护；不为此自动改公开或购买套餐。后续如开通支持的套餐，再按[GitHub分支保护说明](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches)启用。
+
 ## 运行与验证入口
 
 依赖/脚本以[package.json](../../frontend/package.json)为准；[前端README](../../frontend/README.md)提供启动步骤。当前默认本地5178端口，`prototype.html`为确认A的入口。先检查端口上的服务归属，再决定复用或启动，不中断其他任务的服务。
