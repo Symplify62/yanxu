@@ -30,21 +30,16 @@ async function snap(page: Page, variant: string, name: string) {
     );
   });
   await page.screenshot({
-    path: `evidence/design-lab/full/${variant}-${name}.png`,
+    path: `../.local-data/evidence/frontend/design-lab/full/${variant}-${name}.png`,
     fullPage: true,
   });
 }
 async function pick(page: Page, variant: string, label: string, value: string) {
-  if (variant === "element") {
-    await page
-      .getByRole("combobox", { name: label, exact: true })
-      .locator('xpath=ancestor::div[contains(@class,"el-select__wrapper")]')
-      .click();
-    await page.getByRole("option", { name: value, exact: true }).click();
-  } else {
-    await page.getByRole("combobox", { name: label, exact: true }).click();
-    await page.getByRole("option", { name: value, exact: true }).click();
-  }
+  await page
+    .getByRole("combobox", { name: label, exact: true })
+    .locator('xpath=ancestor::div[contains(@class,"el-select__wrapper")]')
+    .click();
+  await page.getByRole("option", { name: value, exact: true }).click();
 }
 async function employee(page: Page) {
   await surface(page, "employee");
@@ -67,7 +62,7 @@ async function record(page: Page) {
   await page.getByRole("button", { name: "结束并保存", exact: true }).click();
   await expect(page.getByTestId("tablet-saved")).toBeVisible();
 }
-for (const variant of ["element", "shadcn"]) {
+for (const variant of ["element"]) {
   test(`${variant}完整: 录音跨端查阅、五类资料、校验、更正不重发`, async ({
     page,
   }) => {
@@ -381,36 +376,7 @@ for (const variant of ["element", "shadcn"]) {
     await expect(page.getByRole("alert")).toContainText("请填写姓名");
   });
 }
-test("完整对比容器: 只显示A/B，切换端不丢数据，切换方案保留所选业务端", async ({
-  page,
-}) => {
-  await page.goto("/design-lab.html");
-  await expect(page.getByRole("tab")).toHaveCount(2);
-  await page.getByRole("button", { name: "员工手机端", exact: true }).click();
-  const f = page.frameLocator("iframe");
-  await f
-    .getByRole("button", { name: "模拟企业微信登录", exact: true })
-    .click();
-  await expect(f.locator(".meeting-item")).toBeVisible();
-  await f.getByRole("button", { name: /报价与交付协调/ }).click();
-  await expect(
-    f.getByRole("button", { name: "主动更正", exact: true }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "管理后台", exact: true }).click();
-  await f.getByRole("button", { name: "进入演示管理员", exact: true }).click();
-  await expect(f.locator(".metrics-strip")).toBeVisible();
-  await page.getByRole("button", { name: "员工手机端", exact: true }).click();
-  await expect(f.locator(".meeting-item")).toBeVisible();
-  await page.getByRole("tab", { name: "克制 · shadcn/vue" }).click();
-  await expect(
-    f.getByRole("button", { name: "模拟企业微信登录", exact: true }),
-  ).toBeVisible();
-  await page.screenshot({
-    path: "evidence/design-lab/full/comparison.png",
-    fullPage: true,
-  });
-});
-for (const variant of ["element", "shadcn"]) {
+for (const variant of ["element"]) {
   test(`${variant}完整: 后台窄屏与登录失效关闭权限弹窗`, async ({ page }) => {
     let token = "";
     page.on("request", (r) => {

@@ -1,36 +1,20 @@
-# 言序项目
+# 言序
 
-**公网真实服务已部署**：[公共记录](https://yanxu.qjl666.xyz/) · [Android测试包](https://yanxu.qjl666.xyz/app/yanxu-debug.apk) · [部署与恢复](docs/implementation/public-deployment.md) · [App说明](android/README.md)。手机联网使用无需USB，Mac负责转写；真机拾音与长期可靠性仍待专项验收。
+Android 录音 → 自动上传 → Mac 转写 → DeepSeek 分析 → 公共结果。第一阶段免登录，访问者可回听和下载录音。
 
-> 当前第一阶段按[免登录录音、自动转写/AI分析与公网公共结果](docs/phases/phase-01.md)实施。阿里云承载API和页面、七牛存原音、Mac转写、DeepSeek分析。本地5189是保留的旧测试库，与公网数据分开。
+- [公共记录](https://yanxu.qjl666.xyz/) · [Android 测试包](https://yanxu.qjl666.xyz/app/yanxu-debug.apk)
+- [AI 协作入口](AGENTS.md)：按任务读取规范。
+- [当前文档地图](docs/README.md)：阶段范围、业务规则与技术来源。
+- [前端与设计规范](frontend/docs/frontend-guides/README.md) · [前端启动](frontend/README.md)
+- [后端](backend/README.md) · [Android](android/README.md) · [配置](config/README.md)
+- [部署与恢复](docs/implementation/public-deployment.md) · [仓库与分支约定](docs/repository/workflow.md)
 
-- [AI协作入口](AGENTS.md)：按任务渐进式读取规范。
-- [当前文档地图](docs/README.md)：业务/权限/技术来源。
-- [前端任务与设计规范](frontend/docs/frontend-guides/README.md)：A方案视觉、布局、组件、交互、工程与验收。
-- [仓库与启动约定](docs/repository/workflow.md)。
+阿里云承载页面和 API，七牛存原音，Mac 主动领取转写。手机联网使用无需 USB；Mac 离线时新转写等待。真机拾音与长期可靠性仍需专项验收。本地 5189 保留旧测试库，与公网数据分开。
 
-# 当前可运行前端：A方案正式组件原型
+## 页面与设计参考
 
-- [打开本地原型](http://127.0.0.1:5178/phase-one.html)
-- [组件与状态展示](http://127.0.0.1:5178/prototype.html?surface=components)
-- [工程说明与启动方法](frontend/README.md)
-- [技术选择](frontend/docs/technical-choice.md)与[原型验证记录](frontend/docs/design-lab/verification.md)
+当前真实页面源码在 `frontend/src/live`，公共列表与详情在 `frontend/src/records`。视觉采用已确认的 [A 方案](frontend/docs/design-lab/selection.md)。
 
-**2026-09-21已确认A方案**，详见[设计决策](frontend/docs/design-lab/selection.md)。Vue 3＋TypeScript、Element Plus；本节5178原型使用MSW模拟接口，公网真实页面独立接入API。企业微信与群发送在第一阶段暂缓。原v0.3 HTML和下列资料继续保留为历史对照。
+本地 5178 的 [第一阶段演示](http://127.0.0.1:5178/phase-one.html) 和 [完整 A 原型](http://127.0.0.1:5178/prototype.html) 使用模拟数据，用于交互参考；原型的扫码、权限与群发送不代表当前真实服务已实现。
 
----
-
-# 文档基线与旧HTML原型
-
-文档基线：**v1.3 已确认全自动业务基线＋页面级规格**；可点击原型：**v0.3**。
-
-- [打开新版原型](会议录音系统_可点击原型_v0.3.html)：员工模拟扫码、开始、结束，本地保存后自动退出，设备自动整理并模拟发群。手机看本人/授权资料，主动更正/共享是可选操作。
-- [文档入口](会议室录音系统_PRD_v1.3/README.md)
-- [已确认业务基线](会议室录音系统_PRD_v1.3/docs/rules/BASE-01-需求基线与待决事项.md)
-- [21页55组件的页面级规格](会议室录音系统_PRD_v1.3/docs/design/DES-10-页面级设计与交互规格.md)
-- [页面与测试对应](会议室录音系统_PRD_v1.3/docs/acceptance/UI-01-页面与组件测试对应.md)
-- [本轮交付与验证](会议室录音系统_PRD_v1.3/evidence/自动化基线交付验证_v1.3.md)
-
-正常无人工核对/确认发送，无本场禁发；企业微信身份、首次自动开户、默认部门、外网手机查阅、长期档案与无业务时长上限已确认。实际服务接入与产品实现尚未完成。
-
-旧v1.0/v1.1/v1.2与旧HTML全部保留，仅作历史资料，不沿用其中已被替代的普通审核/匿名录音设计。原Word/PDF仅历史版本。
+完整产品方案保留在 [v1.3 文档入口](会议室录音系统_PRD_v1.3/README.md)，本期以 [第一阶段范围](docs/phases/phase-01.md) 为准。历史版本与比较方案的保留和恢复方式见 [仓库清理记录](docs/repository/cleanup.md)。

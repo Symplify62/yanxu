@@ -1,8 +1,0 @@
-
-Running 1 test using 1 worker
-
-(node:38609) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
-(Use `node --trace-warnings ...` to show where the warning was created)
-  ✓  1 tests/e2e/design-full.spec.ts:384:1 › 完整对比容器: 只显示A/B，切换端不丢数据，切换方案保留所选业务端 (2.0s)
-
-  1 passed (2.9s)

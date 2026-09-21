@@ -5,7 +5,7 @@
 - 根目录是唯一Git仓库，Web在`frontend/`，API/worker在`backend/`，Android测试App在`android/`。公网页面/API部署在阿里云，七牛存原音，Mac主动领取转写；设备可靠性与部署证据按下表进入。
 - 当前实施按[第一阶段范围](docs/phases/phase-01.md)：免登录真实录音→自动转写/AI分析→公网公共结果。它优先于v1.3中本期暂缓的身份/组织/角色/发群要求。
 - 已确认实施条件：Android App（安卓手机先测、后续平板），Mac本地开发/ASR测试，DeepSeek文本分析；任何访问者可回听/下载录音。具体记录见第一阶段范围。
-- 当前视觉决策见[A方案确认](frontend/docs/design-lab/selection.md)；当前业务文档为`会议室录音系统_PRD_v1.3/`。旧版本、旧HTML、历史比较页只作对照。
+- 当前视觉决策见[A方案确认](frontend/docs/design-lab/selection.md)；当前业务文档为`会议室录音系统_PRD_v1.3/`。旧版本与B/C比较实现从当前分支移除，需要历史时按仓库清理记录查询Git。
 - 先按下表选择任务入口，再只读取该入口指定的相关章节；已有明确上下文时直接进入对应规范，无需全量阅读文档包。
 
 ## 按任务读取

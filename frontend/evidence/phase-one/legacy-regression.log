@@ -1,9 +1,0 @@
-
-Running 2 tests using 1 worker
-
-(node:87558) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
-(Use `node --trace-warnings ...` to show where the warning was created)
-  ✓  1 tests/e2e/design-selection.spec.ts:2:1 › A方案确认: 历史入口固定A，录音与手机后台联通 (4.1s)
-  ✓  2 tests/e2e/design-selection.spec.ts:44:1 › A方案确认: 分端直达、方案锁定及历史比较入口 (640ms)
-
-  2 passed (5.8s)

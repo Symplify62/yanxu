@@ -1,7 +1,0 @@
-{
-  "scope": "dev-mode navigation only",
-  "before": 1,
-  "after": 1,
-  "noReload": true,
-  "errors": []
-}

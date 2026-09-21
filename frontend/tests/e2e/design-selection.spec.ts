@@ -16,7 +16,7 @@ test("A方案确认: 历史入口固定A，录音与手机后台联通", async (
   const f = page.frameLocator("iframe");
   await expect(f.locator(".qr-wrap img")).toBeVisible();
   await page.screenshot({
-    path: "evidence/design-lab/selected/tablet.png",
+    path: "../.local-data/evidence/frontend/design-lab/selected/tablet.png",
     fullPage: true,
   });
   await page.getByRole("button", { name: "模拟扫码登录", exact: true }).click();
@@ -30,18 +30,18 @@ test("A方案确认: 历史入口固定A，录音与手机后台联通", async (
     .click();
   await expect(f.locator(".meeting-item")).toHaveCount(2);
   await page.screenshot({
-    path: "evidence/design-lab/selected/phone.png",
+    path: "../.local-data/evidence/frontend/design-lab/selected/phone.png",
     fullPage: true,
   });
   await page.getByRole("button", { name: "管理后台", exact: true }).click();
   await f.getByRole("button", { name: "进入演示管理员", exact: true }).click();
   await expect(f.locator(".metrics-strip")).toContainText("03");
   await page.screenshot({
-    path: "evidence/design-lab/selected/admin.png",
+    path: "../.local-data/evidence/frontend/design-lab/selected/admin.png",
     fullPage: true,
   });
 });
-test("A方案确认: 分端直达、方案锁定及历史比较入口", async ({ page }) => {
+test("A方案确认: 分端直达、方案锁定及单一A入口", async ({ page }) => {
   const f = page.frameLocator("iframe");
   await page.goto("/prototype.html?surface=employee&variant=shadcn");
   await expect(
@@ -59,9 +59,8 @@ test("A方案确认: 分端直达、方案锁定及历史比较入口", async ({
   await expect(
     f.getByRole("heading", { name: "组件与交互状态" }),
   ).toBeVisible();
-  await page.getByRole("link", { name: "查看历史方案对比" }).click();
-  await expect(page.getByRole("tab")).toHaveCount(2);
   await expect(
-    page.getByRole("link", { name: "← 打开已确认的 A 原型" }),
-  ).toHaveAttribute("href", "/prototype.html");
+    page.getByRole("link", { name: "查看历史方案对比" }),
+  ).toHaveCount(0);
+  await expect(page.getByRole("tab")).toHaveCount(0);
 });

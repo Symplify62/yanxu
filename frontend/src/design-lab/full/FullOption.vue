@@ -8,7 +8,7 @@ import { kitKey, type Kit } from "./context";
 import { api } from "../../services/api";
 import { clearAccounts } from "./account";
 import type { Scenario } from "../../domain/types";
-import "./full.css";
+import "../../styles/a-layout.css";
 const props = defineProps<{ variant: string; kit: Kit }>();
 provide(kitKey, props.kit);
 const surfaces = ["tablet", "employee", "admin", "components"];

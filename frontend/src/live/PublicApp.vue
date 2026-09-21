@@ -2,9 +2,9 @@
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { AudioLines } from "@lucide/vue";
 import zhCn from "element-plus/es/locale/lang/zh-cn";
-import ResultsPage from "../phase-one/ResultsPage.vue";
-import DetailPage from "../phase-one/DetailPage.vue";
-import type { PublicRecord } from "../phase-one/model";
+import ResultsPage from "../records/ResultsPage.vue";
+import DetailPage from "../records/DetailPage.vue";
+import type { PublicRecord } from "../records/model";
 const embedded = new URLSearchParams(location.search).get("app") === "1";
 const query = ref(""),
   filter = ref("all");

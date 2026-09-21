@@ -1,5 +1,8 @@
 # 三套正式组件样板验证合同（2026-09-21）
 
+> 历史时点记录：其中已淘汰的比较实现、旧截图和运行报告从清理前提交 `fee7f7a` 查询；当前结构与验证见[仓库清理记录](../../../docs/repository/cleanup.md)。
+
+
 授权：用户接受对同一平板扫码页进行 Element Plus 精修、shadcn/vue、TDesign 三套实际组件对比。只交付独立可点击样板，不冻结设计、不迁移全产品。
 
 变更范围：新增 design-lab.html 比较入口、design-option.html 隔离页面及 src/design-lab；新增相关依赖和 Vite 多页入口。现有 /tablet、/employee、/admin、业务状态机和 MSW 服务不改。每个样板使用独立文档和模拟数据，切换方案重新开始。

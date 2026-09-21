@@ -3,9 +3,9 @@ import { computed, onMounted, onUnmounted, ref } from "vue";
 import { AudioLines, Mic, FileText, ChevronDown } from "@lucide/vue";
 import zhCn from "element-plus/es/locale/lang/zh-cn";
 import RecordingPage from "./RecordingPage.vue";
-import ResultsPage from "./ResultsPage.vue";
-import DetailPage from "./DetailPage.vue";
-import { usePhaseDemo } from "./model";
+import ResultsPage from "../records/ResultsPage.vue";
+import DetailPage from "../records/DetailPage.vue";
+import { usePhaseDemo, transcript, sampleAnalysis } from "./model";
 const demo = usePhaseDemo();
 const {
   records,
@@ -137,6 +137,8 @@ const scenarios = [
           @open="go('/records/' + $event)"
           @record="go('/record')"
         /><DetailPage
+          :demo-analysis="sampleAnalysis"
+          :demo-transcript="transcript"
           v-else
           :record="record"
           :now="now"

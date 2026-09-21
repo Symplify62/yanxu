@@ -7,7 +7,12 @@ export default defineConfig({
   workers: 1,
   reporter: [
     ["list"],
-    ["json", { outputFile: "evidence/playwright-results.json" }],
+    [
+      "json",
+      {
+        outputFile: "../.local-data/evidence/frontend/playwright-results.json",
+      },
+    ],
   ],
   use: {
     baseURL: "http://127.0.0.1:5178",

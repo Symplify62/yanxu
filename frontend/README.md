@@ -1,83 +1,41 @@
-# 言序 · A方案正式组件原型
+# 言序前端
 
-> 当前第一阶段已调整为[免登录录音、自动转写/AI分析与公网公共结果](../docs/phases/phase-01.md)；第一阶段页面已实现，真实录音/AI/公网尚未接入。
+Vue 3 / TypeScript / Element Plus，采用暖白与绿色的 A 方案。开发时从 [任务导航](docs/frontend-guides/README.md) 选择相关规范。
 
-开发前按任务读取[前端规范导航](docs/frontend-guides/README.md)；局部工作入口见[AGENTS.md](AGENTS.md)。
+## 入口
 
-A方案已于2026-09-21确认，作为后续前端设计基线。当前正式原型使用Vue 3 / TypeScript与Element Plus，覆盖平板、员工手机和管理后台，沿用PRD v1.3 U-11全自动业务基线。接口由MSW提供合成数据。详见[方案确认](docs/design-lab/selection.md)。
+| 入口 | 用途 | 数据来源 |
+| --- | --- | --- |
+| 后端 5189 根地址 / `public.html` | 真实公共列表、详情、回听、下载 | 后端 API；本地旧测试库与公网独立 |
+| 5178 / `phase-one.html` | 第一阶段录音与结果交互演示 | 浏览器模拟资料，不采音 |
+| 5178 / `prototype.html` | 已确认的完整 A 方案，含手机和后台 | MSW 合成资料，后续产品参考 |
+| 5178 /tablet、/employee、/admin | 早期组件原型回归 | MSW 合成资料 |
 
-## 第一阶段页面入口
+开发服务器根地址进入第一阶段演示；完整 A 原型支持 `surface=tablet/employee/admin/components`。`design-option.html` 是 A 原型内部 iframe 的承载页。B/C 比较页及其组件库已移除，历史可从 Git 找回。
 
-- **[快速录音与公共结果](http://127.0.0.1:5178/phase-one.html)**（根地址进入此页）
-- [第一阶段页面范围与验证](../docs/phases/phase-01-pages.md)
+当前真实服务已接入 Android 录音、转写与 AI，详见 [部署记录](../docs/implementation/public-deployment.md)。扫码、组织权限和群发送在第一阶段暂缓。
 
-## 此前完整A方案入口
+## 启动与验证
 
-- **[打开A方案正式原型](http://127.0.0.1:5178/prototype.html)**（完整方案历史对照）
-- [员工手机](http://127.0.0.1:5178/prototype.html?surface=employee) · [管理后台](http://127.0.0.1:5178/prototype.html?surface=admin) · [组件状态](http://127.0.0.1:5178/prototype.html?surface=components)
-
-## 历史对照
-
-- **A/B完整原型对比**：[Element Plus / shadcn/vue](http://127.0.0.1:5178/design-lab.html)（覆盖平板、员工手机、管理后台与组件状态，已选定A，比较页仅保留历史对照；见 [设计说明](docs/design-lab/README.md)）
-
-- 平板交互：[http://127.0.0.1:5178/tablet](http://127.0.0.1:5178/tablet)
-- 员工手机：[http://127.0.0.1:5178/employee](http://127.0.0.1:5178/employee)
-- 管理后台：[http://127.0.0.1:5178/admin](http://127.0.0.1:5178/admin)
-- 组件与状态：[http://127.0.0.1:5178/components](http://127.0.0.1:5178/components)
-
-当前由本任务启动构建后的本地预览服务，仅监听127.0.0.1。服务停止后，在此目录运行：
+在本目录执行：
 
 ```sh
 npm ci
-npm run build
-npm run preview
+npm run dev
 ```
 
-开发时使用 `npm run dev`（同一默认端口，先停止预览服务再启动）。依赖版本精确固定，使用package-lock.json；本轮Node为24.14.1。
+构建与本地预览使用 `npm run build`、`npm run preview`。默认监听 127.0.0.1:5178，启动前确认端口归属。真实页面还需运行 [后端](../backend/README.md)，配置见 [配置说明](../config/README.md)。模型与运行数据不随 Git 克隆。
 
-## 原v0.4迁移记录（历史）
+`npm test` 验证规则与模拟 HTTP，`npm run test:e2e` 使用 Chrome 验证保留的原型流程，`npm run test:live` 验证本地真实服务。真实服务回归需要已有完成的测试录音。长期回归使用项目 Playwright，新产物位于被忽略的 `.local-data/evidence/`。
 
-- Vue Router页面路由；Element Plus按钮/表单/表格/弹窗/抽屉/树/状态；Vant手机导航、表单、弹层、选择器、标签及列表。
-- 页面只调用src/services，不直接操作模拟数据库；MSW处理实际fetch请求并返回200/401/403/404/409/422等结果。
-- 模拟扫码、过期/停用/首次开户、录音状态与本地保存反馈、退出后设备队列、自动处理/发送。
-- 手机本人或授权资料、只读共享/撤销、纪要和事项可选更正、版本冲突与旧发送快照保留。
-- 管理账号状态、组织同步示例、访问组成员、部门群配置、应急停发、异常恢复、审计与设备元数据。
-- 组件展示页直接复用实际组件，可看表单错误、禁用/加载、处理状态及弹窗。
+## 代码定位
 
-## 演示方式
+- `src/live`：真实公共 API 请求、路由与页面装配。
+- `src/records`：共用列表、详情与状态/类型；演示样例由演示入口传入。
+- `src/styles/a-theme.css`、`a-layout.css`、`records.css`：A 主题、完整原型布局和公共记录布局。
+- `src/phase-one`：独立第一阶段演示、模拟录音状态与样例。
+- `src/design-lab`：保留的完整 A 原型、Element Plus 适配组件；目录名沿用历史，已无 B/C 实现。
+- `src/domain`、`src/services`、`src/mocks`：完整原型的类型、请求与合成服务。
+- `src/pages`、`src/components`、`src/composables`：早期原型与仍共用的组件/状态。
 
-平板选“模拟手机扫码”→林同事→开始→结束。保存页只有下一场扫码；顶部端切换是评审导航，不属于平板App。切换员工手机端，以林同事模拟登录，可看新会议和种子会议。管理员入口使用专门管理身份，默认无会议正文权限。
-
-“演示控制”可切换断网、保存失败、AI重试耗尽、缺群和发送结果不明。全部变化只在当前标签页的模拟服务内存中；刷新/重置会还原资料并使旧演示登录过期。不同标签页不共享模拟数据库。
-
-## 明确边界
-
-这是可复用前端工程，不是生产系统。二维码不可真实扫描，不接企业微信、麦克风、真实音频、AI或群发送。模拟任务由浏览器请求与时钟推进，不证明关闭浏览器后的服务端持续处理。用户/设备/后台权限只在mock模型验证，真实后端必须独立实现和测试。
-
-平板仍是Web交互预览，不是原生Android安装包，不能验证息屏、长录音或真实持久队列。完整自定义角色委派编辑和详细分片诊断仍待后续实现；当前角色目录为只读预置展示。未知人员和日期保留原文，不自动派单。
-
-员工首次登录、组织同步与外网访问是已确认业务目标，但没有真实企业身份或网络接入证据。模拟请求使用X-Demo-Session，不能沿用为生产认证。非mock模式在入口明确阻断，尚未配置实际服务适配。
-
-## 代码组织
-
-- src/domain：类型、展示语义。
-- src/services：HTTP错误与类型化API，未来接真实契约的适配边界。
-- src/mocks：合成数据、状态/权限模型、MSW handlers与浏览器启动。
-- src/composables：员工/管理会话、请求轮询及卸载保护。
-- src/components：状态、错误反馈、设备队列、手机更正和共享。
-- src/pages：平板、手机与按职责拆分的管理工作区。
-- src/styles：设计变量与布局，组件按需导入。
-- tests：Vitest规则/HTTP契约与Playwright浏览器流程。
-
-## 验证
-
-```sh
-npm run typecheck
-npm test
-npm run build
-npm run test:e2e
-```
-
-E2E使用本机Chrome的隔离测试上下文和模拟数据，需要Chrome可执行文件；playwright.config.ts启动/复用本工程本地预览。30项规则/模拟HTTP检查、6条浏览器流程及开发导航检查结果见[验证记录](docs/verification.md)。截图在evidence/screenshots。
-
-本轮只做本地工程，没有提交、推送或公网发布。旧单文件HTML/PRD/ZIP未修改，仍在外层目录。
+真实公共入口不加载演示状态或 MSW。完整原型的模拟身份、发送与恢复结果不代替真实后端验收。目录清理与本次验证见 [清理记录](../docs/repository/cleanup.md)。
