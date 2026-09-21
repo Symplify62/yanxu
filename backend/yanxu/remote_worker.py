@@ -145,7 +145,7 @@ def process_remote(cfg, client, asr=transcribe):
                 json={
                     "owner": job["owner"],
                     "retryable": exc.retryable,
-                    "no_speech": not exc.retryable,
+                    "no_speech": False,
                 },
             )
         logger.warning("ASR incomplete %s", job["id"])

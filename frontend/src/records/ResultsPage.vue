@@ -2,7 +2,7 @@
 import { computed, ref, watch } from "vue";
 import { Search, FileText, ArrowUpRight, Plus, Clock } from "@lucide/vue";
 import { duration } from "../domain/presentation";
-import { stageOf, stageLabels, type PublicRecord } from "./model";
+import { stageOf, stageLabels, isProcessed, type PublicRecord } from "./model";
 const props = defineProps<{
   records: PublicRecord[];
   now: number;
@@ -31,8 +31,8 @@ const items = computed(() =>
       r.title.toLowerCase().includes(search.value.trim().toLowerCase()) &&
       (filter.value === "all" ||
         (filter.value === "complete"
-          ? stageOf(r, props.now) === "complete"
-          : stageOf(r, props.now) !== "complete")),
+          ? isProcessed(stageOf(r, props.now))
+          : !isProcessed(stageOf(r, props.now)))),
   ),
 );
 </script>

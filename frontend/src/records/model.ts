@@ -46,6 +46,7 @@ export type Stage =
   | "transcribing"
   | "analyzing"
   | "complete"
+  | "no-speech"
   | "transcript-error"
   | "analysis-error";
 export const stageLabels: Record<Stage, string> = {
@@ -55,6 +56,7 @@ export const stageLabels: Record<Stage, string> = {
   transcribing: "正在转写",
   analyzing: "AI 分析中",
   complete: "已完成",
+  "no-speech": "未检测到语音",
   "transcript-error": "转写未完成",
   "analysis-error": "分析未完成",
 };
@@ -68,4 +70,8 @@ export function stageOf(r: PublicRecord, now: number): Stage {
   if (elapsed < 5200) return "analyzing";
   if (r.scenario === "analysis-error") return "analysis-error";
   return "complete";
+}
+
+export function isProcessed(stage: Stage): boolean {
+  return stage === "complete" || stage === "no-speech";
 }

@@ -35,8 +35,10 @@ def transcribe(cfg, row):
     raw = json.loads((output / "transcript.raw.json").read_text())
     text = "".join(c["text"] for c in raw["chunks"])
     speech = sum(c["end"] - c["start"] for c in raw["chunks"])
+    if m["status"] == "complete_no_speech" and not raw["chunks"] and not raw["cues"]:
+        return {"noSpeech": True, "text": "", "segments": [], "engine": "Qwen3-ASR-1.7B"}
     if m["status"] != "complete" or not text.strip():
-        raise ProviderError("未检测到可转写的清晰语音", False)
+        raise ProviderError("转写结果不完整，请检查处理日志", False)
     if row["duration"] > 60 and (speech / row["duration"] < 0.03 or len(text) < 20):
         raise ProviderError("有效语音覆盖过低，请检查原始录音", False)
     segments = []

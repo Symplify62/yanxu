@@ -31,7 +31,7 @@ Android USB联调使用`adb -s <设备ID> reverse tcp:5189 tcp:5189`，App服务
 ## 运行边界
 
 - 文件和队列落盘；worker单实例锁＋数据库租约/heartbeat，失败最多3次退避，永久失败保留原音与已完成阶段。转写期间关闭页面不影响worker。
-- 本地ASR进程禁网。语音覆盖异常或无语音报错，不用空摘要假装完成；逐字对齐和说话人分离不是本次已验收能力。
+- 本地ASR进程禁网。语音覆盖异常仍报错；明确无语音为独立终态，保留原音、跳过AI，归入已完成筛选，不生成空摘要；逐字对齐和说话人分离不是本次已验收能力。
 - 词级结束时间允许至多20ms的末尾越界修正，原始时间与修正记录保留；其他异常仍拒绝。遇到同类失败及源码指纹变化后的分段缓存恢复，先读[边界修复记录](../docs/implementation/asr-boundary-recovery.md)。
 - DeepSeek结果经JSON/证据ID校验，长文本分段分析后汇总；成功的分段缓存绑定转写、提示词和模型配置。外部超时仍可能造成重复计费，未承诺供应商exactly-once。
 - 默认上传块1MiB、单文件2GiB、最多30条未完成记录，AI每日token软额度200000（UTC日界，按字符估算预留输出再核实际用量）。可通过`YANXU_MAX_UPLOAD_BYTES`、`YANXU_DAILY_TOKEN_BUDGET`及数据目录配置调整。它们是技术资源边界，不是已验证的无限长录音能力。
@@ -53,3 +53,5 @@ Android USB联调使用`adb -s <设备ID> reverse tcp:5189 tcp:5189`，App服务
 - `uv run python -m yanxu.check_storage` 使用隔离数据库及约 32 KB 合成 WAV 验证真实上传和云完整性；启用分发时额外检查 HTTPS、Range 206、下载附件及 SHA256。不会调用 ASR/DeepSeek 或发布现有会议。
 - SDK 上传、管理请求强制 HTTPS。对象键含录音 ID 和 SHA256，禁止覆盖；上传后核验七牛 ETag 和长度。凭证不返回前端，不打印原始供应商异常。
 - 上述保留全部本地原音适用于旧本地测试环境。新公网环境采用云主库、远程转写与7天缓存清理，实际差异、备份和恢复以[公网部署记录](../docs/implementation/public-deployment.md)为准。
+
+无语音状态、旧失败记录恢复与验证见[无语音结果修复](../docs/implementation/no-speech-result.md)。
