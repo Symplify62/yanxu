@@ -55,3 +55,7 @@ Android USB联调使用`adb -s <设备ID> reverse tcp:5189 tcp:5189`，App服务
 - 上述保留全部本地原音适用于旧本地测试环境。新公网环境采用云主库、远程转写与7天缓存清理，实际差异、备份和恢复以[公网部署记录](../docs/implementation/public-deployment.md)为准。
 
 无语音状态、旧失败记录恢复与验证见[无语音结果修复](../docs/implementation/no-speech-result.md)。
+
+## Android版本分发
+
+`GET /app/update.json` 返回最新版本清单（no-store），`GET /app/releases/{filename}` 提供带版本/哈希文件名的APK；发布文件位于数据目录旁的artifacts，先上传APK再原子替换清单。准备包使用 `tools/package_android_update.py`，必须与既有APK同包名/同签名且版本递增。见[自动更新与发布](../docs/implementation/android-updates.md)。

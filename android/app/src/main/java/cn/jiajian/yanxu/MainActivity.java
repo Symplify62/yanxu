@@ -23,7 +23,7 @@ public class MainActivity extends Activity {
       MUTED = Color.rgb(114, 128, 117),
       BG = Color.rgb(251, 252, 248);
   private LinearLayout shell, content, actions;
-  private TextView timer, status;
+  private TextView timer, status, settingsLabel;
   private int tab = 0;
   private String lastLocalSignature = "";
   private boolean previousActive = false, previousPaused = false;
@@ -32,12 +32,15 @@ public class MainActivity extends Activity {
   private final Runnable tick =
       new Runnable() {
         public void run() {
+          if (settingsLabel != null)
+            settingsLabel.setText(AppUpdater.needsAction(MainActivity.this) ? "设置 · 更新" : "设置");
           if (tab == 0) {
             if (timer != null) timer.setText(format(RecordingService.frames / 16000));
             if (status != null) status.setText(RecordingService.message);
             if (previousActive != RecordingService.active
                 || previousPaused != RecordingService.paused) {
               render();
+              AppUpdater.kick(MainActivity.this, false);
             }
           } else if (tab == 2 && !localSignature().equals(lastLocalSignature)) {
             render();
@@ -54,13 +57,27 @@ public class MainActivity extends Activity {
     LocalStore.recover(this);
     render();
     handler.post(tick);
+    AppUpdater.recover(this);
+    AppUpdater.schedule(this);
+    if (getIntent().getBooleanExtra("showUpdates", false))
+      handler.post(() -> UpdateDialog.show(this));
   }
 
   @Override
   protected void onResume() {
     super.onResume();
     LocalStore.enqueue(this);
+    UpdateInstaller.foreground = new java.lang.ref.WeakReference<>(this);
+    boolean manual = AppUpdater.prefs(this).getBoolean("resumeInstall", false);
+    AppUpdater.prefs(this).edit().remove("resumeInstall").apply();
+    AppUpdater.kick(this, manual);
     if (tab == 2) render();
+  }
+
+  @Override
+  protected void onPause() {
+    UpdateInstaller.foreground.clear();
+    super.onPause();
   }
 
   @Override
@@ -132,6 +149,7 @@ public class MainActivity extends Activity {
     brand.setTypeface(null, Typeface.BOLD);
     top.addView(brand, new LinearLayout.LayoutParams(0, -2, 1));
     TextView settings = text("设置", 13, MUTED);
+    settingsLabel = settings;
     settings.setPadding(dp(12), dp(10), dp(12), dp(10));
     settings.setOnClickListener(v -> settings());
     top.addView(settings);
@@ -400,6 +418,14 @@ public class MainActivity extends Activity {
                   startActivityForResult(i, 201);
                 })
             .create();
+    box.addView(
+        button(
+            "应用更新 · " + AppUpdater.versionName(this),
+            false,
+            () -> {
+              d.dismiss();
+              UpdateDialog.show(this);
+            }));
     d.setOnShowListener(
         v ->
             d.getButton(AlertDialog.BUTTON_POSITIVE)
@@ -427,6 +453,13 @@ public class MainActivity extends Activity {
     super.onActivityResult(request, result, data);
     if (request != 201 || result != RESULT_OK || data == null) return;
     Uri uri = data.getData();
+    synchronized (AppUpdater.GATE) {
+      if (AppUpdater.installing(this)) {
+        Toast.makeText(this, "正在更新，请稍后导入", Toast.LENGTH_SHORT).show();
+        return;
+      }
+      AppUpdater.importing = true;
+    }
     new Thread(
             () -> {
               try {
@@ -467,6 +500,9 @@ public class MainActivity extends Activity {
                     });
               } catch (Exception e) {
                 runOnUiThread(() -> Toast.makeText(this, "导入失败，请重新选择音频", Toast.LENGTH_LONG).show());
+              } finally {
+                AppUpdater.importing = false;
+                AppUpdater.kick(this, false);
               }
             },
             "yanxu-import")

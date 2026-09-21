@@ -48,6 +48,7 @@ public class UploadJob extends JobService {
                 }
               }
               jobFinished(params, retry);
+              if (!stopped) AppUpdater.kick(this, false);
             },
             "yanxu-upload")
         .start();
