@@ -2,7 +2,7 @@
 
 原生AudioRecord采音、麦克风前台服务、PCM/WAV本地保存、JobScheduler可恢复上传。界面沿用A风格；公共结果页在App中读取真实服务。无需账号，DeepSeek密钥不进入App。
 
-当前测试版 **0.1.5** 默认连接 `https://yanxu.qjl666.xyz`，联网使用无需USB。曾手动填写其他服务地址的安装会保留原设置，需在“设置”中确认；旧本地已上传记录不批量重新发布。公网运行与实测证据见[部署记录](../docs/implementation/public-deployment.md)。
+当前测试版 **0.1.7** 默认连接 `https://yanxu.qjl666.xyz`，联网使用无需USB。曾手动填写其他服务地址的安装会保留原设置，需在“设置”中确认；旧本地已上传记录不批量重新发布。公网运行与实测证据见[部署记录](../docs/implementation/public-deployment.md)。
 
 ## 构建与使用
 
