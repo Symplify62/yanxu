@@ -10,7 +10,8 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "preview": "vite preview --host 127.0.0.1 --port 5178 --strictPort",
-    "format:check": "prettier --check \"src/**/*.{ts,vue,css}\" \"tests/**/*.ts\" vite.config.ts playwright.config.ts tsconfig.json"
+    "format:check": "prettier --check \"src/**/*.{ts,vue,css}\" \"tests/**/*.ts\" vite.config.ts playwright.config.ts tsconfig.json",
+    "test:live": "playwright test -c playwright.live.config.ts"
   },
   "dependencies": {
     "@lucide/vue": "1.47.0",

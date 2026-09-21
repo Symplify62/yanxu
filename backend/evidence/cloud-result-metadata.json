@@ -1,0 +1,26 @@
+{
+  "id": "f7cd2a0c-9090-4dd2-85bd-ac2ba18add32",
+  "bytes": 32044,
+  "sha256": "e9cb13e48621929dace9db11cf1a02c750e846bf739c70d5ab0b74925eaf3ec0",
+  "cloudStatus": "ready",
+  "error": null,
+  "https": true,
+  "range206": true,
+  "download": true,
+  "url": "https://audio.qjl666.xyz/recordings/f7cd2a0c-9090-4dd2-85bd-ac2ba18add32/e9cb13e48621929dace9db11cf1a02c750e846bf739c70d5ab0b74925eaf3ec0.wav",
+  "checks": {
+    "backendTests": 18,
+    "localPublicBrowser": 1,
+    "cloudPublicBrowser": 1,
+    "credentialsTracked": false,
+    "mainDataMigrated": false
+  },
+  "cloud": {
+    "bucket": "yanxu-recordings",
+    "region": "华东-浙江",
+    "domain": "audio.qjl666.xyz",
+    "certExpires": "2026-12-20",
+    "trafficAlert": "5分钟流量>1GB",
+    "autoRenewal": false
+  }
+}

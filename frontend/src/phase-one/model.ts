@@ -7,6 +7,31 @@ export type Scenario =
   | "transcript-error"
   | "analysis-error";
 export interface PublicRecord {
+  status?: Stage;
+  hasAudio?: boolean;
+  interrupted?: boolean;
+  error?: string | null;
+  transcript?: {
+    text: string;
+    segments: Array<{
+      id: string;
+      start: number;
+      end: number;
+      text: string;
+      speaker: string | null;
+    }>;
+  } | null;
+  analysis?: {
+    summary: string;
+    points: string[];
+    decisions: string[];
+    tasks: Array<{
+      text: string;
+      owner: string | null;
+      due: string | null;
+      evidence: string[];
+    }>;
+  } | null;
   id: string;
   title: string;
   createdAt: number;
@@ -16,6 +41,7 @@ export interface PublicRecord {
   seed?: boolean;
 }
 export type Stage =
+  | "queued"
   | "uploading"
   | "waiting"
   | "transcribing"
@@ -45,6 +71,7 @@ const seed = (): PublicRecord[] => [
   },
 ];
 export const stageLabels: Record<Stage, string> = {
+  queued: "等待转写",
   uploading: "正在上传",
   waiting: "等待网络",
   transcribing: "正在转写",
@@ -54,6 +81,7 @@ export const stageLabels: Record<Stage, string> = {
   "analysis-error": "分析未完成",
 };
 export function stageOf(r: PublicRecord, now: number): Stage {
+  if (r.status) return r.status;
   if (r.scenario === "offline") return "waiting";
   const elapsed = now - r.readyAt;
   if (elapsed < 1200) return "uploading";

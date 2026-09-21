@@ -1,0 +1,361 @@
+{
+  "metric": "character edit distance to paired DingTalk machine reference; NOT human transcription accuracy",
+  "normalization": "Unicode NFKC, lowercase, letters/numbers only; no simplified/traditional or spoken-number conversion",
+  "source_assets": "private local dataset; full input paths/transcripts remain in ignored .local-data",
+  "hardware": "Apple M4 Max, 128 GiB unified memory, macOS 27.0",
+  "network": "ASR and alignment subprocesses run under sandbox-exec deny network*",
+  "runs": [
+    {
+      "sample": "S1",
+      "engine": "qwen",
+      "scope": "complete_recording",
+      "audio_seconds": 445.9624375,
+      "source_sha256": "86edc28291d97f99c0e5385df8c38eccf5cb66093720daa5f22657af7d8df8b6",
+      "prepared_sha256": "999a0fb50488ec2625bd69bbdca15f0290aa59c80cbd59f620db11908f76c68b",
+      "elapsed_seconds": 26.328105041990057,
+      "asr_seconds": 17.4891248755157,
+      "alignment_seconds": 2.7820012089796364,
+      "model_load_seconds": 1.7124850433319807,
+      "rtf": 0.05903659776725042,
+      "peak_mlx_gib": 7.062497049570084,
+      "max_rss_gib": 6.0796661376953125,
+      "peak_process_footprint_gib": 8.752249278128147,
+      "reference_characters": 1703,
+      "recognized_characters": 1708,
+      "reference_character_edits": 165,
+      "reference_character_difference_rate": 0.09688784497944804,
+      "review_issue_entries": 11,
+      "zero_duration_words": 160,
+      "words": 1668,
+      "status": "complete",
+      "partial_input": false,
+      "versions": {
+        "mlx": "0.32.2",
+        "mlx-audio": "0.5.4",
+        "mlx-whisper": "0.4.3",
+        "silero-vad": "6.2.1",
+        "onnxruntime": "1.30.0"
+      },
+      "models": {
+        "qwen": {
+          "repo": "mlx-community/Qwen3-ASR-1.7B-bf16",
+          "revision": "e1f6c266914abc5a46e8756e02580f834a6cf8a7",
+          "content_sha256": "5b946e4334f900eed28ca085a47e2fc1a2af10295f703e7722e9537f255b57d6"
+        },
+        "aligner": {
+          "repo": "mlx-community/Qwen3-ForcedAligner-0.6B-bf16",
+          "revision": "53c8c0e46733eec430e4b53dd6471d0e5dee45f8",
+          "content_sha256": "d8b93459a1c54127162a46b17ed78191e5079dc82c94c4578774132e58ff8d3f"
+        }
+      },
+      "comparison_use": "paired_full_recording",
+      "recognition_accuracy_verified": false
+    },
+    {
+      "sample": "S1",
+      "engine": "whisper",
+      "scope": "complete_recording",
+      "audio_seconds": 445.9624375,
+      "source_sha256": "86edc28291d97f99c0e5385df8c38eccf5cb66093720daa5f22657af7d8df8b6",
+      "prepared_sha256": "999a0fb50488ec2625bd69bbdca15f0290aa59c80cbd59f620db11908f76c68b",
+      "elapsed_seconds": 36.81743837497197,
+      "asr_seconds": 32.30201266752556,
+      "alignment_seconds": 0,
+      "model_load_seconds": 1.1218790817074478,
+      "rtf": 0.08255726330084015,
+      "peak_mlx_gib": 3.6940171103924513,
+      "max_rss_gib": 3.7652435302734375,
+      "peak_process_footprint_gib": 6.284275442361832,
+      "reference_characters": 1703,
+      "recognized_characters": 1447,
+      "reference_character_edits": 461,
+      "reference_character_difference_rate": 0.270698766881973,
+      "review_issue_entries": 6,
+      "zero_duration_words": 13,
+      "words": 1187,
+      "status": "complete",
+      "partial_input": false,
+      "versions": {
+        "mlx": "0.32.2",
+        "mlx-audio": "0.5.4",
+        "mlx-whisper": "0.4.3",
+        "silero-vad": "6.2.1",
+        "onnxruntime": "1.30.0"
+      },
+      "models": {
+        "whisper": {
+          "repo": "mlx-community/whisper-large-v3-mlx",
+          "revision": "49e6aa286ad60c14352c404340ded53710378a11",
+          "content_sha256": "734bd7a8232ae2ef5210168cbb93d21b626d8fa79a7a58b353543ccf24cee7fc"
+        }
+      },
+      "comparison_use": "paired_full_recording",
+      "recognition_accuracy_verified": false
+    },
+    {
+      "sample": "S2",
+      "engine": "qwen",
+      "scope": "complete_recording",
+      "audio_seconds": 516.2318125,
+      "source_sha256": "9d8ab7de63af0d2a8086389d3f2687e9aa2a7f55886384ecdc3d11585fa5fc84",
+      "prepared_sha256": "7c1e9eda84f93e536cc5d716ebecfef466d5de9994f50c7fc8a44d90b86295ac",
+      "elapsed_seconds": 43.792084167012945,
+      "asr_seconds": 30.480318335583434,
+      "alignment_seconds": 6.939953500404954,
+      "model_load_seconds": 1.746485749958083,
+      "rtf": 0.08483027025191893,
+      "peak_mlx_gib": 7.045161083340645,
+      "max_rss_gib": 6.11090087890625,
+      "peak_process_footprint_gib": 8.8030456751585,
+      "reference_characters": 2253,
+      "recognized_characters": 2266,
+      "reference_character_edits": 280,
+      "reference_character_difference_rate": 0.12427873945849978,
+      "review_issue_entries": 10,
+      "zero_duration_words": 188,
+      "words": 2238,
+      "status": "complete",
+      "partial_input": false,
+      "versions": {
+        "mlx": "0.32.2",
+        "mlx-audio": "0.5.4",
+        "mlx-whisper": "0.4.3",
+        "silero-vad": "6.2.1",
+        "onnxruntime": "1.30.0"
+      },
+      "models": {
+        "qwen": {
+          "repo": "mlx-community/Qwen3-ASR-1.7B-bf16",
+          "revision": "e1f6c266914abc5a46e8756e02580f834a6cf8a7",
+          "content_sha256": "5b946e4334f900eed28ca085a47e2fc1a2af10295f703e7722e9537f255b57d6"
+        },
+        "aligner": {
+          "repo": "mlx-community/Qwen3-ForcedAligner-0.6B-bf16",
+          "revision": "53c8c0e46733eec430e4b53dd6471d0e5dee45f8",
+          "content_sha256": "d8b93459a1c54127162a46b17ed78191e5079dc82c94c4578774132e58ff8d3f"
+        }
+      },
+      "comparison_use": "paired_full_recording",
+      "recognition_accuracy_verified": false
+    },
+    {
+      "sample": "S2",
+      "engine": "whisper",
+      "scope": "complete_recording",
+      "audio_seconds": 516.2318125,
+      "source_sha256": "9d8ab7de63af0d2a8086389d3f2687e9aa2a7f55886384ecdc3d11585fa5fc84",
+      "prepared_sha256": "7c1e9eda84f93e536cc5d716ebecfef466d5de9994f50c7fc8a44d90b86295ac",
+      "elapsed_seconds": 144.73170012491755,
+      "asr_seconds": 138.13956212392077,
+      "alignment_seconds": 0,
+      "model_load_seconds": 1.1005432070232928,
+      "rtf": 0.2803618386554152,
+      "peak_mlx_gib": 3.7107487227767706,
+      "max_rss_gib": 3.802215576171875,
+      "peak_process_footprint_gib": 6.696995280683041,
+      "reference_characters": 2253,
+      "recognized_characters": 2019,
+      "reference_character_edits": 610,
+      "reference_character_difference_rate": 0.2707501109631602,
+      "review_issue_entries": 4,
+      "zero_duration_words": 17,
+      "words": 1648,
+      "status": "complete",
+      "partial_input": false,
+      "versions": {
+        "mlx": "0.32.2",
+        "mlx-audio": "0.5.4",
+        "mlx-whisper": "0.4.3",
+        "silero-vad": "6.2.1",
+        "onnxruntime": "1.30.0"
+      },
+      "models": {
+        "whisper": {
+          "repo": "mlx-community/whisper-large-v3-mlx",
+          "revision": "49e6aa286ad60c14352c404340ded53710378a11",
+          "content_sha256": "734bd7a8232ae2ef5210168cbb93d21b626d8fa79a7a58b353543ccf24cee7fc"
+        }
+      },
+      "comparison_use": "paired_full_recording",
+      "recognition_accuracy_verified": false
+    },
+    {
+      "sample": "S3",
+      "engine": "qwen",
+      "scope": "excerpt",
+      "audio_seconds": 141.09,
+      "source_sha256": "e930a51dc672329012057542a58032393015d8c07981291459efefbf16879b1f",
+      "prepared_sha256": "ece338cc848f30029b35defd0d74a2e3e7d93a754bfe56f4a5a17ec7d7685be0",
+      "elapsed_seconds": 7.319852999877185,
+      "asr_seconds": 0.33718208293430507,
+      "alignment_seconds": 0.08972675004042685,
+      "model_load_seconds": 1.8762822079006582,
+      "rtf": 0.051880735699746154,
+      "peak_mlx_gib": 6.325479377061129,
+      "max_rss_gib": 5.9796600341796875,
+      "peak_process_footprint_gib": 6.982641309499741,
+      "reference_characters": 126,
+      "recognized_characters": 5,
+      "reference_character_edits": 123,
+      "reference_character_difference_rate": 0.9761904761904762,
+      "review_issue_entries": 0,
+      "zero_duration_words": 0,
+      "words": 5,
+      "status": "complete",
+      "partial_input": false,
+      "versions": {
+        "mlx": "0.32.2",
+        "mlx-audio": "0.5.4",
+        "mlx-whisper": "0.4.3",
+        "silero-vad": "6.2.1",
+        "onnxruntime": "1.30.0"
+      },
+      "models": {
+        "qwen": {
+          "repo": "mlx-community/Qwen3-ASR-1.7B-bf16",
+          "revision": "e1f6c266914abc5a46e8756e02580f834a6cf8a7",
+          "content_sha256": "5b946e4334f900eed28ca085a47e2fc1a2af10295f703e7722e9537f255b57d6"
+        },
+        "aligner": {
+          "repo": "mlx-community/Qwen3-ForcedAligner-0.6B-bf16",
+          "revision": "53c8c0e46733eec430e4b53dd6471d0e5dee45f8",
+          "content_sha256": "d8b93459a1c54127162a46b17ed78191e5079dc82c94c4578774132e58ff8d3f"
+        }
+      },
+      "comparison_use": "diagnostic_only_reference_time_or_vad_mismatch",
+      "recognition_accuracy_verified": false
+    },
+    {
+      "sample": "S3",
+      "engine": "whisper",
+      "scope": "excerpt",
+      "audio_seconds": 141.09,
+      "source_sha256": "e930a51dc672329012057542a58032393015d8c07981291459efefbf16879b1f",
+      "prepared_sha256": "ece338cc848f30029b35defd0d74a2e3e7d93a754bfe56f4a5a17ec7d7685be0",
+      "elapsed_seconds": 6.275981124956161,
+      "asr_seconds": 1.4145946667995304,
+      "alignment_seconds": 0,
+      "model_load_seconds": 1.1986337499693036,
+      "rtf": 0.044482111595124815,
+      "peak_mlx_gib": 3.6753330770879984,
+      "max_rss_gib": 3.6389617919921875,
+      "peak_process_footprint_gib": 4.658283352851868,
+      "reference_characters": 126,
+      "recognized_characters": 1,
+      "reference_character_edits": 125,
+      "reference_character_difference_rate": 0.9920634920634921,
+      "review_issue_entries": 0,
+      "zero_duration_words": 0,
+      "words": 1,
+      "status": "complete",
+      "partial_input": false,
+      "versions": {
+        "mlx": "0.32.2",
+        "mlx-audio": "0.5.4",
+        "mlx-whisper": "0.4.3",
+        "silero-vad": "6.2.1",
+        "onnxruntime": "1.30.0"
+      },
+      "models": {
+        "whisper": {
+          "repo": "mlx-community/whisper-large-v3-mlx",
+          "revision": "49e6aa286ad60c14352c404340ded53710378a11",
+          "content_sha256": "734bd7a8232ae2ef5210168cbb93d21b626d8fa79a7a58b353543ccf24cee7fc"
+        }
+      },
+      "comparison_use": "diagnostic_only_reference_time_or_vad_mismatch",
+      "recognition_accuracy_verified": false
+    },
+    {
+      "sample": "S4",
+      "engine": "qwen",
+      "scope": "complete_recording",
+      "audio_seconds": 120.8424375,
+      "source_sha256": "3ddc1b974d08fcb40df6a7163dc25531bab23e9f7d5aa8627709686102988435",
+      "prepared_sha256": "3846511414ff68a9ec065fb2ad96def617abd98047a6a45003334216e28d9474",
+      "elapsed_seconds": 8.318103333003819,
+      "asr_seconds": 2.85944937588647,
+      "alignment_seconds": 0.46704737516120076,
+      "model_load_seconds": 1.6869097908493131,
+      "rtf": 0.06883428955166367,
+      "peak_mlx_gib": 6.979142174124718,
+      "max_rss_gib": 6.0264739990234375,
+      "peak_process_footprint_gib": 8.664617650210857,
+      "reference_characters": 271,
+      "recognized_characters": 245,
+      "reference_character_edits": 72,
+      "reference_character_difference_rate": 0.2656826568265683,
+      "review_issue_entries": 4,
+      "zero_duration_words": 36,
+      "words": 243,
+      "status": "complete",
+      "partial_input": false,
+      "versions": {
+        "mlx": "0.32.2",
+        "mlx-audio": "0.5.4",
+        "mlx-whisper": "0.4.3",
+        "silero-vad": "6.2.1",
+        "onnxruntime": "1.30.0"
+      },
+      "models": {
+        "qwen": {
+          "repo": "mlx-community/Qwen3-ASR-1.7B-bf16",
+          "revision": "e1f6c266914abc5a46e8756e02580f834a6cf8a7",
+          "content_sha256": "5b946e4334f900eed28ca085a47e2fc1a2af10295f703e7722e9537f255b57d6"
+        },
+        "aligner": {
+          "repo": "mlx-community/Qwen3-ForcedAligner-0.6B-bf16",
+          "revision": "53c8c0e46733eec430e4b53dd6471d0e5dee45f8",
+          "content_sha256": "d8b93459a1c54127162a46b17ed78191e5079dc82c94c4578774132e58ff8d3f"
+        }
+      },
+      "comparison_use": "paired_full_recording",
+      "recognition_accuracy_verified": false
+    },
+    {
+      "sample": "S4",
+      "engine": "whisper",
+      "scope": "complete_recording",
+      "audio_seconds": 120.8424375,
+      "source_sha256": "3ddc1b974d08fcb40df6a7163dc25531bab23e9f7d5aa8627709686102988435",
+      "prepared_sha256": "3846511414ff68a9ec065fb2ad96def617abd98047a6a45003334216e28d9474",
+      "elapsed_seconds": 9.134279458085075,
+      "asr_seconds": 5.631356000201777,
+      "alignment_seconds": 0,
+      "model_load_seconds": 1.2338512921705842,
+      "rtf": 0.07558834170392396,
+      "peak_mlx_gib": 3.6914841514080763,
+      "max_rss_gib": 3.67449951171875,
+      "peak_process_footprint_gib": 5.57616063952446,
+      "reference_characters": 271,
+      "recognized_characters": 189,
+      "reference_character_edits": 115,
+      "reference_character_difference_rate": 0.42435424354243545,
+      "review_issue_entries": 2,
+      "zero_duration_words": 2,
+      "words": 156,
+      "status": "complete",
+      "partial_input": false,
+      "versions": {
+        "mlx": "0.32.2",
+        "mlx-audio": "0.5.4",
+        "mlx-whisper": "0.4.3",
+        "silero-vad": "6.2.1",
+        "onnxruntime": "1.30.0"
+      },
+      "models": {
+        "whisper": {
+          "repo": "mlx-community/whisper-large-v3-mlx",
+          "revision": "49e6aa286ad60c14352c404340ded53710378a11",
+          "content_sha256": "734bd7a8232ae2ef5210168cbb93d21b626d8fa79a7a58b353543ccf24cee7fc"
+        }
+      },
+      "comparison_use": "paired_full_recording",
+      "recognition_accuracy_verified": false
+    }
+  ],
+  "diagnostic_findings": {
+    "S3": "141.09-second excerpt; VAD selected 1.3 seconds. Full sequential decode selected 2.0 seconds; gain diagnostic selected 10.2 seconds. Paired reference has 126 normalized characters. Root cause unresolved, not scored as recognition quality; original output retained.",
+    "timestamps": "Qwen zero-duration aligned words: S1=160,S2=188,S4=36; Whisper S1=13,S2=17,S4=2. Skill merges cues and flags review; precise word seeking not validated."
+  }
+}

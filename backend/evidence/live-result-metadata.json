@@ -1,0 +1,26 @@
+{
+  "id": "483956de-46fa-4eb8-9b41-4b907da453ec",
+  "state": "complete",
+  "duration": 120.842438,
+  "original_sha256": "3846511414ff68a9ec065fb2ad96def617abd98047a6a45003334216e28d9474",
+  "download_sha256": "3846511414ff68a9ec065fb2ad96def617abd98047a6a45003334216e28d9474",
+  "segments": 15,
+  "analysis_present": true,
+  "tests": {
+    "backend": 10,
+    "frontend_model_http": 30,
+    "prototype_e2e": 6,
+    "live_public_e2e": 1
+  },
+  "android": {
+    "package": "cn.jiajian.yanxu",
+    "version": "0.1.2",
+    "emulator_api": 36,
+    "physical_install_verified": true,
+    "physical_microphone_tested": false,
+    "record_pause_resume_saved_upload_verified": true,
+    "real_file_import_pipeline_verified": true,
+    "apk_sha256": "0963d080892025a7214e2395be57cb94f4908b862dba478d4f2b34a8bb59f3d8"
+  },
+  "deployment": "local_loopback_with_adb_reverse_only"
+}

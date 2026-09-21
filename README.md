@@ -1,6 +1,8 @@
 # 言序项目
 
-> 当前第一阶段已调整为[免登录录音、自动转写/AI分析与公网公共结果](docs/phases/phase-01.md)；第一阶段页面已实现，真实录音/AI/公网尚未接入。
+**公网真实服务已部署**：[公共记录](https://yanxu.qjl666.xyz/) · [Android测试包](https://yanxu.qjl666.xyz/app/yanxu-debug.apk) · [部署与恢复](docs/implementation/public-deployment.md) · [App说明](android/README.md)。手机联网使用无需USB，Mac负责转写；真机拾音与长期可靠性仍待专项验收。
+
+> 当前第一阶段按[免登录录音、自动转写/AI分析与公网公共结果](docs/phases/phase-01.md)实施。阿里云承载API和页面、七牛存原音、Mac转写、DeepSeek分析。本地5189是保留的旧测试库，与公网数据分开。
 
 - [AI协作入口](AGENTS.md)：按任务渐进式读取规范。
 - [当前文档地图](docs/README.md)：业务/权限/技术来源。
@@ -14,7 +16,7 @@
 - [工程说明与启动方法](frontend/README.md)
 - [技术选择](frontend/docs/technical-choice.md)与[原型验证记录](frontend/docs/design-lab/verification.md)
 
-**2026-09-21已确认A方案**，详见[设计决策](frontend/docs/design-lab/selection.md)。Vue 3＋TypeScript；Element Plus平板、手机及后台Web原型；MSW模拟接口。当前仍是前端原型，真实企业微信、音频、AI、群发送与原生Android未接入。原v0.3 HTML和下列资料继续保留为历史对照。
+**2026-09-21已确认A方案**，详见[设计决策](frontend/docs/design-lab/selection.md)。Vue 3＋TypeScript、Element Plus；本节5178原型使用MSW模拟接口，公网真实页面独立接入API。企业微信与群发送在第一阶段暂缓。原v0.3 HTML和下列资料继续保留为历史对照。
 
 ---
 

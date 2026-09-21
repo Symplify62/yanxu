@@ -8,13 +8,13 @@
 
 纳入：源码、package-lock、mock-only环境预设、测试、规范、许可证、历史展开文档、合成数据测试证据。排除：node_modules、dist、图谱数据库、运行临时目录、密钥、本机备份、重复ZIP交付包。证据目录可保留有意义的日志；实际凭证或真实资料不因位于evidence就允许提交。
 
-提交前检查工作区与暂存清单；仅提交授权内容。初始提交包含现有项目基线，之后按任务切片。远程推送和发布另行授权；本次只建立本地仓库。
+提交前检查工作区与暂存清单；仅提交授权内容。初始提交包含现有项目基线，之后按任务切片。提交、远程推送和发布分别按授权执行；当前部署事实见[公网部署记录](../implementation/public-deployment.md)。
 
 ## 运行与验证入口
 
 依赖/脚本以[package.json](../../frontend/package.json)为准；[前端README](../../frontend/README.md)提供启动步骤。当前默认本地5178端口，`prototype.html`为确认A的入口。先检查端口上的服务归属，再决定复用或启动，不中断其他任务的服务。
 
-fresh clone时在frontend运行npm ci，再运行其build/preview脚本。MSW环境预设仅`VITE_MOCKS=true`；真实模式被启动检查阻止，不存在直接改地址即完成生产接入的承诺。
+fresh clone时在frontend运行npm ci，再运行其build/preview脚本。旧原型的MSW预设为`VITE_MOCKS=true`；真实公共页面从`public.html`单独启动，后端依赖与密钥见[后端说明](../../backend/README.md)。Android构建见[App说明](../../android/README.md)，模型权重和运行数据不随Git克隆。
 
 文档检查从根目录运行：`python3 tools/check_docs.py`。它检查当前导航文档的本地链接、AGENTS长度、前端专题可达性及任务路由样例；不证明业务规格已实现。
 

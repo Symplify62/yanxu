@@ -1,0 +1,33 @@
+{
+  "recordId": "61888bf2-64e8-4669-bd9c-f8cc568a1b34",
+  "oldFingerprint": "322511f48422771cb2c73a698a66838dcbd12101f0eb5f802a4b2d44f7c53e67",
+  "newFingerprint": "9341c78f4551e5df4008c3dfae2ad94d4362c19dd6235823d55a57015de7761c",
+  "preservedChunks": 37,
+  "reusedDiagnosticChunks": 1,
+  "fixes": [
+    {
+      "chunk": 38,
+      "corrections": [
+        {
+          "word_index": 128,
+          "original_start": 31.36,
+          "original_end": 31.52,
+          "corrected_end": 31.5,
+          "reason": "end_boundary_tolerance"
+        }
+      ]
+    }
+  ],
+  "audioSha256": "637cd27ecb278fe34feda052dfc347dc1dffce38e7c6ea51a5fbef07a31c5e2b",
+  "publicResult": {
+    "status": "complete",
+    "duration": 1967.0,
+    "transcriptChars": 9621,
+    "segmentCount": 426,
+    "lastSegmentEnd": 1967.0,
+    "summaryChars": 188,
+    "pointCount": 9,
+    "taskCount": 8,
+    "audioSha256": "637cd27ecb278fe34feda052dfc347dc1dffce38e7c6ea51a5fbef07a31c5e2b"
+  }
+}

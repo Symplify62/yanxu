@@ -1108,6 +1108,49 @@
   color: var(--p1-muted);
   margin-left: auto;
 }
+
+/* Live lists keep navigation tools visible while records scroll. */
+.p1-results.is-live .p1-list-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--p1-bg);
+  padding: 4px 0 8px;
+  margin-bottom: 12px;
+  gap: 8px;
+  border-bottom: 1px solid var(--p1-line);
+}
+.p1-results.is-live .p1-filters {
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 20px;
+  row-gap: 0;
+}
+.p1-results.is-live .p1-filters button {
+  min-height: 44px;
+  padding: 6px 0;
+  font-size: 12px;
+  line-height: 20px;
+}
+.p1-results.is-live .el-input__wrapper {
+  min-height: 40px;
+  padding: 0 10px;
+}
+.p1-toolbar-count {
+  color: var(--p1-muted);
+  font-size: 11px;
+  white-space: nowrap;
+  margin-left: 6px;
+}
+.p1-app--embedded .p1-main {
+  max-width: none;
+  padding: 0 8px 16px;
+}
+@media (max-width: 650px) {
+  .p1-results.is-live .p1-list-toolbar {
+    gap: 4px;
+  }
+}
 @media (max-width: 650px) {
   .p1-record-page {
     margin: 8px auto;

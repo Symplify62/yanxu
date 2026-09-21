@@ -22,3 +22,12 @@ frontend/.claude/
 /会议室录音系统_*.zip
 # Runtime logs; curated evidence logs can be retained by their local ignore file.
 *.log
+
+# User-provided meeting audio and local ASR research outputs
+/.local-data/
+**/.venv/
+**/.pytest_cache/
+**/.ruff_cache/
+**/build/
+**/.gradle/
+android/local.properties

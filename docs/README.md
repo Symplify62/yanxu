@@ -19,6 +19,16 @@
 
 遇到来源差异：先确认这是已批准变更、历史建议还是实现缺口；记录差异并修正正确来源，不用原型的现状自行降低业务或权限要求。
 
+## 已确认的接入方向
+
+Android App采音、Mac本地开发与转写、DeepSeek分析、匿名回听/下载。ASR选型读[官方资料研究](research/asr-primary-sources.md)和[本机测试结论](research/asr-local-benchmark.md)，密钥准备读[后端配置](../config/README.md)。
+
+## 本地运行入口
+
+[后端运行与接口](../backend/README.md) · [Android测试App](../android/README.md) · [公网部署与恢复](implementation/public-deployment.md) · [早期本地接入证据](implementation/phase-one-live.md)。公网入口为 https://yanxu.qjl666.xyz/ ，本地5189保留旧测试库。
+
+接入七牛存储、阿里云文件域名、证书与云同步时，读[七牛接入记录](implementation/qiniu-storage.md)和[后端配置](../config/README.md)。文件域名可访问不等于公共应用已部署。
+
 ## 按业务进入
 
 - 平板录音：[PRD-01](../会议室录音系统_PRD_v1.3/docs/product/PRD-01-平板录音端.md)；实际采集/设备实现再读[安卓设计](../会议室录音系统_PRD_v1.3/docs/design/DES-03-安卓端技术设计要求.md)。
@@ -32,6 +42,8 @@
 - 里程碑/真实接入/发布准备：[实施工作包](../会议室录音系统_PRD_v1.3/docs/delivery/DEL-01-里程碑与开发工作包.md)、[决策清单](../会议室录音系统_PRD_v1.3/docs/delivery/DEC-01-决策与实施准备清单.md)、[发布检查](../会议室录音系统_PRD_v1.3/docs/delivery/DEL-02-部署运维与上线检查.md)。只展开当前任务需要的部分。
 
 ## 历史与证据
+
+当前真实实现归档范围与提交验证见[第一阶段归档提交](implementation/phase-one-commit.md)。
 
 `会议室录音系统_PRD_v1.0`至`v1.2`、旧单HTML、旧导出文件和A/B/C对比是历史来源。当前源码初始Git提交保留展开文档；根目录重复ZIP不入库且仍留本机。
 

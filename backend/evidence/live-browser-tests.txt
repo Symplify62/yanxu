@@ -1,0 +1,12 @@
+
+> yanxu-frontend@0.4.0 test:live
+> playwright test -c playwright.live.config.ts
+
+
+Running 1 test using 1 worker
+
+(node:1777) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 tests/live/public.spec.ts:3:1 › 真实服务：匿名列表、逐字稿、分析、播放、下载与刷新 (1.2s)
+
+  1 passed (2.7s)
