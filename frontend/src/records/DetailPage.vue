@@ -51,6 +51,7 @@ const stage = computed(() =>
     () =>
       stage.value === "complete" && (!props.live || !!props.record?.analysis),
   );
+const noSpeech = computed(() => stage.value === "no-speech");
 const analysisData = computed(() =>
   props.live ? props.record?.analysis : props.demoAnalysis,
 );
@@ -63,12 +64,16 @@ const segments = computed(() =>
       }))
     : props.demoTranscript || [],
 );
-const detailTabs = computed(() => [
-  ["analysis", "AI 分析"],
-  ["transcript", "逐字稿"],
-  ["tasks", "行动事项"],
-  ...(props.live ? [["audio", "原始录音"]] : []),
-]);
+const detailTabs = computed(() =>
+  noSpeech.value
+    ? [["audio", "原始录音"]]
+    : [
+        ["analysis", "AI 分析"],
+        ["transcript", "逐字稿"],
+        ["tasks", "行动事项"],
+        ...(props.live ? [["audio", "原始录音"]] : []),
+      ],
+);
 const progress = computed(() =>
   stage.value === "complete"
     ? 4
@@ -138,7 +143,11 @@ async function copy() {
       <p v-if="live && record.interrupted" role="status" class="p1-notice">
         录音曾中断，以下为已保留内容。
       </p>
-      <div class="p1-progress" aria-label="处理进度">
+      <div v-if="noSpeech" class="p1-no-speech" role="status">
+        <strong>未检测到语音</strong>
+        <p>录音已保留，已跳过 AI 分析。</p>
+      </div>
+      <div v-else class="p1-progress" aria-label="处理进度">
         <div
           v-for="(label, i) in [
             '录音已保存',
@@ -181,7 +190,7 @@ async function copy() {
             <button
               v-for="t in detailTabs"
               :key="t[0]"
-              :class="{ active: tab === t[0] }"
+              :class="{ active: tab === t[0] || noSpeech }"
               @click="tab = t[0]!"
             >
               <Sparkles v-if="t[0] === 'analysis'" :size="15" /><FileText
@@ -240,7 +249,7 @@ async function copy() {
                 </div>
               </article></template
             >
-            <div v-else-if="tab === 'audio'" class="live-audio">
+            <div v-else-if="tab === 'audio' || noSpeech" class="live-audio">
               <h2>原始录音</h2>
               <audio
                 v-if="record.hasAudio"

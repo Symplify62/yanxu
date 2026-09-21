@@ -96,6 +96,12 @@ class Transcript(Lease):
 
 
 def validate_transcript(result, duration):
+    if "noSpeech" in result and type(result["noSpeech"]) is not bool:
+        raise ValueError("无语音标识无效")
+    if result.get("noSpeech") is True:
+        if result.get("text") != "" or result.get("segments") != []:
+            raise ValueError("无语音结果包含矛盾内容")
+        return {"noSpeech": True, "text": "", "segments": [], "engine": "Qwen3-ASR-1.7B"}
     segments = result.get("segments")
     if not isinstance(segments, list) or not 1 <= len(segments) <= 100000:
         raise ValueError("转写段落缺失或超过容量")

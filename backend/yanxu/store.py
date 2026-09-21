@@ -79,7 +79,7 @@ class Store:
                     raise Conflict("同一录音编号对应的文件已改变")
                 return dict(row)
             count = db.execute(
-                "SELECT count(*) FROM recordings WHERE state!='complete'"
+                "SELECT count(*) FROM recordings WHERE state NOT IN ('complete','no-speech')"
             ).fetchone()[0]
             if count >= self.settings.max_pending:
                 raise Busy("当前待处理任务较多，请稍后重试")
@@ -193,16 +193,23 @@ class Store:
             ).fetchone()
             if not live:
                 return False
+            no_speech = job["stage"] == "asr" and result.get("noSpeech") is True
+            if no_speech and (result.get("text") != "" or result.get("segments") != []):
+                raise ValueError("无语音结果包含矛盾内容")
             column = "transcript" if job["stage"] == "asr" else "analysis"
             db.execute(
                 f"UPDATE recordings SET {column}=?,state=?,error=NULL WHERE id=?",
                 (
                     json.dumps(result, ensure_ascii=False),
-                    "analyzing" if job["stage"] == "asr" else "complete",
+                    "no-speech"
+                    if no_speech
+                    else "analyzing"
+                    if job["stage"] == "asr"
+                    else "complete",
                     job["recording_id"],
                 ),
             )
-            if job["stage"] == "asr":
+            if job["stage"] == "asr" and not no_speech:
                 db.execute(
                     "UPDATE jobs SET stage='analysis',status='pending',attempts=0,next_at=0,owner=NULL,lease_until=NULL,error=NULL WHERE recording_id=?",
                     (job["recording_id"],),
@@ -245,9 +252,9 @@ class Store:
 
     def list(self, q="", limit=30, offset=0, state_filter="all"):
         condition = (
-            " AND state='complete'"
+            " AND state IN ('complete','no-speech')"
             if state_filter == "complete"
-            else " AND state!='complete'"
+            else " AND state NOT IN ('complete','no-speech')"
             if state_filter == "processing"
             else ""
         )

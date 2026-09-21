@@ -1162,3 +1162,20 @@
     min-height: 330px;
   }
 }
+
+.p1-status.no-speech {
+  background: var(--p1-soft);
+  color: var(--p1-muted);
+}
+.p1-no-speech {
+  padding: 16px;
+  margin-bottom: 16px;
+  border: 1px solid var(--p1-line);
+  border-radius: 8px;
+  background: var(--p1-soft);
+  color: var(--p1-ink);
+}
+.p1-no-speech p {
+  margin: 4px 0 0;
+  color: var(--p1-muted);
+}
