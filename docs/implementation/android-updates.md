@@ -34,6 +34,19 @@ Android允许满足条件的自更新请求USER_ACTION_NOT_REQUIRED，但仍要�
 
 本地：后端39项通过；Java来源/完整性/身份/降级/忙碌门禁测试通过；Android与独立测试APK构建通过。专用5560模拟器上的Instrumentation已验证真实签名读取、拒绝异签名APK、拒绝版本矛盾、录音/导入保护及中断下载状态恢复；测试APK与测试密钥不随产品发布。
 
-已保留0.1.5的4个本地录音文件哈希与业务地址作为覆盖升级基线。公网发布及0.1.6→0.1.7自更新结果待补充。
+已保留0.1.5的4个本地录音文件哈希与业务地址作为覆盖升级基线。公网已发布0.1.7（versionCode=8），版本入口 `/app/update.json` 返回no-store，版本APK与旧下载入口均核对SHA256一致。API运行目录 `/opt/yanxu/releases/20260921-updates`，来源release提交 `cb1a2f5`；发布前SQLite与旧APK备份位于 `/var/lib/yanxu/backups/android-updates-20260921/`，旧代码目录保留，其他业务服务正常。
+
+专用模拟器5560（API36）实测：
+
+- 先用ADB将0.1.5覆盖安装为具备更新能力的0.1.6，这一步明确属于bootstrap。
+- 关闭自动更新后，公网已提供0.1.7，设备仍保持0.1.6；开启后自动检查、下载并校验安装包。
+- 第一次需要在系统中允许言序安装更新；Google Play Protect要求首次安全扫描，扫描后提示可安装并确认。未关闭保护。
+- 之后由言序自己的PackageInstaller会话完成0.1.6→0.1.7。系统读回versionCode=8、versionName=0.1.7，installerPackageName和initiatingPackageName均为cn.jiajian.yanxu；本次升级阶段未使用ADB install。
+- 升级前后4个本地录音文件SHA256全部一致，业务服务地址保持不变。自动更新开关仍为true，更新页显示“已是最新版本”，后台周期任务已登记（waiting）。
+- 测试APK已从模拟器卸载，私有测试安装包与临时测试密钥已清理；保留元数据、截图和校验记录于 `.local-data/evidence/android-updates/`。
+
+实际验证了自动发现/下载、系统要求时交互、App自身覆盖升级及数据保留；这台模拟器首次升级并非零确认。未验证华为真机/OEM静默安装、6小时实时时钟等待或长期运行，不能承诺所有设备每次都无需确认。
+
+旧0.1.5用户通过公网 `/app/yanxu-debug.apk` 覆盖安装一次0.1.7即可获得更新能力；保持同包名/同签名，勿卸载旧版。服务器撤回更新时先撤下版本清单；已安装新版本不自动降级，修复应发布更高versionCode。
 
 后续发布：在release构建递增versionCode的新APK，用 `tools/package_android_update.py --help` 准备分发文件，`--previous-apk` 必须指向当前已发布包以验证同签名和版本递增。先传入清单指定的releases文件并验证SHA256，最后原子替换android-update.json和旧下载入口；既有版本文件保留，不以同versionCode覆盖已发布版本。
