@@ -245,4 +245,7 @@ def create_app(settings=None):
             filename="yanxu-debug.apk",
         )
 
+    from .app_updates import router as updates_router
+    app.include_router(updates_router)
+
     return app

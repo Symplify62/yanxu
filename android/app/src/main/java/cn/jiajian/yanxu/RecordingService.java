@@ -29,8 +29,15 @@ public class RecordingService extends Service {
   @Override
   public int onStartCommand(Intent intent, int flags, int startId) {
     String action = intent == null ? "" : intent.getAction();
-    if ("start".equals(action) && !active) start();
-    else if ("pause".equals(action) && active && running) {
+    if ("start".equals(action) && !active) {
+      synchronized (AppUpdater.GATE) {
+        if (AppUpdater.installing(this)) {
+          android.widget.Toast.makeText(this, "正在安装更新，请稍后录音", android.widget.Toast.LENGTH_SHORT)
+              .show();
+          stopSelf();
+        } else start();
+      }
+    } else if ("pause".equals(action) && active && running) {
       paused = !paused;
       message = paused ? "录音已暂停" : "正在录音";
       try {
