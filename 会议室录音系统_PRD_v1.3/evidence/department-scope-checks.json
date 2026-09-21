@@ -1,0 +1,18 @@
+{
+  "scope": "synthetic_prototype_only",
+  "checks": [
+    {
+      "name": "允许在获授权范围内调整归属",
+      "pass": true
+    },
+    {
+      "name": "开录冻结归属且不开放部门其他资料",
+      "pass": true
+    },
+    {
+      "name": "调整归属后按管理员配置群自动发",
+      "pass": true
+    }
+  ],
+  "product_tests_executed": 0
+}

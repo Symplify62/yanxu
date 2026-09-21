@@ -1,0 +1,65 @@
+[
+  {
+    "name": "v03-01-tablet-scan",
+    "width": 1280,
+    "bodyWidth": 1280,
+    "overflow": false,
+    "dialog": false
+  },
+  {
+    "name": "v03-02-long-recording",
+    "width": 1024,
+    "bodyWidth": 1024,
+    "overflow": false,
+    "dialog": false
+  },
+  {
+    "name": "v03-03-saved-logout",
+    "width": 1024,
+    "bodyWidth": 1024,
+    "overflow": false,
+    "dialog": false
+  },
+  {
+    "name": "v03-04-phone-detail",
+    "width": 390,
+    "bodyWidth": 375,
+    "overflow": false,
+    "dialog": false
+  },
+  {
+    "name": "v03-05-mobile-edit",
+    "width": 390,
+    "bodyWidth": 375,
+    "overflow": false,
+    "dialog": true
+  },
+  {
+    "name": "v03-06-mobile-tasks",
+    "width": 390,
+    "bodyWidth": 375,
+    "overflow": false,
+    "dialog": false
+  },
+  {
+    "name": "v03-07-phone-list",
+    "width": 1280,
+    "bodyWidth": 1280,
+    "overflow": false,
+    "dialog": false
+  },
+  {
+    "name": "v03-08-admin-routes",
+    "width": 1600,
+    "bodyWidth": 1585,
+    "overflow": false,
+    "dialog": false
+  },
+  {
+    "name": "v03-09-admin-exceptions",
+    "width": 960,
+    "bodyWidth": 945,
+    "overflow": false,
+    "dialog": false
+  }
+]

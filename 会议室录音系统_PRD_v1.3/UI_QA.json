@@ -1,0 +1,9 @@
+{
+  "scope": "ui_spec_structure_only",
+  "result": "PASS",
+  "pages": 21,
+  "components": 55,
+  "ui_specs": 21,
+  "errors": [],
+  "product_tests_executed": 0
+}

@@ -1,0 +1,22 @@
+{
+  "scope": "formal_component_frontend_with_msw_only",
+  "version": "0.4.0",
+  "typecheck": "PASS",
+  "build": "PASS",
+  "unit_http_tests": 30,
+  "browser_e2e": 6,
+  "dev_navigation_without_reload": true,
+  "screenshots": 9,
+  "widths": [
+    1600,
+    1280,
+    1024,
+    960,
+    390
+  ],
+  "real_wecom": false,
+  "real_recording": false,
+  "real_ai_or_group_send": false,
+  "production_backend": false,
+  "preview": "http://127.0.0.1:5178/tablet"
+}

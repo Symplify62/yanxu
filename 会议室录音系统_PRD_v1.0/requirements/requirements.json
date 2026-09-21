@@ -1,0 +1,1305 @@
+[
+  {
+    "id": "REQ-REC-001",
+    "title": "设备就绪与首次授权",
+    "rule": "首次配置由管理员完成服务器与会议室绑定、麦克风权限和设备身份注册。正常会议沿用有效配置，无须再次登录或扫码。未完成绑定的正式设备不得默默生成无主录音；开发模式独立标识。",
+    "feedback": "就绪页分别显示麦克风、存储、设备授权和网络。网络断开与设备未授权必须显示为不同问题。",
+    "basis": "已确认目标＋建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-REC-001"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-01-平板录音端.md",
+    "work_package": "WP-01/WP-02"
+  },
+  {
+    "id": "REQ-REC-002",
+    "title": "明确开始与单会话互斥",
+    "rule": "开始必须由前台可见操作触发。分配可离线生成的会话唯一标识；同一设备同一时刻只允许一个采集会话。连点、旋转或重建界面不能重复启动。首次获得有效采音/写入确认后才显示录音中。",
+    "feedback": "初始化失败回到可重试状态，保留诊断但不伪造时长。不得在重启或远程管理时偷偷启动麦克风。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-REC-002"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-01-平板录音端.md",
+    "work_package": "WP-01/WP-02"
+  },
+  {
+    "id": "REQ-REC-003",
+    "title": "录音状态与静音诊断",
+    "rule": "计时按实际音频时间与暂停区间计算，不仅依靠界面计时器。显示输入活动和采集错误。连续低输入仅提醒，不自动判断会议结束，不自动丢弃静音部分。",
+    "feedback": "静音提示使用“暂未检测到明显声音，请检查”，不保证一定是故障。权限撤销和设备异常采用明确错误。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-REC-003",
+      "E2E-021"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-01-平板录音端.md",
+    "work_package": "WP-01/WP-02"
+  },
+  {
+    "id": "REQ-REC-004",
+    "title": "暂停、继续与时间轴",
+    "rule": "暂停期间不采集可回放音频，继续仍属于同一会议。记录暂停边界和墙上时间；播放时间轴只包含已采音内容，界面同时区分实际录音时长与会议经过时长。",
+    "feedback": "快速切换不得重复创建文件或丢失已封存内容；失败状态不可显示继续成功。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-REC-004"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-01-平板录音端.md",
+    "work_package": "WP-01/WP-02"
+  },
+  {
+    "id": "REQ-REC-005",
+    "title": "正常结束与本地封存",
+    "rule": "员工操作结束后停止采集，完成片段收尾、必要本地记录和可恢复性检查，才显示已保存。保存成功立即自动创建待上传任务，返回首页可开始下一场，不要求手动点击上传。",
+    "feedback": "保存失败/文件不完整用不同状态；结束不是取消或删除。音频太短也必须给出实际结果，不虚构成功文件。",
+    "basis": "已确认目标＋建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-REC-005",
+      "E2E-001",
+      "E2E-025"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-01-平板录音端.md",
+    "work_package": "WP-01/WP-02"
+  },
+  {
+    "id": "REQ-REC-006",
+    "title": "离线录音与恢复",
+    "rule": "已配对、离线配置有效、权限和空间满足时允许离线录音。将录音绑定到采集时的会议室、设备和配置版本。断网或 AI 不可用不阻止已授权录音；恢复后自动尝试上传。",
+    "feedback": "首次激活仍需联机；离线授权过期禁止新录音但保护旧文件。离线无法即时知道服务器撤销，应告知管理员该边界。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-REC-006",
+      "E2E-002",
+      "E2E-023"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-01-平板录音端.md",
+    "work_package": "WP-01/WP-02"
+  },
+  {
+    "id": "REQ-REC-007",
+    "title": "后台、熄屏与系统限制",
+    "rule": "目标系统上录音跨界面切换、熄屏继续；实现必须遵守权限与可见录音服务要求。用户强制停止、进程被杀或系统撤销权限不承诺连续录音，应检测中断并保留已写入内容。",
+    "feedback": "系统限制说明见 EXT-01/02；模拟器不能取代实机验证。恢复 App 不自动续开麦克风。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-REC-007",
+      "E2E-003",
+      "E2E-021"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-01-平板录音端.md",
+    "work_package": "WP-01/WP-02"
+  },
+  {
+    "id": "REQ-REC-008",
+    "title": "异常保护与恢复",
+    "rule": "录音要周期性形成可恢复的数据边界；具体分段或容器方案由技术验证决定。重开 App 扫描未正常结束会话，区分可恢复片段和缺口。保存原件、缺口及恢复过程，后续内容标为不完整。",
+    "feedback": "不承诺断电零丢失；最大未封存窗口是待批准指标。恢复内容默认需人工核对后才能分发。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-REC-008",
+      "E2E-003"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-01-平板录音端.md",
+    "work_package": "WP-01/WP-02"
+  },
+  {
+    "id": "REQ-REC-009",
+    "title": "低空间、低电与输入变化",
+    "rule": "开始前做空间与音频可用性预检；录音中监测空间、电源和输入切换。阈值配置化。空间达到危险线时优先尝试安全结束并告警，绝不能为腾空间删除未归档会议。",
+    "feedback": "电量低提示接电；无法安全保存则显示实际失败。输入设备改变记录时间并提示，不静默当作无变化。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-REC-009",
+      "E2E-017"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-01-平板录音端.md",
+    "work_package": "WP-01/WP-02"
+  },
+  {
+    "id": "REQ-REC-010",
+    "title": "公用界面与保密开关",
+    "rule": "公用首页显示默认录音和外发提示，不显示历史正文。可选择“本场限制分享”，允许降低外发范围；从限制状态恢复自动外发必须经业务授权。可选部门/类型不能强迫每场填写，也不能由 AI 决定路由。",
+    "feedback": "限制分享与本地 AI 并非同义；原本禁云的会议不能因为只归档就自动发给云 AI。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-REC-010",
+      "E2E-007",
+      "E2E-025"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-01-平板录音端.md",
+    "work_package": "WP-01/WP-02"
+  },
+  {
+    "id": "REQ-REC-011",
+    "title": "长期使用与升级边界",
+    "rule": "繁忙时不自动安装升级、解绑、清空数据或计划重启；空闲可按维护配置执行。设备重新启动先恢复界面与待上传状态，不自动开启新录音。",
+    "feedback": "管理员计划操作需展示未上传会话数量和风险；签名、升级回退见技术与运维附件。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-REC-011",
+      "E2E-026"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-01-平板录音端.md",
+    "work_package": "WP-01/WP-02"
+  },
+  {
+    "id": "REQ-REC-012",
+    "title": "模拟器与测试模式",
+    "rule": "提供真实采音与测试文件注入两条验证入口。测试入口只在开发/测试构建存在，所有产物带 test 标记，不流入生产 AI 或真实群。记录模拟器版本、镜像、宿主机权限与采音结果。",
+    "feedback": "EXT-03 提供宿主麦克风开关；EXT-01 仍要求真机测试。遇到不支持的环境继续用测试音频开发，不把注入通过记为采集通过。",
+    "basis": "已确认模拟器开发＋建议隔离",
+    "priority": "P0",
+    "test_ids": [
+      "TC-REC-012",
+      "E2E-024"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-01-平板录音端.md",
+    "work_package": "WP-01/WP-02"
+  },
+  {
+    "id": "REQ-UPL-001",
+    "title": "唯一身份与幂等建会",
+    "rule": "使用设备身份＋客户端会话标识建立稳定映射。相同录音重复提交返回既有会议，不重新创建。会话即使改标题、改会议室名称，身份也不改变。",
+    "feedback": "未经授权的设备不得伪造其他会议室；不使用时间戳或文件名作为唯一去重依据。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-UPL-001",
+      "E2E-004"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-02-上传与音频归档.md",
+    "work_package": "WP-02"
+  },
+  {
+    "id": "REQ-UPL-002",
+    "title": "完整接收与收据",
+    "rule": "完整接收应校验清单、片段大小/完整性、文件可读性及存储与会议记录持久性。完成后生成稳定接收收据，独立排队后续任务。不等 AI 返回才答复上传。",
+    "feedback": "收到请求或缓存完毕不是最终接收；部分内容存在时保持待完成/不完整状态。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-UPL-002",
+      "E2E-001",
+      "E2E-005"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-02-上传与音频归档.md",
+    "work_package": "WP-02"
+  },
+  {
+    "id": "REQ-UPL-003",
+    "title": "中断续传与有界重试",
+    "rule": "网络变化时保留待传范围，支持分段或等效可恢复上传。采用可配置的有限重试和退避，认证失败、非法文件不进行无意义无限重试。重启后恢复队列。",
+    "feedback": "网络不可用显示待网络；达到自动重试上限转管理员处理，原件保留。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-UPL-003",
+      "E2E-002",
+      "E2E-005"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-02-上传与音频归档.md",
+    "work_package": "WP-02"
+  },
+  {
+    "id": "REQ-UPL-004",
+    "title": "标识相同内容不同的冲突",
+    "rule": "同设备同会话或片段标识但内容摘要不同，标为冲突并隔离新副本，不覆盖既有原件。管理员根据证据选择保留为独立恢复件或拒绝，必须留痕。",
+    "feedback": "不得仅以最后上传时间胜出；冲突会议自动处理和分发暂停。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-UPL-004",
+      "E2E-004"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-02-上传与音频归档.md",
+    "work_package": "WP-02"
+  },
+  {
+    "id": "REQ-UPL-005",
+    "title": "片段、暂停与完整性",
+    "rule": "存储录音会话清单，包含片段顺序、采集边界、暂停和异常缺口。拼接或衍生播放文件必须可回溯至原片段。声学静音不自动算缺片；缺片不以静音填充后伪称完整。",
+    "feedback": "原始片段可回放的范围应明确；人工接受不完整记录也不能抹掉缺口标记。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-UPL-005",
+      "E2E-003"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-02-上传与音频归档.md",
+    "work_package": "WP-02"
+  },
+  {
+    "id": "REQ-UPL-006",
+    "title": "并行会议与资源隔离",
+    "rule": "上一场正在上传或处理时，新会议仍可开始；旧任务不能占用采集资源到导致新录音丢音。所有状态及文件按会话隔离，失败不影响其他会议。",
+    "feedback": "首期并行度可低，但不得设计为只能等纪要结束才录下一场。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-UPL-006",
+      "E2E-017"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-02-上传与音频归档.md",
+    "work_package": "WP-02"
+  },
+  {
+    "id": "REQ-UPL-007",
+    "title": "本地清理条件",
+    "rule": "只有服务端已确认归档、满足批准的本地保留及备份条件、无冲突/保留锁时才可自动清理本地原件。清理产生清单与审计；策略未批准时禁用自动删除。",
+    "feedback": "开发期不自动删正式资料；空间不足提示维护，不删除唯一副本。下载到终端的临时播放缓存另行短期管理。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-UPL-007",
+      "E2E-017"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-02-上传与音频归档.md",
+    "work_package": "WP-02"
+  },
+  {
+    "id": "REQ-UPL-008",
+    "title": "上传安全与限额",
+    "rule": "设备仅能上传自身授权内容；验证真实格式、大小、清单长度，限制异常压缩/解析资源。文件名作为显示数据，不作为服务端路径。存储私有，不允许裸地址匿名读取。",
+    "feedback": "拒绝原因可诊断但不泄露密钥和存储路径；任意 URL 导入不是首期入口。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-UPL-008"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-02-上传与音频归档.md",
+    "work_package": "WP-02"
+  },
+  {
+    "id": "REQ-UPL-009",
+    "title": "撤销设备与恢复数据",
+    "rule": "设备被撤销后停止普通上传与获取业务信息，但本地原件不销毁。提供管理员批准的受控恢复流程，验证归属、清单与隔离区，不能通过“恢复模式”绕过身份校验。",
+    "feedback": "断网设备无法即时感知撤销是已知边界；重连拒绝须提示联系管理员而非循环删除重建。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-UPL-009",
+      "E2E-016"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-02-上传与音频归档.md",
+    "work_package": "WP-02"
+  },
+  {
+    "id": "REQ-UPL-010",
+    "title": "原件与派生件的生命周期",
+    "rule": "原件、播放文件、转写导出、纪要导出分别记录来源与保留规则。替换算法或重新转码创建新派生件；删除会议应按 NFR-01 覆盖关联物、索引、待处理任务和备份恢复删除清单。",
+    "feedback": "处于调查/业务保留锁时暂缓物理删除并记录原因；不能把“回收站隐藏”显示为彻底删除。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-UPL-010"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-02-上传与音频归档.md",
+    "work_package": "WP-02"
+  },
+  {
+    "id": "REQ-AI-001",
+    "title": "处理准入与路由",
+    "rule": "只有音频已归档且当前 AI 数据策略允许，才能排队处理。允许服务名单按音频和文字分别限制。无配置保持待配置；异常音频进入检查。每次外部调用前重新校验当前禁用/保密策略。",
+    "feedback": "不因为本地模型失败自动改用云端；数据已发送后不能宣称撤销能收回。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-AI-001",
+      "E2E-008"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-03-转写纪要与行动事项.md",
+    "work_package": "WP-04"
+  },
+  {
+    "id": "REQ-AI-002",
+    "title": "中文转写与时间定位",
+    "rule": "输出可搜索的中文片段，并定位到可回放音频时间。分段识别可合并，但要处理重叠去重并保留源片段关联。厂商没有原生时间戳时不能伪造精确定位，应选合适服务或标注待对齐。",
+    "feedback": "听不清显示不确定标记；保留姓名、数字、单位原意。不得只返回翻译或提要当逐字稿。",
+    "basis": "已确认逐字稿＋建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-AI-002"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-03-转写纪要与行动事项.md",
+    "work_package": "WP-04"
+  },
+  {
+    "id": "REQ-AI-003",
+    "title": "说话人分段与人工映射",
+    "rule": "允许按会话区分说话人标签，标签不跨会议自动认定同一人。支持授权用户把标签映射为显示姓名；五人场景作为验收样本，不强迫算法输出五个标签。",
+    "feedback": "说话人分离能力不足时显示未知或待核对，不得为填满五人制造标签。重叠发言允许标记多人/不清楚。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-AI-003"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-03-转写纪要与行动事项.md",
+    "work_package": "WP-04"
+  },
+  {
+    "id": "REQ-AI-004",
+    "title": "会议纪要内容",
+    "rule": "基于指定转写版本生成结构化概述、议题、关键讨论、明确决定和未决问题。与源片段关联。机器稿清楚标注未经人工核对，不把问句、假设、否定或建议当成承诺。",
+    "feedback": "输入不足时显示无法充分总结及原因；不得编造会议标题中的业务信息。",
+    "basis": "已确认纪要＋建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-AI-004",
+      "E2E-001"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-03-转写纪要与行动事项.md",
+    "work_package": "WP-04"
+  },
+  {
+    "id": "REQ-AI-005",
+    "title": "行动事项提取",
+    "rule": "提取明确的待办，并保存任务说明、负责人原文、日期原文、对应证据。未明确负责人/期限时字段为空且标待确认。日期解析和账号映射须可人工确认；不得自动创建企业微信任务或考核。",
+    "feedback": "“我来处理”在说话人身份未知时不能映射到某员工；条件性承诺保留条件。",
+    "basis": "已确认行动事项＋建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-AI-005",
+      "E2E-023"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-03-转写纪要与行动事项.md",
+    "work_package": "WP-04"
+  },
+  {
+    "id": "REQ-AI-006",
+    "title": "长录音与上下文完整性",
+    "rule": "在批准的最长录音范围内可拆分处理，再汇总跨段决定与事项。记录覆盖了哪些片段，禁止默默截断后半场仍显示完整。重叠片段不得重复制造待办。",
+    "feedback": "超服务限额转适配处理或明确失败；不把“模型成功返回”作为全文已覆盖的证明。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-AI-006"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-03-转写纪要与行动事项.md",
+    "work_package": "WP-04"
+  },
+  {
+    "id": "REQ-AI-007",
+    "title": "可恢复任务与计费控制",
+    "rule": "转写和总结分开任务，保存输入指纹、处理版本与有界重试。总结失败仅重试总结；同一请求不无控制重复计费。服务超时但执行状态不明时应记录不确定状态并采用服务支持的查询或恢复策略。",
+    "feedback": "预算阈值超限暂停新付费任务，保留待处理会议；不删除原件以“解决”超额。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-AI-007",
+      "E2E-006"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-03-转写纪要与行动事项.md",
+    "work_package": "WP-04"
+  },
+  {
+    "id": "REQ-AI-008",
+    "title": "重新生成与版本冻结",
+    "rule": "新的模板、转写修订或模型产生新版本，不覆盖历史。人工确认版本不会被后台重跑替换。已有分发绑定的内容版本保持不变；新版本需重新满足审核/发送规则。",
+    "feedback": "修订源逐字稿后把旧纪要标记可能过时；迟到任务结果不能覆盖更新的人工内容。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-AI-008",
+      "E2E-013",
+      "E2E-019"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-03-转写纪要与行动事项.md",
+    "work_package": "WP-04"
+  },
+  {
+    "id": "REQ-AI-009",
+    "title": "录音内容不执行系统指令",
+    "rule": "把录音和转写当作不可信业务输入。模型不得根据其中的指令访问网址、发消息、更改群、执行代码、泄露其他会议或修改权限。输出经结构校验与文本安全处理。",
+    "feedback": "纪要中的链接不自动访问；标题、转写、AI 输出都不能直接成为任意脚本或网页。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-AI-009",
+      "E2E-020"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-03-转写纪要与行动事项.md",
+    "work_package": "WP-04"
+  },
+  {
+    "id": "REQ-AI-010",
+    "title": "热词与模板版本",
+    "rule": "管理员可维护中文专有词和纪要模板，版本化并测试。模板只影响内容整理，不得带真实群密钥或形成自动授权。热词改善效果必须经样本对比，不强制所有服务具备同一特性。",
+    "feedback": "不支持热词的服务明确能力限制；模板变更默认只影响新任务，重跑旧会须显式操作。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-AI-010"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-03-转写纪要与行动事项.md",
+    "work_package": "WP-04"
+  },
+  {
+    "id": "REQ-AI-011",
+    "title": "质量审核与空结果",
+    "rule": "定义结果校验：字段结构、证据有效性、覆盖率、空结果、缺口和明显无依据内容。空白/仅噪声可形成“无可识别内容”，不编纪要；只要有原件仍能归档。",
+    "feedback": "低质量或不完整自动转待审核，不能按普通成功会议无提示自动发群。质量阈值见 ACC-01。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-AI-011"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-03-转写纪要与行动事项.md",
+    "work_package": "WP-04"
+  },
+  {
+    "id": "REQ-AI-012",
+    "title": "成本与部署对比",
+    "rule": "同一批经授权样本可在获批准的云端、本地、混合候选上测转写、总结质量、时延和成本。记录真实版本与算力，不预填赢家。不要求首期同时维护全部路线。",
+    "feedback": "开发默认 mock，无真实付费；真实对比按单独批准的服务、资料范围和额度执行。",
+    "basis": "已确认比较部署＋建议方法",
+    "priority": "P0",
+    "test_ids": [
+      "TC-AI-012"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-03-转写纪要与行动事项.md",
+    "work_package": "WP-04"
+  },
+  {
+    "id": "REQ-LIB-001",
+    "title": "授权列表与搜索",
+    "rule": "用户登录后按对象访问策略查询会议。筛选会议室、时间、标题和状态，允许全文关键字搜索已授权文本。筛选计数、自动补全和搜索片段也执行权限过滤。",
+    "feedback": "未知或无权对象采用一致的不泄露反馈；公用平板设备账号没有历史全文列表权限。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-LIB-001",
+      "E2E-015"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-04-会议记录与人工修订.md",
+    "work_package": "WP-03/WP-04"
+  },
+  {
+    "id": "REQ-LIB-002",
+    "title": "四类资料统一详情",
+    "rule": "一场会议聚合原始音频、逐字稿、纪要和事项，分别显示版本、完整性、处理状态、来源。尚未生成时显示处理中/失败/未配置，而非伪造空白成功。",
+    "feedback": "能先看已授权且已完成部分；例如纪要失败不阻止有权用户回听原件。",
+    "basis": "已确认完整资料＋建议界面",
+    "priority": "P0",
+    "test_ids": [
+      "TC-LIB-002",
+      "E2E-006"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-04-会议记录与人工修订.md",
+    "work_package": "WP-03/WP-04"
+  },
+  {
+    "id": "REQ-LIB-003",
+    "title": "播放、定位与下载",
+    "rule": "逐字稿/事项证据可跳到有效音频位置；暂停与异常缺口映射一致。播放与下载每次校验权限，采用受控响应或短效访问方式，撤权在下一受控请求生效。",
+    "feedback": "已下载副本和已缓存播放内容不能承诺远程删除；访问令牌有效期需记录。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-LIB-003",
+      "E2E-015"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-04-会议记录与人工修订.md",
+    "work_package": "WP-03/WP-04"
+  },
+  {
+    "id": "REQ-LIB-004",
+    "title": "人工纠错与版本记录",
+    "rule": "有权限用户可修改标题、正文、姓名映射和事项；保存前后差异、修改人、时间、原因及来源版本。机器原始版本不可被无痕覆盖。证据仍指向明确版本。",
+    "feedback": "编辑界面区分保存草稿与审核通过；不因为保存文字就自动发送。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-LIB-004",
+      "E2E-013"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-04-会议记录与人工修订.md",
+    "work_package": "WP-03/WP-04"
+  },
+  {
+    "id": "REQ-LIB-005",
+    "title": "并发编辑与过时结果",
+    "rule": "同一内容并发编辑使用版本检查。版本不一致拒绝无提示覆盖，展示冲突并让用户合并或重载。转写变化标记关联纪要/事项可能过时。",
+    "feedback": "旧 AI 结果晚到不覆盖人工稿；选择保留旧内容必须显式确认。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-LIB-005",
+      "E2E-012"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-04-会议记录与人工修订.md",
+    "work_package": "WP-03/WP-04"
+  },
+  {
+    "id": "REQ-LIB-006",
+    "title": "行动事项确认",
+    "rule": "每项事项有待确认、已确认、不采纳等整理状态；有权限者补负责人/期限或更正内容，保留原始提取。确认不等于负责人已接单或任务已完成。",
+    "feedback": "显示实名来源和日期解析依据；无证据的人工新增标为人工补充。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-LIB-006"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-04-会议记录与人工修订.md",
+    "work_package": "WP-03/WP-04"
+  },
+  {
+    "id": "REQ-LIB-007",
+    "title": "受控导出",
+    "rule": "首期支持单场授权导出：原音频按权限获取；逐字稿、纪要、事项以可读文件导出，首期格式建议 TXT/Markdown 与事项 JSON。记录会议及版本、完整性、生成时间和导出者。",
+    "feedback": "批量导出及精排 PDF/Word 为 P1；导出需消除可执行注入，不包含后台密钥。管理员可禁导出。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-LIB-007"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-04-会议记录与人工修订.md",
+    "work_package": "WP-03/WP-04"
+  },
+  {
+    "id": "REQ-LIB-008",
+    "title": "删除、撤权与保留锁",
+    "rule": "业务授权人员申请删除，按保留策略与审核执行；记录进入不可常规访问状态，并停止未完成处理/分发。保留锁阻止物理清理，理由和到期复核可查。",
+    "feedback": "删除不是擦除审计证据；已发群摘要不能保证撤回。详细生命周期依 NFR-01。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-LIB-008",
+      "E2E-019"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-04-会议记录与人工修订.md",
+    "work_package": "WP-03/WP-04"
+  },
+  {
+    "id": "REQ-LIB-009",
+    "title": "分享入口与移动访问",
+    "rule": "群中入口指向公司受控详情或指定已发送版本。首次登录后回到原授权会议。对象标识难猜不能代替认证；无登录/无权用户不得看到标题、摘要、音频。",
+    "feedback": "外网可达方式与登录方案待批准；企业微信内能打开页面不等于天然获得身份或权限。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-LIB-009",
+      "E2E-001",
+      "E2E-014"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-04-会议记录与人工修订.md",
+    "work_package": "WP-03/WP-04"
+  },
+  {
+    "id": "REQ-LIB-010",
+    "title": "关联状态与审计可见性",
+    "rule": "详情展示处理版本、审核、分发目标及结果，并区分系统事件和人工操作；不展示完整密钥、存储凭证或敏感运行日志。维护者只看必要的故障元数据。",
+    "feedback": "“接口已接收”不是已读；数据状态说明采用 STATE-01 统一文案。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-LIB-010"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-04-会议记录与人工修订.md",
+    "work_package": "WP-03/WP-04"
+  },
+  {
+    "id": "REQ-DIST-001",
+    "title": "三种分发模式",
+    "rule": "实现自动发送、审核后发送、仅归档。普通已配置会议在内容满足条件时自动推进；配置缺失进入未配置，保密限制进入禁止。生产初始禁发，测试仅预览。",
+    "feedback": "只归档不自动审核也不自动发群；未配置不能偷偷使用最后一个群。",
+    "basis": "用户要求可配置＋建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-DIST-001",
+      "E2E-001",
+      "E2E-009"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-05-分发与审核.md",
+    "work_package": "WP-05"
+  },
+  {
+    "id": "REQ-DIST-002",
+    "title": "规则匹配与冲突",
+    "rule": "按会议室、已提供的类型/部门和显式优先级匹配，按 STATE-01 处理冲突。展示命中规则、版本和原因。缺部门只能命中明确允许的默认规则，不猜测分类。",
+    "feedback": "同级多个不同结果阻断并通知配置负责人；无自动“取第一个”。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-DIST-002",
+      "E2E-007",
+      "E2E-009"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-05-分发与审核.md",
+    "work_package": "WP-05"
+  },
+  {
+    "id": "REQ-DIST-003",
+    "title": "保密与动态收紧",
+    "rule": "任何时点将会议设为更严格模式、删除或全局停发，都要在尚未发送的任务执行前拦截。已经提交到外部渠道的消息不能保证召回；系统保留披露记录及后续撤权。",
+    "feedback": "普通操作人员可收紧，不可扩大分享。仅归档、禁云、内容访问三个约束分别生效。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-DIST-003",
+      "E2E-007",
+      "E2E-022"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-05-分发与审核.md",
+    "work_package": "WP-05"
+  },
+  {
+    "id": "REQ-DIST-004",
+    "title": "审核绑定内容和目标版本",
+    "rule": "审核通过绑定纪要版本、消息预览、目标集合和策略版本。内容或目标变化使原审核失效；原作者能否自审属于待批准配置，默认测试允许但标记，正式必须显式设定。",
+    "feedback": "审核意见与否决原因留痕；审核不是“以后所有版本都可发”。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-DIST-004",
+      "E2E-012"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-05-分发与审核.md",
+    "work_package": "WP-05"
+  },
+  {
+    "id": "REQ-DIST-005",
+    "title": "可预览消息与内容限额",
+    "rule": "生成会议时间、会议室、简短摘要、可选事项、版本、完整记录入口及 AI 提醒。模板确定性裁剪到渠道限制内，不在字符中间破坏中文；完整信息留受控页面。",
+    "feedback": "具体字节/频率限制由适配器按当前渠道文档核实；无需长文拆成大量群消息。低质量会议必须可见标记。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-DIST-005"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-05-分发与审核.md",
+    "work_package": "WP-05"
+  },
+  {
+    "id": "REQ-DIST-006",
+    "title": "发送任务去重与多目标状态",
+    "rule": "同会议＋内容版本＋目标＋发送类型建立稳定业务去重。重复完成事件只产生一个逻辑任务。多目标各自记录，不因一个失败重复发送已成功目标。",
+    "feedback": "人工补发需要新动作和理由，明确标记补发；不承诺外部渠道支持端到端恰好一次。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-DIST-006",
+      "E2E-004",
+      "E2E-010",
+      "E2E-011"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-05-分发与审核.md",
+    "work_package": "WP-05"
+  },
+  {
+    "id": "REQ-DIST-007",
+    "title": "超时、限流与未知结果",
+    "rule": "按真实渠道返回判定已接收、明确失败或结果待确认。明确未成功可有界重试；请求可能已送达但响应丢失时进入未知结果，默认不自动盲重发，交人工确认。",
+    "feedback": "发送成功显示渠道已接收，不显示已读。未知结果经确认重发可能重复，应告知操作者。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-DIST-007",
+      "E2E-010"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-05-分发与审核.md",
+    "work_package": "WP-05"
+  },
+  {
+    "id": "REQ-DIST-008",
+    "title": "凭证和连接测试",
+    "rule": "Webhook 由授权管理员录入受控服务端，保存后仅显示掩码与连接名。校验发送目标属于批准的渠道域与协议，防止任意地址访问。测试先显示目标和虚构内容，明确授权才真实发送。",
+    "feedback": "测试群和正式群隔离；日志/错误不得回显 URL 密钥。轮换凭证不自动把历史待发任务发送。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-DIST-008"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-05-分发与审核.md",
+    "work_package": "WP-05"
+  },
+  {
+    "id": "REQ-DIST-009",
+    "title": "发送与阅读权限分离",
+    "rule": "策略管理员明确群受众可接收的摘要范围，详情单独按登录对象授权。群名单不能从机器人 URL 推断；接收群与内部访问组的映射需人工登记、定期复核。",
+    "feedback": "正文访问被撤销时未来请求拒绝，但无法撤销群里已经看到的摘要或下载副本。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-DIST-009",
+      "E2E-014"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-05-分发与审核.md",
+    "work_package": "WP-05"
+  },
+  {
+    "id": "REQ-DIST-010",
+    "title": "修订后再发布",
+    "rule": "已发送的纪要快照不覆盖。人工确认新版本后，可显式发布更正版，标注版本与更正说明；不得每次编辑自动重复发群。对未发送旧任务按版本失效规则取消。",
+    "feedback": "旧链接显示其原版本和存在新版提示，不把旧消息内容偷偷替换。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-DIST-010",
+      "E2E-013"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-05-分发与审核.md",
+    "work_package": "WP-05"
+  },
+  {
+    "id": "REQ-DIST-011",
+    "title": "可解释的配置预演",
+    "rule": "发布规则前选择合成样例或授权已有会议预演，只计算结果，不发消息。显示预计模式、目标、内容范围、审核和权限冲突。发布新规则默认仅作用新会议。",
+    "feedback": "重评历史待发会议须显式范围和数量确认，重新校验权限和审核。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-DIST-011",
+      "E2E-009",
+      "E2E-022"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-05-分发与审核.md",
+    "work_package": "WP-05"
+  },
+  {
+    "id": "REQ-DIST-012",
+    "title": "异常告警与停发",
+    "rule": "提供全局停发开关及异常列表；停发不阻断录音/归档。运维告警默认只包含编号、错误和受控入口，不把会议正文送到运维群。渠道故障不能依赖同一个已坏渠道作为唯一告警。",
+    "feedback": "停发后仍需处理外部已提交的未知结果；恢复时受控重评，不无条件清空全部队列。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-DIST-012",
+      "E2E-011"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-05-分发与审核.md",
+    "work_package": "WP-05"
+  },
+  {
+    "id": "REQ-ADM-001",
+    "title": "会议室与设备配对",
+    "rule": "管理员创建会议室并用一次性配对方式绑定平板。设备凭证有独立标识、作用域和撤销方式；一次性配对信息不可永久复用。会议室改名不重写历史采集快照。",
+    "feedback": "设备更换可绑定同会议室；旧设备的未上传数据按受控恢复处理。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-ADM-001",
+      "E2E-016"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-06-设备配置与管理.md",
+    "work_package": "WP-03/WP-06"
+  },
+  {
+    "id": "REQ-ADM-002",
+    "title": "账号、角色和对象范围",
+    "rule": "提供最小可用登录与人工配置账号/访问组，或经审批复用现有身份系统。录音设备身份与用户身份分开。停用用户后撤销会话并停止新访问；企业微信登录是可后置适配，不等同群推送。",
+    "feedback": "无共享默认管理员密码；首个管理员由部署者一次性设置。管理权限授予须审计。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-ADM-002"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-06-设备配置与管理.md",
+    "work_package": "WP-03/WP-06"
+  },
+  {
+    "id": "REQ-ADM-003",
+    "title": "设备健康与离线状态",
+    "rule": "设备上报最近在线、App/系统版本、采集状态、存储和待传数量。显示上报时间，超时转离线或未知。告警只反映可观测事实，不把未上报解释为正常。",
+    "feedback": "不采集无关员工应用内容和身份数据；指标不要求持续录音或监听。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-ADM-003"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-06-设备配置与管理.md",
+    "work_package": "WP-03/WP-06"
+  },
+  {
+    "id": "REQ-ADM-004",
+    "title": "配置版本与生效边界",
+    "rule": "配置由草稿、校验、发布、回退组成。设备开始时保存配置快照；录音参数变更不破坏正在录音。安全禁用、访问收紧和全局停发在服务端下一相关动作前检查。",
+    "feedback": "回退是发布一个新版本而非抹掉历史；放宽数据外发不自动应用旧录音。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-ADM-004",
+      "E2E-022"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-06-设备配置与管理.md",
+    "work_package": "WP-03/WP-06"
+  },
+  {
+    "id": "REQ-ADM-005",
+    "title": "AI 连接、费用和数据边界",
+    "rule": "分别配置音频转写、文字总结的允许服务、部署位置、数据地域说明、预算与限额。新增外部服务需要批准。连接测试只用合成材料，默认不测试真实会议。",
+    "feedback": "服务配置未批准不阻断本地采音和归档，只保持待处理；密钥仅存受控后端。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-ADM-005",
+      "E2E-008"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-06-设备配置与管理.md",
+    "work_package": "WP-03/WP-06"
+  },
+  {
+    "id": "REQ-ADM-006",
+    "title": "异常恢复工作台",
+    "rule": "提供按失败类型的重试、重新授权、冲突调查、补传恢复与停止操作；展示影响会议和预期结果。恢复不重新计入已成功的上传/分发，不允许跳过权限校验。",
+    "feedback": "批量危险动作须范围预览和确认；恢复理由进入审计。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-ADM-006"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-06-设备配置与管理.md",
+    "work_package": "WP-03/WP-06"
+  },
+  {
+    "id": "REQ-ADM-007",
+    "title": "审计与隐私最小化",
+    "rule": "记录绑定、权限、查看/下载、修订、审核、规则发布、发送、恢复、删除等事件及操作者或设备身份、时间和对象。普通日志记录相关标识和错误码，不记录凭证/全文。",
+    "feedback": "匿名录音只记设备，不编造人员；读取音频的事件不能宣称用户已听完整会议。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-ADM-007"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-06-设备配置与管理.md",
+    "work_package": "WP-03/WP-06"
+  },
+  {
+    "id": "REQ-ADM-008",
+    "title": "保留策略与容量治理",
+    "rule": "管理员配置经批准的设备、服务器、派生件和备份保留策略；显示容量预测、保留锁和待清理数量。策略缩短先预演，不立即批量永久删除。",
+    "feedback": "保留期未批准时禁自动删除并阻断正式上线；试用测试数据单独管理。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-ADM-008"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-06-设备配置与管理.md",
+    "work_package": "WP-03/WP-06"
+  },
+  {
+    "id": "REQ-ADM-009",
+    "title": "备份与恢复演练",
+    "rule": "备份原件、业务库、权限、必要配置和独立可恢复的密钥材料，敏感部分分开控制。恢复演练校验音频、版本、权限、待发去重、删除清单和审计；恢复环境默认禁发。",
+    "feedback": "恢复目标时间与允许数据损失由指标批准，不能只以备份任务显示成功验收。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-ADM-009",
+      "E2E-018"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-06-设备配置与管理.md",
+    "work_package": "WP-03/WP-06"
+  },
+  {
+    "id": "REQ-ADM-010",
+    "title": "环境与发布门禁",
+    "rule": "区分开发、测试、试点、正式环境的账号、数据、存储和外部凭证；构建和迁移可追溯。生产启用必须满足 ACC-01 与 BASE-01 门禁，不因为模拟器通过就自动开群。",
+    "feedback": "首期允许轻量部署，不要求微服务；提供回退和故障处置说明。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-ADM-010",
+      "E2E-024",
+      "E2E-026"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/product/PRD-06-设备配置与管理.md",
+    "work_package": "WP-03/WP-06"
+  },
+  {
+    "id": "REQ-SEC-001",
+    "title": "认证与对象级授权",
+    "rule": "所有内容端点、搜索、统计、媒体播放/范围请求、下载和导出在服务端校验用户及会议范围。设备令牌只能上传和查询自身必要状态，不可充当管理员令牌。",
+    "feedback": "未认证返回登录入口但不渲染内容；无权请求不得靠猜ID读取。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-SEC-001",
+      "E2E-014",
+      "E2E-015"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/rules/ACL-01-角色权限与数据访问.md",
+    "work_package": "WP-02至WP-06"
+  },
+  {
+    "id": "REQ-SEC-002",
+    "title": "权限变更和凭证撤销",
+    "rule": "停用账号、撤销对象授权和设备凭证在下一受控请求生效；缓存与短效文件凭证的残余窗口必须记录。公用设备退出维护态清理用户会话和内容缓存。",
+    "feedback": "不承诺抹去已下载资料；最大缓存窗口需在设计与验收中明确。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-SEC-002",
+      "E2E-016"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/rules/ACL-01-角色权限与数据访问.md",
+    "work_package": "WP-02至WP-06"
+  },
+  {
+    "id": "REQ-SEC-003",
+    "title": "秘密与传输保护",
+    "rule": "正式传输受保护；凭证不入源码、前端包、截图、普通日志或错误回显。终端仅持有设备最小凭证，AI/企微秘密留后端。生成与轮换可审计。",
+    "feedback": "开发可用隔离本地测试配置，不让明文调试例外流入正式构建。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-SEC-003"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/rules/ACL-01-角色权限与数据访问.md",
+    "work_package": "WP-02至WP-06"
+  },
+  {
+    "id": "REQ-SEC-004",
+    "title": "内容展示与外部输入",
+    "rule": "转写、标题、模板、AI输出、上传文件名和外部错误全部视为不可信输入。网页转义，限制可执行格式、外链访问和服务器任意URL请求；模型输出不能驱动系统权限。",
+    "feedback": "导出文件避免表格公式注入等风险；诊断错误不拼接用户输入执行命令。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-SEC-004",
+      "E2E-020"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/rules/ACL-01-角色权限与数据访问.md",
+    "work_package": "WP-02至WP-06"
+  },
+  {
+    "id": "REQ-SEC-005",
+    "title": "审计与职责分离",
+    "rule": "维护权限和内容权限分开；高风险授权、真实分发、删除、导出与恢复可追踪到身份/设备和原因。审计写入失败时不得无痕执行高风险操作。",
+    "feedback": "普通录音不中断于远程审计服务短暂不可用，但本地事件要可后续同步。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-SEC-005"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/rules/ACL-01-角色权限与数据访问.md",
+    "work_package": "WP-02至WP-06"
+  },
+  {
+    "id": "REQ-SEC-006",
+    "title": "录音告知与最少采集",
+    "rule": "平板清楚显示录音状态、用途及默认接收范围；首期不采集视频、屏幕、精确人员声纹或其他应用内容。测试录音须有授权标记，自动化不得隐蔽开启麦克风。",
+    "feedback": "告知方案由公司批准，不将按钮点击当成全部参会者的法律同意证明。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-SEC-006"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/rules/ACL-01-角色权限与数据访问.md",
+    "work_package": "WP-02至WP-06"
+  },
+  {
+    "id": "REQ-SEC-007",
+    "title": "备份恢复不扩大访问",
+    "rule": "恢复环境默认禁外部AI和群发；先恢复权限、撤销记录和删除清单再开放查询。恢复不得默认管理员可读全部业务正文，也不重放已成功发送事件。",
+    "feedback": "保留最少必要的删除标记，用于防止旧备份复活已删资料。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-SEC-007",
+      "E2E-018"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/rules/ACL-01-角色权限与数据访问.md",
+    "work_package": "WP-02至WP-06"
+  },
+  {
+    "id": "REQ-SEC-008",
+    "title": "上线配置校验",
+    "rule": "生产启动检查管理员初始化、环境隔离、数据保留、网络保护和外发授权；门禁缺项可只运行受限模式，不允许假定默认群或无限留存。",
+    "feedback": "门禁阻断具体危险能力，不强迫为了编译通过填写真实密钥。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-SEC-008",
+      "E2E-024"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/rules/ACL-01-角色权限与数据访问.md",
+    "work_package": "WP-02至WP-06"
+  },
+  {
+    "id": "REQ-NFR-001",
+    "title": "状态持久与崩溃恢复",
+    "rule": "本地会话、上传收据、处理任务和分发任务能够在进程/服务重启后恢复。状态迁移防止并发乱序和重复回调导致逆转。不同组件故障不会让UI虚构成功。",
+    "feedback": "原子边界由技术设计说明，不能用内存队列作为唯一任务记录。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-NFR-001",
+      "E2E-002",
+      "E2E-005"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/rules/NFR-01-非功能要求与数据生命周期.md",
+    "work_package": "WP-06/WP-07"
+  },
+  {
+    "id": "REQ-NFR-002",
+    "title": "长录音与容量边界",
+    "rule": "正式支持时长和积压容量必须被明确批准并测试。保证批准负载内资源受控；达到容量阈值采取阻止不安全新录/清晰提示，不删除唯一未传原件。",
+    "feedback": "长录音拆段不得制造明显缺音或重复语句；不为测试通过缩短需求上限。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-NFR-002",
+      "E2E-021"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/rules/NFR-01-非功能要求与数据生命周期.md",
+    "work_package": "WP-06/WP-07"
+  },
+  {
+    "id": "REQ-NFR-003",
+    "title": "备份与可恢复性",
+    "rule": "生产备份包含原件、关联库、访问策略、版本、删除/去重及恢复密钥。恢复在禁外发隔离环境验证，对比抽样音频、权限和业务状态。",
+    "feedback": "备份成功日志不是恢复通过；RTO/RPO没有批准时不能宣称已达标。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-NFR-003"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/rules/NFR-01-非功能要求与数据生命周期.md",
+    "work_package": "WP-06/WP-07"
+  },
+  {
+    "id": "REQ-NFR-004",
+    "title": "数据生命周期与安全清理",
+    "rule": "所有资料类型有明确保留和清理归属。删除动作执行前阻止后续AI/发送，并记录墓碑/删除清单；后台运行任务的迟到结果也不能重新发布。备份内删除以批准保留窗口和恢复过滤处理。",
+    "feedback": "第三方AI副本、群摘要和用户下载不在本系统可保证删除范围，UI需说明。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-NFR-004",
+      "E2E-018",
+      "E2E-019"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/rules/NFR-01-非功能要求与数据生命周期.md",
+    "work_package": "WP-06/WP-07"
+  },
+  {
+    "id": "REQ-NFR-005",
+    "title": "可观测性与故障可操作",
+    "rule": "为会话到处理/发送建立关联标识；后台可看队列年龄、失败原因、设备在线、容量、服务费用、备份时间。每类失败有负责人及恢复说明，日志最小化。",
+    "feedback": "外部渠道故障仍在本系统显示；健康检查不播放或转存无关音频。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-NFR-005"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/rules/NFR-01-非功能要求与数据生命周期.md",
+    "work_package": "WP-06/WP-07"
+  },
+  {
+    "id": "REQ-NFR-006",
+    "title": "中文与可用性",
+    "rule": "平板主要操作大且明确、状态不只靠颜色；中文错误说明可行动，后台与企微移动网页均可读。录音、暂停、结束不因横竖屏或字体设置错位导致误操作。",
+    "feedback": "无实时字幕要求；首次配置后的普通流程不用技术字段。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-NFR-006",
+      "E2E-025"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/rules/NFR-01-非功能要求与数据生命周期.md",
+    "work_package": "WP-06/WP-07"
+  },
+  {
+    "id": "REQ-NFR-007",
+    "title": "可升级与可回退",
+    "rule": "版本固定并记录构建、数据库迁移、配置兼容和回退步骤。升级不在采集中发生；破坏性迁移前备份。恢复旧版本若不能读新数据，明确停止而不是盲回滚。",
+    "feedback": "开源依赖更新须重新核验许可、安全和兼容，不追随未测试latest。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-NFR-007",
+      "E2E-026"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/rules/NFR-01-非功能要求与数据生命周期.md",
+    "work_package": "WP-06/WP-07"
+  },
+  {
+    "id": "REQ-NFR-008",
+    "title": "测试证据分级与发布约束",
+    "rule": "每次验证注明环境、版本、样本、输入方式、真实外部调用与结论。测试数据/结果不被冒充生产事实；所有P0验收含必要的实机层级，缺证据不可标通过。",
+    "feedback": "本PRD包只通过文档结构检查，不包含录音软件的任何已运行测试。",
+    "basis": "建议细化",
+    "priority": "P0",
+    "test_ids": [
+      "TC-NFR-008"
+    ],
+    "implementation_status": "未开发",
+    "verification_status": "未执行",
+    "source_document": "docs/rules/NFR-01-非功能要求与数据生命周期.md",
+    "work_package": "WP-06/WP-07"
+  }
+]

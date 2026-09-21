@@ -1,0 +1,146 @@
+{
+  "scope": "synthetic_prototype_only",
+  "checks": [
+    {
+      "name": "未扫码不能开始录音",
+      "pass": true
+    },
+    {
+      "name": "过期扫码禁用",
+      "pass": true
+    },
+    {
+      "name": "跨企业身份拒绝",
+      "pass": true
+    },
+    {
+      "name": "停用身份拒绝",
+      "pass": true
+    },
+    {
+      "name": "有效新员工自动开户基础角色",
+      "pass": true
+    },
+    {
+      "name": "未开录退出回新挑战",
+      "pass": true
+    },
+    {
+      "name": "默认主部门且无任意群选择",
+      "pass": true
+    },
+    {
+      "name": "暂停仍同一发起人",
+      "pass": true
+    },
+    {
+      "name": "超过4小时没有业务截止",
+      "pass": true
+    },
+    {
+      "name": "本地保存后员工退出而任务存在",
+      "pass": true
+    },
+    {
+      "name": "无会后操作自动完成四类资料与发送",
+      "pass": true
+    },
+    {
+      "name": "无正常人工核对状态",
+      "pass": true
+    },
+    {
+      "name": "本人手机可见资料",
+      "pass": true
+    },
+    {
+      "name": "未知事项不阻断已发送",
+      "pass": true
+    },
+    {
+      "name": "未附音频不假播放，下载独立禁用",
+      "pass": true
+    },
+    {
+      "name": "缺少更正原因不保存且保留输入",
+      "pass": true
+    },
+    {
+      "name": "保存更正不重发旧快照",
+      "pass": true
+    },
+    {
+      "name": "事项可选更正保留证据且不改群快照",
+      "pass": true
+    },
+    {
+      "name": "只读共享不新增群消息",
+      "pass": true
+    },
+    {
+      "name": "跨部门明确授权可看但不能编辑",
+      "pass": true
+    },
+    {
+      "name": "撤销后旧链接无权且不泄露标题正文",
+      "pass": true
+    },
+    {
+      "name": "保存失败不伪退出或归属下一人",
+      "pass": true
+    },
+    {
+      "name": "保存恢复仍归属原人",
+      "pass": true
+    },
+    {
+      "name": "离线保存退出且保留待传",
+      "pass": true
+    },
+    {
+      "name": "离线不能新场冒用旧身份",
+      "pass": true
+    },
+    {
+      "name": "下一场独立人员且旧任务继续",
+      "pass": true
+    },
+    {
+      "name": "AI自动重试耗尽后只产生管理员告警",
+      "pass": true
+    },
+    {
+      "name": "无路由不猜群、不落待审核",
+      "pass": true
+    },
+    {
+      "name": "UNKNOWN不会盲重发",
+      "pass": true
+    },
+    {
+      "name": "员工可见失败但无管理员恢复按钮",
+      "pass": true
+    },
+    {
+      "name": "异常处理依据必填",
+      "pass": true
+    },
+    {
+      "name": "人工核对标识不伪造渠道回执",
+      "pass": true
+    },
+    {
+      "name": "恢复失败阶段自动完成、不重做人工核对",
+      "pass": true
+    },
+    {
+      "name": "已开户员工停用后不能重新开户绕过",
+      "pass": true
+    },
+    {
+      "name": "审计安全展示而非执行输入",
+      "pass": true
+    }
+  ],
+  "product_tests_executed": 0
+}

@@ -1,0 +1,10 @@
+{
+  "scope": "document_structure_only",
+  "requirements": 96,
+  "test_cases": 128,
+  "markdown_files": 49,
+  "errors": [],
+  "result": "PASS",
+  "product_tests_executed": 0,
+  "all_product_verification": "未执行"
+}

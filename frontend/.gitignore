@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.gitnexus/
+playwright-report/
+test-results/
+.claude/
+*.log
+!evidence/**/*.log

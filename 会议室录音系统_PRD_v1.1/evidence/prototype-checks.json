@@ -1,0 +1,139 @@
+{
+  "scope": "synthetic_prototype_only",
+  "timestamp": "2026-09-20T09:55:23.193Z",
+  "checks": [
+    {
+      "name": "后台先显示登录且不展示管理表格",
+      "pass": true
+    },
+    {
+      "name": "停用账号不能登录",
+      "pass": true
+    },
+    {
+      "name": "管理员登录后进入用户页",
+      "pass": true
+    },
+    {
+      "name": "缺必填内容保留表单并提示",
+      "pass": true
+    },
+    {
+      "name": "重复账号被拒绝",
+      "pass": true
+    },
+    {
+      "name": "预览不立即创建账号",
+      "pass": true
+    },
+    {
+      "name": "取消预览无变更",
+      "pass": true
+    },
+    {
+      "name": "新增用户成功且没有自动内容权",
+      "pass": true
+    },
+    {
+      "name": "搜索空态",
+      "pass": true
+    },
+    {
+      "name": "停用保留用户与历史并拒绝权限",
+      "pass": true
+    },
+    {
+      "name": "刚停用的账号登录被拒绝",
+      "pass": true
+    },
+    {
+      "name": "创建层级部门成功",
+      "pass": true
+    },
+    {
+      "name": "组织循环被拒绝",
+      "pass": true
+    },
+    {
+      "name": "有依赖部门禁止停用",
+      "pass": true
+    },
+    {
+      "name": "业务角色创建成功",
+      "pass": true
+    },
+    {
+      "name": "账号管理员不能借角色修改扩大已授权内容",
+      "pass": true
+    },
+    {
+      "name": "会话过期回登录",
+      "pass": true
+    },
+    {
+      "name": "业务授权者进入授权页",
+      "pass": true
+    },
+    {
+      "name": "历史边界必选",
+      "pass": true
+    },
+    {
+      "name": "超出公司范围的委派被拒绝",
+      "pass": true
+    },
+    {
+      "name": "授权预览显示角色与范围",
+      "pass": true
+    },
+    {
+      "name": "授权后允许编辑指定会议",
+      "pass": true
+    },
+    {
+      "name": "撤销编辑保留独立只读权限",
+      "pass": true
+    },
+    {
+      "name": "成员变更预览提示继承历史范围",
+      "pass": true
+    },
+    {
+      "name": "移组撤销组带来的读取资格",
+      "pass": true
+    },
+    {
+      "name": "普通部门范围不能读取受限会议",
+      "pass": true
+    },
+    {
+      "name": "全公司只读加销售编辑不变成财务编辑",
+      "pass": true
+    },
+    {
+      "name": "原型变更留下审计",
+      "pass": true
+    },
+    {
+      "name": "原有纪要修订保留版本且不发送",
+      "pass": true
+    },
+    {
+      "name": "原录音开始状态",
+      "pass": true
+    },
+    {
+      "name": "原暂停状态",
+      "pass": true
+    },
+    {
+      "name": "原继续状态",
+      "pass": true
+    },
+    {
+      "name": "结束后模拟保存仍工作",
+      "pass": true
+    }
+  ],
+  "product_tests_executed": 0
+}

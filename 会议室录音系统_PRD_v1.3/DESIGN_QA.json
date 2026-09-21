@@ -1,0 +1,12 @@
+{
+  "scope": "design_document_consistency_only",
+  "result": "PASS",
+  "errors": [],
+  "requirements": 96,
+  "product_test_specs": 128,
+  "design_documents": 11,
+  "indexed_documents": 42,
+  "technical_decisions": 10,
+  "valid_json_examples": 1,
+  "product_tests_executed": 0
+}

@@ -1,0 +1,24 @@
+# Local runtimes, caches, build output
+.DS_Store
+**/node_modules/
+**/dist/
+**/.gitnexus/
+**/test-results/
+**/playwright-report/
+**/__pycache__/
+*.pyc
+.local-backups/
+# Tool-generated local skill copies are not project policy.
+frontend/.claude/
+# Secrets stay local. Only reviewed mock-only presets are included.
+.env
+.env.*
+!frontend/.env.development
+!frontend/.env.production
+!**/.env.example
+*.pem
+*.key
+# Packaged duplicates; expanded versioned documents remain tracked.
+/会议室录音系统_*.zip
+# Runtime logs; curated evidence logs can be retained by their local ignore file.
+*.log

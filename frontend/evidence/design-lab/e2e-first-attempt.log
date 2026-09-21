@@ -1,0 +1,158 @@
+
+> yanxu-frontend@0.4.0 test:e2e
+> playwright test
+
+
+Running 16 tests using 1 worker
+
+(node:34729) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 tests/e2e/design-lab.spec.ts:21:3 › element: 真实组件扫码、暂停、保存退出和自动处理 (10.9s)
+  ✘   2 tests/e2e/design-lab.spec.ts:59:3 › element: 过期码、无效员工拒绝、保存故障恢复 (45.1s)
+(node:40099) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   3 tests/e2e/design-lab.spec.ts:108:3 › element: 平板与窄屏布局 (1.1s)
+  ✓   4 tests/e2e/design-lab.spec.ts:21:3 › shadcn: 真实组件扫码、暂停、保存退出和自动处理 (10.6s)
+  ✓   5 tests/e2e/design-lab.spec.ts:59:3 › shadcn: 过期码、无效员工拒绝、保存故障恢复 (6.1s)
+  ✓   6 tests/e2e/design-lab.spec.ts:108:3 › shadcn: 平板与窄屏布局 (888ms)
+  ✓   7 tests/e2e/design-lab.spec.ts:21:3 › tdesign: 真实组件扫码、暂停、保存退出和自动处理 (10.4s)
+  ✘   8 tests/e2e/design-lab.spec.ts:59:3 › tdesign: 过期码、无效员工拒绝、保存故障恢复 (13.3s)
+(node:43541) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   9 tests/e2e/design-lab.spec.ts:108:3 › tdesign: 平板与窄屏布局 (1.1s)
+  ✘  10 tests/e2e/design-lab.spec.ts:128:1 › 对比容器切换样式、外部模拟入口、重置 (45.1s)
+(node:46206) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  11 tests/e2e/prototype.spec.ts:42:1 › 正式组件完成扫码、自动退出、独立队列、手机更正不重发 (12.4s)
+  ✓  12 tests/e2e/prototype.spec.ts:81:1 › 扫码过期可刷新，保存故障不假退出 (5.3s)
+  ✓  13 tests/e2e/prototype.spec.ts:100:1 › 手机共享、换人只读、撤销后旧链接拒绝 (3.0s)
+  ✓  14 tests/e2e/prototype.spec.ts:161:1 › AI自动重试失败后管理员接管，恢复继续自动发送 (14.6s)
+  ✓  15 tests/e2e/prototype.spec.ts:186:1 › 后台路由和访问组使用正式表单，取消无变更 (5.0s)
+  ✓  16 tests/e2e/prototype.spec.ts:220:1 › 手机宽度、组件状态和权限错误页面 (1.6s)
+
+
+  1) tests/e2e/design-lab.spec.ts:59:3 › element: 过期码、无效员工拒绝、保存故障恢复 ────────────────────────────────
+
+    Test timeout of 45000ms exceeded.
+
+    Error: locator.click: Test timeout of 45000ms exceeded.
+    Call log:
+      - waiting for locator('[role="combobox"]').last()
+        - locator resolved to <input readonly value="" type="text" tabindex="0" role="combobox" aria-label="扫码员工" id="el-id-7444-9" autocomplete="off" spellcheck="false" aria-expanded="false" aria-haspopup="listbox" aria-activedescendant="" aria-autocomplete="none" aria-controls="el-id-7444-2" class="el-select__input is-large"/>
+      - attempting click action
+        2 × waiting for element to be visible, enabled and stable
+          - element is not stable
+        - retrying click action
+        - waiting 20ms
+        2 × waiting for element to be visible, enabled and stable
+          - element is not stable
+        - retrying click action
+          - waiting 100ms
+        84 × waiting for element to be visible, enabled and stable
+           - element is visible, enabled and stable
+           - scrolling into view if needed
+           - done scrolling
+           - <div class="el-select__selected-item el-select__placeholder">…</div> intercepts pointer events
+         - retrying click action
+           - waiting 500ms
+
+
+      74 |     await command(page, "scan");
+      75 |     const select = page.locator('[role="combobox"]').last();
+    > 76 |     await select.click();
+         |                  ^
+      77 |     await page.getByText("其他企业用户", { exact: true }).click();
+      78 |     await page
+      79 |       .getByRole("button", { name: "确认模拟扫码", exact: true })
+        at /Users/alec/嘉谏言序/frontend/tests/e2e/design-lab.spec.ts:76:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/design-lab-element-过期码、无效员工拒绝、保存故障恢复/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/design-lab-element-过期码、无效员工拒绝、保存故障恢复/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/design-lab-element-过期码、无效员工拒绝、保存故障恢复/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/design-lab-element-过期码、无效员工拒绝、保存故障恢复/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) tests/e2e/design-lab.spec.ts:59:3 › tdesign: 过期码、无效员工拒绝、保存故障恢复 ────────────────────────────────
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  getByText('模拟企业微信扫码', { exact: true })
+    Expected: 0
+    Received: 1
+    Timeout:  12000ms
+
+    Call log:
+      - Expect "toHaveCount" getByText('模拟企业微信扫码', { exact: true }) with timeout 12000ms
+      - waiting for getByText('模拟企业微信扫码', { exact: true })
+        28 × locator resolved to 1 element
+           - unexpected value "1"
+
+
+      67 |     await expect(
+      68 |       page.getByText("模拟企业微信扫码", { exact: true }),
+    > 69 |     ).toHaveCount(0);
+         |       ^
+      70 |     await page.getByRole("button", { name: "刷新二维码", exact: true }).click();
+      71 |     await expect(page.getByText("二维码已过期", { exact: true })).toHaveCount(
+      72 |       0,
+        at /Users/alec/嘉谏言序/frontend/tests/e2e/design-lab.spec.ts:69:7
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/design-lab-tdesign-过期码、无效员工拒绝、保存故障恢复/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/design-lab-tdesign-过期码、无效员工拒绝、保存故障恢复/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/design-lab-tdesign-过期码、无效员工拒绝、保存故障恢复/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/design-lab-tdesign-过期码、无效员工拒绝、保存故障恢复/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) tests/e2e/design-lab.spec.ts:128:1 › 对比容器切换样式、外部模拟入口、重置 ───────────────────────────────────────
+
+    Test timeout of 45000ms exceeded.
+
+    Error: locator.click: Test timeout of 45000ms exceeded.
+    Call log:
+      - waiting for getByRole('tab', { name: 'A温润 · Element Plus' })
+
+
+      133 | }
+      134 | test("对比容器切换样式、外部模拟入口、重置", async ({ page }) => {
+    > 135 |   await page.goto("/design-lab.html");
+          |                                       ^
+      136 |   for (const name of [
+      137 |     "温润 · Element Plus",
+      138 |     "克制 · shadcn/vue",
+        at /Users/alec/嘉谏言序/frontend/tests/e2e/design-lab.spec.ts:135:43
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/design-lab-对比容器切换样式、外部模拟入口、重置/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/design-lab-对比容器切换样式、外部模拟入口、重置/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/design-lab-对比容器切换样式、外部模拟入口、重置/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/design-lab-对比容器切换样式、外部模拟入口、重置/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3 failed
+    tests/e2e/design-lab.spec.ts:59:3 › element: 过期码、无效员工拒绝、保存故障恢复 ─────────────────────────────────
+    tests/e2e/design-lab.spec.ts:59:3 › tdesign: 过期码、无效员工拒绝、保存故障恢复 ─────────────────────────────────
+    tests/e2e/design-lab.spec.ts:128:1 › 对比容器切换样式、外部模拟入口、重置 ────────────────────────────────────────
+  13 passed (3.2m)

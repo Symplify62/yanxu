@@ -1,0 +1,74 @@
+[
+  {
+    "name": "01-tablet-scan",
+    "width": 1280,
+    "bodyWidth": 1280,
+    "overflow": false,
+    "elementPlus": 15,
+    "vant": 2
+  },
+  {
+    "name": "02-tablet-recording",
+    "width": 1024,
+    "bodyWidth": 1009,
+    "overflow": false,
+    "elementPlus": 58,
+    "vant": 2
+  },
+  {
+    "name": "03-tablet-saved",
+    "width": 1024,
+    "bodyWidth": 1024,
+    "overflow": false,
+    "elementPlus": 54,
+    "vant": 2
+  },
+  {
+    "name": "04-mobile-list",
+    "width": 390,
+    "bodyWidth": 375,
+    "overflow": false,
+    "elementPlus": 9,
+    "vant": 30
+  },
+  {
+    "name": "05-mobile-detail",
+    "width": 390,
+    "bodyWidth": 375,
+    "overflow": false,
+    "elementPlus": 8,
+    "vant": 35
+  },
+  {
+    "name": "06-mobile-editor",
+    "width": 390,
+    "bodyWidth": 390,
+    "overflow": false,
+    "elementPlus": 8,
+    "vant": 93
+  },
+  {
+    "name": "07-admin-routing",
+    "width": 1600,
+    "bodyWidth": 1585,
+    "overflow": false,
+    "elementPlus": 62,
+    "vant": 2
+  },
+  {
+    "name": "08-admin-organization",
+    "width": 960,
+    "bodyWidth": 945,
+    "overflow": false,
+    "elementPlus": 82,
+    "vant": 2
+  },
+  {
+    "name": "09-component-states",
+    "width": 1280,
+    "bodyWidth": 1265,
+    "overflow": false,
+    "elementPlus": 60,
+    "vant": 20
+  }
+]

@@ -1,0 +1,95 @@
+[
+  {
+    "package": "vue",
+    "version": "3.5.43",
+    "declaredLicense": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/vuejs/core.git"
+    }
+  },
+  {
+    "package": "vue-router",
+    "version": "5.3.1",
+    "declaredLicense": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/vuejs/router.git"
+    }
+  },
+  {
+    "package": "element-plus",
+    "version": "2.14.6",
+    "declaredLicense": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/element-plus/element-plus.git"
+    }
+  },
+  {
+    "package": "vant",
+    "version": "4.10.2",
+    "declaredLicense": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/vant-ui/vant.git",
+      "directory": "packages/vant"
+    }
+  },
+  {
+    "package": "msw",
+    "version": "2.15.0",
+    "declaredLicense": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/mswjs/msw.git"
+    }
+  },
+  {
+    "package": "vite",
+    "version": "8.3.0",
+    "declaredLicense": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/vitejs/vite.git",
+      "directory": "packages/vite"
+    }
+  },
+  {
+    "package": "typescript",
+    "version": "5.9.3",
+    "declaredLicense": "Apache-2.0",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/microsoft/TypeScript.git"
+    }
+  },
+  {
+    "package": "@playwright/test",
+    "version": "1.63.0",
+    "declaredLicense": "Apache-2.0",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/microsoft/playwright.git"
+    }
+  },
+  {
+    "package": "vitest",
+    "version": "5.0.1",
+    "declaredLicense": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/vitest-dev/vitest.git",
+      "directory": "packages/vitest"
+    }
+  },
+  {
+    "package": "unplugin-vue-components",
+    "version": "32.1.0",
+    "declaredLicense": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/unplugin/unplugin-vue-components.git"
+    }
+  }
+]

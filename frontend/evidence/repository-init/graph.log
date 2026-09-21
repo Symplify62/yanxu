@@ -1,0 +1,10 @@
+
+  GitNexus Analyzer (1.6.12)
+
+  GitNexus Analyzer (1.6.12)
+{"level":40,"time":1789953831316,"name":"gitnexus","msg":"[scope-resolution] 208 property read/write site(s) name a field that IS defined in this workspace, but only in another language, so per-language inference declined to link them. Queries for these fields return an empty result that does NOT mean \"unused\" — it means the definition anchor is in a different language. Affected: body (javascript), headers (javascript), method (javascript), scope (javascript), url (javascript), action (typescript), active (typescript), admin (typescript), attempts (typescript), audit (typescript), …"}
+
+  Repository indexed successfully (9.2s)
+
+  3,346 nodes | 5,706 edges | 60 clusters | 60 flows
+  /Users/alec/嘉谏言序

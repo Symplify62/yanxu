@@ -1,0 +1,22 @@
+{
+  "scope": "synthetic_prototype_only",
+  "checks": [
+    {
+      "name": "保存页只有下一场扫码业务按钮",
+      "pass": true
+    },
+    {
+      "name": "保存后员工已退出，设备队列保留",
+      "pass": true
+    },
+    {
+      "name": "删除演示跳转不影响自动处理发送",
+      "pass": true
+    },
+    {
+      "name": "顶部评审导航切换后仍需手机独立登录且可看本人记录",
+      "pass": true
+    }
+  ],
+  "product_tests_executed": 0
+}

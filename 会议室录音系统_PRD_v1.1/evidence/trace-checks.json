@@ -1,0 +1,22 @@
+{
+  "requirement_count": 96,
+  "test_count": 122,
+  "bidirectional_trace_errors": [],
+  "all_product_tests_unexecuted": true,
+  "new_requirements": [
+    "REQ-IAM-001",
+    "REQ-IAM-002",
+    "REQ-IAM-003",
+    "REQ-IAM-004",
+    "REQ-IAM-005",
+    "REQ-IAM-006",
+    "REQ-IAM-007",
+    "REQ-IAM-008",
+    "REQ-IAM-009",
+    "REQ-IAM-010",
+    "REQ-IAM-011",
+    "REQ-IAM-012",
+    "REQ-IAM-013",
+    "REQ-IAM-014"
+  ]
+}

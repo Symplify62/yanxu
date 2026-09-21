@@ -1,0 +1,10 @@
+[
+ {"task":"调整A方案按钮主色","entry":"AGENTS.md","target":"frontend/docs/frontend-guides/01-视觉基础.md","max_hops":2},
+ {"task":"修复手机弹窗滚动和后台表格溢出","entry":"AGENTS.md","target":"frontend/docs/frontend-guides/02-布局与多端.md","max_hops":2},
+ {"task":"为现有表单复用选择器","entry":"frontend/AGENTS.md","target":"frontend/docs/frontend-guides/03-组件与业务模式.md","max_hops":1},
+ {"task":"修改网络错误提示与取消行为","entry":"AGENTS.md","target":"frontend/docs/frontend-guides/04-交互状态与文案.md","max_hops":2},
+ {"task":"接入会议API并处理会话失效","entry":"AGENTS.md","target":"frontend/docs/frontend-guides/05-工程实施.md","max_hops":1},
+ {"task":"为共享撤销写回归与截图证据","entry":"frontend/AGENTS.md","target":"frontend/docs/frontend-guides/06-验收与维护.md","max_hops":1},
+ {"task":"修改角色和会议范围规则","entry":"AGENTS.md","target":"会议室录音系统_PRD_v1.3/docs/rules/ACL-01-角色权限与数据访问.md","max_hops":2},
+ {"task":"查看仓库忽略和提交约定","entry":"AGENTS.md","target":"docs/repository/workflow.md","max_hops":1}
+]

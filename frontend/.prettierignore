@@ -1,0 +1,5 @@
+node_modules
+dist
+.gitnexus
+src/components.d.ts
+public/mockServiceWorker.js

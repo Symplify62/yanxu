@@ -1,0 +1,2 @@
+PASS: 21 navigation documents, 163 local links, 8 routing cases; all frontend guides reachable within 2 links.
+Scope: file links and navigation structure, not semantic or business acceptance.

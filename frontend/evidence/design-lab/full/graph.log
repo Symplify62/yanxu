@@ -1,0 +1,16 @@
+
+  GitNexus Analyzer (1.6.12)
+
+  GitNexus Analyzer (1.6.12)
+{"level":40,"time":1789947728025,"name":"gitnexus","msg":"[scope-resolution] 38 property read/write site(s) name a field that IS defined in this workspace, but only in another language, so per-language inference declined to link them. Queries for these fields return an empty result that does NOT mean \"unused\" — it means the definition anchor is in a different language. Affected: body (javascript), headers (javascript), method (javascript), scope (javascript), url (javascript), data (typescript), error (typescript), id (typescript), message (typescript), size (vue), …"}
+[2K
+Incremental: changed=4, added=3, deleted=0 (skipping wipe + 151 unchanged file rows preserved)
+[2K
+Incremental: +1 importer(s) added to writable set (BFS depth ≤ 4)
+[2K
+Parse cache: pruned 1 stale chunk entries
+
+  Repository indexed successfully (3.3s)
+
+  1,110 nodes | 2,737 edges | 35 clusters | 60 flows
+  /Users/alec/嘉谏言序/frontend
