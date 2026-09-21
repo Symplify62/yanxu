@@ -1,6 +1,5 @@
 import { defineConfig } from "vitest/config";
 import vue from "@vitejs/plugin-vue";
-import tailwindcss from "@tailwindcss/vite";
 import Components from "unplugin-vue-components/vite";
 import {
   ElementPlusResolver,
@@ -9,7 +8,6 @@ import {
 export default defineConfig({
   plugins: [
     vue(),
-    tailwindcss(),
     Components({
       resolvers: [ElementPlusResolver(), VantResolver()],
       dts: "src/components.d.ts",
@@ -26,14 +24,8 @@ export default defineConfig({
       "msw",
       "msw/browser",
       "dayjs",
-      "tdesign-vue-next",
-      "reka-ui",
       "qrcode",
       "@lucide/vue",
-      "@vueuse/core",
-      "class-variance-authority",
-      "clsx",
-      "tailwind-merge",
     ],
   },
   build: {
@@ -43,7 +35,6 @@ export default defineConfig({
         prototype: "prototype.html",
         phaseOne: "phase-one.html",
         public: "public.html",
-        lab: "design-lab.html",
         option: "design-option.html",
       },
     },

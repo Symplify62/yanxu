@@ -2,7 +2,7 @@
 
 当前实施范围优先读[第一阶段：免登录录音与公共结果](../docs/phases/phase-01.md)。v1.3的登录、个人/共享范围、组织角色与发群在本期暂缓，不能据此重新增加本期前置步骤。
 
-继承[项目AGENTS](../AGENTS.md)。真实公共结果入口是后端5189的`public.html`，启动在`src/live/`，复用A主题和`src/phase-one`组件；`phase-one.html`保留独立演示。`prototype.html`和`src/design-lab/`保留完整方案历史参考。
+继承[项目AGENTS](../AGENTS.md)。真实公共结果入口是后端5189的`public.html`，启动在`src/live/`，复用`src/styles`的A主题和`src/records`公共组件；`phase-one.html`保留独立演示。`prototype.html`和`src/design-lab/`保留完整A方案参考，B/C比较已移除。
 
 | 要改什么 | 读取什么 |
 | --- | --- |

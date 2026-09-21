@@ -1,6 +1,0 @@
-
-> yanxu-frontend@0.4.0 format:check
-> prettier --check "src/**/*.{ts,vue,css}" "tests/**/*.ts" vite.config.ts playwright.config.ts tsconfig.json
-
-Checking formatting...
-All matched files use Prettier code style!

@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-const variants = ["element", "shadcn", "tdesign"];
+const variants = ["element"];
 async function command(page: Page, action: string) {
   await page.evaluate(
     (action) =>
@@ -72,13 +72,7 @@ for (const variant of variants) {
       0,
     );
     await command(page, "scan");
-    const select = page.locator(
-      variant === "element"
-        ? ".scan-dialog-body .el-select__wrapper"
-        : variant === "tdesign"
-          ? ".scan-dialog-body .t-input"
-          : ".scan-dialog-body [role=combobox]",
-    );
+    const select = page.locator(".scan-dialog-body .el-select__wrapper");
     await select.click();
     await page.getByText("其他企业用户", { exact: true }).click();
     await page
@@ -125,34 +119,24 @@ for (const variant of variants) {
       }));
       expect(dimensions.scroll).toBeLessThanOrEqual(dimensions.width);
       await page.screenshot({
-        path: `evidence/design-lab/${variant}-${width}.png`,
+        path: `../.local-data/evidence/frontend/design-lab/${variant}-${width}.png`,
         fullPage: true,
       });
     }
   });
 }
-test("对比容器切换样式、外部模拟入口、重置", async ({ page }) => {
-  await page.goto("/design-lab.html");
-  for (const name of ["温润 · Element Plus", "克制 · shadcn/vue"]) {
-    await page.getByRole("tab", { name }).click();
-    await expect(
-      page.getByRole("button", { name: "模拟扫码登录" }),
-    ).toBeEnabled();
-    await page.getByRole("tab", { name }).click();
-    await expect(
-      page.getByRole("button", { name: "模拟扫码登录" }),
-    ).toBeEnabled();
-    await page.getByRole("button", { name: "模拟扫码登录" }).click();
-    const frame = page.frameLocator("iframe");
-    await frame
-      .getByRole("button", { name: "确认模拟扫码", exact: true })
-      .click();
-    await expect(
-      frame.getByRole("button", { name: "开始录音", exact: true }),
-    ).toBeVisible();
-    await page.getByRole("button", { name: "重新体验" }).click();
-    await expect(
-      frame.getByRole("heading", { name: "扫码开始这场会议" }),
-    ).toBeVisible();
-  }
+test("A容器外部模拟入口与重置", async ({ page }) => {
+  await page.goto("/prototype.html");
+  await page.getByRole("button", { name: "模拟扫码登录" }).click();
+  const frame = page.frameLocator("iframe");
+  await frame
+    .getByRole("button", { name: "确认模拟扫码", exact: true })
+    .click();
+  await expect(
+    frame.getByRole("button", { name: "开始录音", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "重新体验" }).click();
+  await expect(
+    frame.getByRole("heading", { name: "扫码开始这场会议" }),
+  ).toBeVisible();
 });

@@ -45,6 +45,6 @@ Android App采音、Mac本地开发与转写、DeepSeek分析、匿名回听/下
 
 当前真实实现归档范围与提交验证见[第一阶段归档提交](implementation/phase-one-commit.md)。
 
-`会议室录音系统_PRD_v1.0`至`v1.2`、旧单HTML、旧导出文件和A/B/C对比是历史来源。当前源码初始Git提交保留展开文档；根目录重复ZIP不入库且仍留本机。
+旧PRD v1.0–v1.2、根目录旧HTML和B/C比较实现已从当前分支移除，历史查询与外部ZIP归档见[仓库清理记录](repository/cleanup.md)。v1.3仍保留有效产品规划与设计规则，本期以第一阶段范围优先。
 
 前端既有验证见[原型验证记录](../frontend/docs/design-lab/verification.md)。测试结果、截图是具体时点证据；选A并不等于所有业务、可访问性或设备要求已验收。

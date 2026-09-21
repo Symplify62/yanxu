@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from "vue";
-const props = defineProps<{ confirmed?: boolean }>();
+import { ref, onMounted, onUnmounted } from "vue";
 const requestedSurface =
   new URLSearchParams(location.search).get("surface") || "tablet";
 const startSurface = ["tablet", "employee", "admin", "components"].includes(
@@ -8,37 +7,18 @@ const startSurface = ["tablet", "employee", "admin", "components"].includes(
 )
   ? requestedSurface
   : "tablet";
-const options = [
-  {
-    id: "element",
-    letter: "A",
-    name: "温润 · Element Plus",
-    note: "柔和的绿与暖白，更亲近会议室场景。保留当前组件，重新组织空间与层次。",
-  },
-  {
-    id: "shadcn",
-    letter: "B",
-    name: "克制 · shadcn/vue",
-    note: "黑白、细线与留白，让内容成为主角。使用官方组件源码，拥有更自由的定制空间。",
-  },
-];
-const variant = ref("element"),
-  frame = ref<HTMLIFrameElement>(),
+const selected = {
+  name: "温润 · Element Plus",
+  note: "A 方案 · 暖白与柔和绿色",
+};
+const variant = "element";
+const frame = ref<HTMLIFrameElement>(),
   ready = ref(false),
   phase = ref("scan"),
   width = ref("wide"),
   surface = ref(startSurface),
   initialSurface = ref(startSurface),
   scenario = ref("normal");
-const selected = computed(() => options.find((x) => x.id === variant.value)!);
-function select(id: string) {
-  if (props.confirmed || id === variant.value) return;
-  initialSurface.value = surface.value;
-  variant.value = id;
-  ready.value = false;
-  phase.value = "scan";
-  scenario.value = "normal";
-}
 function send(action: string) {
   frame.value?.contentWindow?.postMessage(
     {
@@ -82,46 +62,11 @@ onUnmounted(() => window.removeEventListener("message", message));
   <div class="lab">
     <header class="lab-header">
       <div>
-        <a
-          :href="confirmed ? '/design-lab.html' : '/prototype.html'"
-          class="back"
-          >{{ confirmed ? "查看历史方案对比" : "← 打开已确认的 A 原型" }}</a
-        >
-        <h1>
-          {{
-            confirmed ? "言序 · 正式组件原型" : "从录音到查阅，两套完整体验。"
-          }}
-        </h1>
-        <p>
-          {{
-            confirmed
-              ? "已确认采用 A · 温润 / Element Plus，覆盖平板、员工手机和管理后台。"
-              : "A 方案已确认。此页保留 A / B 的历史对比。"
-          }}
-        </p>
+        <h1>言序 · 正式组件原型</h1>
+        <p>A · Element Plus，完整方案演示。</p>
       </div>
-      <span class="lab-label">{{
-        confirmed ? "言序 / A · 已确认" : "言序 / DESIGN STUDY 02"
-      }}</span>
+      <span class="lab-label">言序 / A · 已确认</span>
     </header>
-    <div
-      v-if="!confirmed"
-      class="option-tabs"
-      role="tablist"
-      aria-label="选择设计方向"
-    >
-      <button
-        v-for="o in options"
-        :key="o.id"
-        role="tab"
-        :aria-selected="variant === o.id"
-        :class="{ active: variant === o.id }"
-        @click="select(o.id)"
-      >
-        <span>{{ o.letter }}</span
-        >{{ o.name }}
-      </button>
-    </div>
     <div class="lab-description">
       <p>{{ selected.note }}</p>
       <div
@@ -200,11 +145,7 @@ onUnmounted(() => window.removeEventListener("message", message));
       ></iframe>
     </div>
     <footer class="lab-footer">
-      <span>{{
-        confirmed
-          ? "切换业务端保留演示资料；重新体验将重置本次模拟数据。"
-          : "同一方案切换端保留演示资料；切换 A/B 会重新开始该方案数据。"
-      }}</span
+      <span>切换业务端保留演示资料；重新体验将重置本次模拟数据。</span
       ><span>模拟数据 · 不采音、不连接企业微信、不发真实消息</span>
     </footer>
   </div>
@@ -256,41 +197,6 @@ body {
   font-size: 11px;
   letter-spacing: 2px;
   color: #777d76;
-}
-.option-tabs {
-  display: flex;
-  border-bottom: 1px solid #d4d7d1;
-  gap: 30px;
-}
-.option-tabs button {
-  border: 0;
-  background: none;
-  padding: 0 0 16px;
-  color: #757a73;
-  font-size: 15px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
-}
-.option-tabs button span {
-  font:
-    12px ui-monospace,
-    monospace;
-  background: #e2e4df;
-  border-radius: 5px;
-  padding: 4px 7px;
-}
-.option-tabs button.active {
-  color: #202a22;
-  border-color: #354d3b;
-  font-weight: 600;
-}
-.option-tabs button.active span {
-  background: #354d3b;
-  color: white;
 }
 .lab-description {
   display: flex;
@@ -407,13 +313,6 @@ a:focus-visible {
   }
   .lab-header h1 {
     font-size: 22px;
-  }
-  .option-tabs {
-    gap: 14px;
-  }
-  .option-tabs button {
-    font-size: 12px;
-    gap: 6px;
   }
   .lab-description {
     gap: 8px;

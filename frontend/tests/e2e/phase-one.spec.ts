@@ -22,7 +22,7 @@ async function record(page: Page) {
 }
 async function snap(page: Page, name: string) {
   await page.screenshot({
-    path: `evidence/phase-one/${name}.png`,
+    path: `../.local-data/evidence/frontend/phase-one/${name}.png`,
     fullPage: true,
   });
 }
