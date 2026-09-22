@@ -41,6 +41,9 @@ public class SpeakersInstrumentation extends Instrumentation {
         out.putString("result", "PASS: isolated local API and updates disabled for emulator tests");
       } else if ("cloudchecks".equals(mode)) {
         out.putString("result", CloudIdentityChecks.run(context));
+      } else if ("guestchecks".equals(mode)) {
+        out.putString("identity", GuestRecordingChecks.run(context));
+        out.putString("result", GuestRecordingApiChecks.run(context));
       } else if ("cloudapi".equals(mode)) {
         out.putString("result", CloudApiIntegrationChecks.run(context, args));
       } else if ("cloudfixture".equals(mode)) {
