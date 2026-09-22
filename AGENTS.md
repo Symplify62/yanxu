@@ -3,7 +3,7 @@
 ## 当前范围
 
 - 根目录是唯一Git仓库，Web在`frontend/`，API/worker在`backend/`，Android测试App在`android/`。公网页面/API部署在阿里云，七牛存原音，Mac主动领取转写；设备可靠性与部署证据按下表进入。
-- 线上基线按[第一阶段范围](docs/phases/phase-01.md)；当前增量按[账号与声音实施](docs/implementation/identity-voice-delivery.md)：组织者账号、人员/部门/角色、私有声音档案与说话人归属。实施与生产发布状态分别记录。
+- 线上已具备组织者账号、人员/部门/角色、私有声音档案与说话人归属，按[账号与声音实施](docs/implementation/identity-voice-delivery.md)进入；当前版本与运行证据见[发布验证](docs/implementation/identity-voice-release.md)。[第一阶段范围](docs/phases/phase-01.md)保留旧匿名链路基线。
 - 已确认实施条件：Android App（安卓手机先测、后续平板），Mac本地开发/ASR测试，DeepSeek文本分析；任何访问者可回听/下载录音。具体记录见第一阶段范围。
 - 当前视觉决策见[A方案确认](frontend/docs/design-lab/selection.md)；当前业务文档为`会议室录音系统_PRD_v1.3/`。旧版本与B/C比较实现从当前分支移除，需要历史时按仓库清理记录查询Git。
 - 先按下表选择任务入口，再只读取该入口指定的相关章节；已有明确上下文时直接进入对应规范，无需全量阅读文档包。

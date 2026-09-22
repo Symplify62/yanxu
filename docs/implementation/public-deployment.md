@@ -14,19 +14,21 @@
 
 ## 当前状态
 
+2026-09-22已升级真实账号、私有声音与说话人归属，当前运行及回退证据见[0.3.0发布验证](identity-voice-release.md)。本页新鲜验证小节保留第一阶段首次上线历史。
+
 公网部署已运行。服务器2vCPU/2GiB/40GiB/3Mbps，上海Ubuntu22.04；部署前实际可用内存1151MiB、根盘可用34GiB，仅发现frps监听7000/7500/8080及SSH。frps进程2764和原端口保留；未升级实例、重启服务器或改变已有安全组规则。
 
 ## 运行与恢复入口
 
-- 公共网页/API：`https://yanxu.qjl666.xyz`，A记录指向现有ECS；匿名查看/下载，无员工登录。`audio.qjl666.xyz`沿用七牛专用空间。
+- 公共网页/API：`https://yanxu.qjl666.xyz`，A记录指向现有ECS；公共页匿名查看/下载；账号工作台和新App支持组织者账号密码登录。`audio.qjl666.xyz`沿用七牛专用空间。
 - 部署通过阿里云Workbench终端与文件传输完成。公网SSH握手被关闭，因此没有重置密码或更改SSH配置；仅临时加入的本次部署公钥已精确移除。配置经Workbench传入root专用700目录，安装到`/etc/yanxu.env`（600），传输副本已删除。
-- 当前代码目录`/opt/yanxu/releases/20260921-updates`，`/opt/yanxu/current`指向它。无语音终态发布及旧记录恢复见[修复记录](no-speech-result.md)，App更新分发见[自动更新](android-updates.md)。服务用户`yanxu`，数据`/var/lib/yanxu/data`，APK`/var/lib/yanxu/artifacts/yanxu-debug.apk`。API只监听127.0.0.1:5189，Nginx接公网80/443，保留原frps端口。
+- 当前代码目录`/opt/yanxu/releases/20260922-identity-voice`，`/opt/yanxu/current`指向它。无语音终态发布及旧记录恢复见[修复记录](no-speech-result.md)，App更新分发见[自动更新](android-updates.md)。服务用户`yanxu`，数据`/var/lib/yanxu/data`，APK`/var/lib/yanxu/artifacts/yanxu-debug.apk`。API只监听127.0.0.1:5189，Nginx接公网80/443，保留原frps端口。
 - 云服务：`yanxu-api.service`、`yanxu-analysis.service`、`yanxu-cloud.service`，均启用开机启动与失败重启；日志走`journalctl -u <服务名>`。`YANXU_WORKER_STAGE=analysis`保证服务器不运行本地ASR。
 - Mac服务：`~/Library/LaunchAgents/cn.jiajian.yanxu.remote-asr.plist`，登录后自动运行并失败重启；工作目录`backend`，数据`.local-data/remote-cloud`，日志`.local-data/logs/remote-asr.log`。`launchctl print gui/$(id -u)/cn.jiajian.yanxu.remote-asr`查状态。不要与旧本地worker/旧库混用。
-- 机器令牌`YANXU_WORKER_TOKEN`在本机`.env.local`与云端`/etc/yanxu.env`中一致，至少32字符；Mac仅主动发HTTPS请求，不公开本机端口。备份接口同样需要此令牌；公网匿名调用实测403。配置变更后分别重启对应进程。
+- 机器令牌`YANXU_WORKER_TOKEN`在本机`.env.local`与云端`/etc/yanxu.env`中一致，至少32字符；Mac仅主动发HTTPS请求，不公开本机端口。备份改用独立`YANXU_BACKUP_TOKEN`，声音任务用独立`YANXU_VOICE_WORKER_TOKEN`；ASR凭据不能下载身份/声音备份。配置变更后分别重启对应进程。
 - 录音目前仍为App→ECS分片接收→七牛同步；尚未改成App直传七牛。同步会占用3Mbps服务器出网，长录音可能排队；Mac只领取七牛已校验的录音。
 - 服务器保留7天已验证原音缓存；每日03:30 `yanxu-maintenance.timer`先做SQLite一致性备份，重新核对七牛文件hash/长度后才清理旧缓存。保留30份本机数据库快照；磁盘不足2GiB或无法预留上传/组装空间时拒绝新任务，App保留本地文件重试。
-- Mac每日获取一次云数据库快照，存`.local-data/remote-cloud/cloud-backups`（不入Git、600）；Mac离线时跨机副本会延迟。已实际下载快照并验证SQLite quick_check和业务记录存在。云对象与快照联合恢复，不依赖已过期的ECS录音缓存。
+- Mac每日获取一次一致性数据库和未撤回私有声音的备份包，存`.local-data/remote-cloud/cloud-backups`（不入Git、600）；Mac离线时跨机副本会延迟。已实际下载新版包、验证SQLite与文件SHA，恢复后登录并回听私有样本。云对象与快照联合恢复，不依赖已过期的ECS录音缓存。
 - 网站HTTPS证书有效至2026-12-20；服务器Certbot timer负责webroot续期，部署钩子校验并重载Nginx。`certbot renew --dry-run --cert-name yanxu.qjl666.xyz`已实际通过模拟续期。**七牛audio证书仍是此前手动DNS签发，尚未自动续期**，与网站证书分开维护。
 
 ## 新鲜验证
