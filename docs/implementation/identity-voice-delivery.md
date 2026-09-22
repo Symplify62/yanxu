@@ -21,6 +21,7 @@ D. 本地隔离数据上端到端及API越权测试、真实模型烟测、Web�
 身份模块导出 initialize(store), router, current_account(request), require_permission(request, permission)。返回principal为dict：id(账号ID),username,personId,displayName,permissions(list)。权限 record/users/roles/departments/voices，首版单组织；普通成员仅本人声音，组织者可协助本组织人员登记但无后台删除权。
 
 POST /api/auth/login {username,password} → {accessToken,expiresAt,account}; GET /api/auth/me → account；POST /api/auth/logout。
+密码规则（2026-09-22用户确认调整）：新建账号、管理员重置及初始化管理员最低6个字符，不要求大小写、数字或特殊字符组合；保留256字符请求容量上限。编辑已有账号时留空保留密码；改变密码撤销该账号已有会话。此调整不自动修改任何现有账号密码。
 GET /api/people → {items:[{id,name,detail,departmentId,departmentName,active}],departments:[{id,name,parentId}]}。
 POST /api/people {name,detail} → Person；组织者的record权限可以新增没有登录账号的参会人，不能通过此入口传账号/密码/角色或修改部门。管理后台带账号的用户创建仍要求users权限。
 后台GET/POST /api/admin/users、roles、departments，PATCH/DELETE /api/admin/{resource}/{id}。用户面向Person(id,name,detail,departmentId,active)，可选关联username/password/roleId；bootstrap产生管理员。角色字段id/name/description/permissions；部门id/name/parentId。

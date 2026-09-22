@@ -100,6 +100,35 @@ def test_unknown_and_disabled_login_same_error(env):
     assert responses[0].json() == responses[1].json()
 
 
+@pytest.mark.parametrize("password", ["123456", "abcdef", "!@#$%^", "a" * 256], ids=["digits", "lowercase", "symbols", "maximum-length"])
+def test_password_length_accepts_simple_passwords_and_existing_maximum(env, password):
+    c, _, _, h = env
+    response = c.post("/api/admin/users", json={
+        "name": "密码边界用户", "username": "password-boundary", "password": password, "roleId": "member",
+    }, headers=h)
+    assert response.status_code == 200, response.text
+    authenticated = c.post("/api/auth/login", json={"username": "password-boundary", "password": password})
+    assert authenticated.status_code == 200, authenticated.text
+    session = {"Authorization": "Bearer " + authenticated.json()["accessToken"]}
+    assert c.get("/api/auth/me", headers=session).json()["personId"] == response.json()["id"]
+
+
+@pytest.mark.parametrize("password", ["12345", "a" * 257], ids=["too-short", "too-long"])
+def test_invalid_password_length_rejects_create_and_reset_without_changing_account(env, password):
+    c, _, _, h = env
+    response = c.post("/api/admin/users", json={
+        "name": "不能创建", "username": "rejected-password", "password": password, "roleId": "member",
+    }, headers=h)
+    assert response.status_code == 422 and password not in response.text
+    assert "rejected-password" not in [p["username"] for p in c.get("/api/admin/users", headers=h).json()["items"]]
+    person = create_person(c, h, username="retained-password")
+    session = login_as(c, "retained-password")
+    response = c.patch("/api/admin/users/" + person["id"], json={"password": password}, headers=h)
+    assert response.status_code == 422 and password not in response.text
+    assert c.get("/api/auth/me", headers=session).status_code == 200
+    assert login_as(c, "retained-password")
+
+
 def test_directory_scope_and_http_crud(env):
     c, _, _, h = env
     dep = c.post("/api/admin/departments", json={"name": "研发"}, headers=h).json()
@@ -132,7 +161,7 @@ def test_password_reset_disable_role_change_take_effect_immediately(env):
     assert "record" in c.get("/api/auth/me", headers=session).json()["permissions"]
     assert c.patch("/api/admin/roles/" + role["id"], json={"permissions": []}, headers=h).status_code == 200
     assert c.get("/api/auth/me", headers=session).json()["permissions"] == []
-    new_password = PASSWORD + "updated"
+    new_password = "123456"
     assert c.patch("/api/admin/users/" + person["id"], json={"password": new_password}, headers=h).status_code == 200
     assert c.get("/api/auth/me", headers=session).status_code == 401
     assert c.post("/api/auth/login", json={"username": "tester", "password": PASSWORD}).status_code == 401
@@ -211,13 +240,14 @@ def test_migration_is_atomic_idempotent_and_does_not_change_core_version(env):
     assert admin["username"] == "admin"
 
 
-def test_bootstrap_cli_uses_stdin_without_printing_password(tmp_path):
+@pytest.mark.parametrize("password", [PASSWORD, "123456"], ids=["existing-long-password", "six-digits"])
+def test_bootstrap_cli_uses_stdin_without_printing_password(tmp_path, password):
     env = {**os.environ, "YANXU_DATA_DIR": str(tmp_path), "YANXU_STORAGE": "local", "QINIU_DELIVERY_ENABLED": "false"}
-    result = subprocess.run([sys.executable, "-m", "yanxu.identity", "--username", "initial-admin", "--name", "管理员", "--password-stdin"], input=PASSWORD + "\n", text=True, capture_output=True, env=env, cwd=Path(__file__).resolve().parents[1])
+    result = subprocess.run([sys.executable, "-m", "yanxu.identity", "--username", "initial-admin", "--name", "管理员", "--password-stdin"], input=password + "\n", text=True, capture_output=True, env=env, cwd=Path(__file__).resolve().parents[1])
     assert result.returncode == 0, result.stderr
-    assert PASSWORD not in result.stdout + result.stderr
-    repeat = subprocess.run([sys.executable, "-m", "yanxu.identity", "--username", "initial-admin", "--name", "管理员", "--password-stdin"], input=PASSWORD + "\n", text=True, capture_output=True, env=env, cwd=Path(__file__).resolve().parents[1])
-    assert repeat.returncode == 1 and PASSWORD not in repeat.stderr
+    assert password not in result.stdout + result.stderr
+    repeat = subprocess.run([sys.executable, "-m", "yanxu.identity", "--username", "initial-admin", "--name", "管理员", "--password-stdin"], input=password + "\n", text=True, capture_output=True, env=env, cwd=Path(__file__).resolve().parents[1])
+    assert repeat.returncode == 1 and password not in repeat.stderr
 
 
 def test_failed_migration_rolls_back_without_partial_tables(tmp_path, monkeypatch):
