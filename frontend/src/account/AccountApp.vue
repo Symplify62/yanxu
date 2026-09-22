@@ -8,6 +8,7 @@ import {
   AudioLines,
   Files,
   LogOut,
+  Settings,
 } from "@lucide/vue";
 import {
   account,
@@ -16,6 +17,7 @@ import {
   restoreSession,
   onSessionClear,
   sessionNotice,
+  sessionNoticeType,
   signIn,
   signOut,
 } from "./api";
@@ -24,6 +26,7 @@ import RolesPage from "./RolesPage.vue";
 import DepartmentsPage from "./DepartmentsPage.vue";
 import VoicesPage from "./VoicesPage.vue";
 import RecordsPage from "./RecordsPage.vue";
+import PersonalSettingsPage from "./PersonalSettingsPage.vue";
 const clearDialogs = onSessionClear(() => ElMessageBox.close());
 const booting = ref(true),
   busy = ref(false),
@@ -61,6 +64,12 @@ const menus = computed(() =>
       id: "voices",
       label: hasPermission("voices") ? "声纹管理" : "声音档案",
       icon: AudioLines,
+      visible: true,
+    },
+    {
+      id: "settings",
+      label: "个人设置",
+      icon: Settings,
       visible: true,
     },
   ].filter((m) => m.visible),
@@ -104,7 +113,7 @@ onUnmounted(() => {
         <el-alert
           v-if="sessionNotice || error"
           :title="error || sessionNotice"
-          type="error"
+          :type="error ? 'error' : sessionNoticeType"
           :closable="false"
           show-icon
         />
@@ -176,6 +185,7 @@ onUnmounted(() => {
         <RolesPage v-else-if="active.id === 'roles'" />
         <DepartmentsPage v-else-if="active.id === 'departments'" />
         <VoicesPage v-else-if="active.id === 'voices'" />
+        <PersonalSettingsPage v-else-if="active.id === 'settings'" />
         <RecordsPage v-else />
       </main>
     </div>

@@ -5,8 +5,8 @@ from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
 
 from . import directory as directory
-from .auth import bearer_token, current_account, enabled, login, require_permission, token_digest
-from .models import GuestCreate, Login, UserCreate, UserPatch, RoleCreate, RolePatch, DepartmentCreate, DepartmentPatch
+from .auth import bearer_token, change_password, current_account, enabled, login, require_permission, token_digest
+from .models import GuestCreate, Login, PasswordChange, UserCreate, UserPatch, RoleCreate, RolePatch, DepartmentCreate, DepartmentPatch
 
 
 class PrivateRoute(APIRoute):
@@ -41,6 +41,11 @@ def sign_in(value: Login, request: Request):
 @router.get("/api/auth/me")
 def me(request: Request):
     return current_account(request)
+
+
+@router.post("/api/auth/password")
+def update_password(value: PasswordChange, request: Request):
+    return change_password(request, value.oldPassword, value.newPassword)
 
 
 @router.post("/api/auth/logout")
