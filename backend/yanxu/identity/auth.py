@@ -122,3 +122,39 @@ def login(store, username, password, address, hours):
 
 def revoke_account_sessions(db, account_id):
     db.execute("UPDATE identity_sessions SET revoked_at=? WHERE account_id=? AND revoked_at IS NULL", (time.time(), account_id))
+
+
+def change_password(request: Request, old_password, new_password):
+    enabled(request)
+    digest = token_digest(bearer_token(request))
+    store = request.app.state.store
+    session_query = ACCOUNT_SELECT + """ JOIN identity_sessions s ON s.account_id=a.id
+        WHERE s.token_hash=? AND s.revoked_at IS NULL AND s.expires_at>?
+        AND a.active=1 AND p.active=1 AND p.deleted_at IS NULL"""
+    now = time.time()
+    # Reserve an account-wide attempt before hashing; a new login cannot reset it.
+    with store.connect(True) as db:
+        row = db.execute(session_query, (digest, now)).fetchone()
+        if row is None:
+            raise HTTPException(401, "登录已失效，请重新登录", headers={"WWW-Authenticate": "Bearer"})
+        bucket = "password:" + token_digest(row["id"])
+        db.execute("DELETE FROM identity_login_attempts WHERE attempted_at<?", (now - WINDOW_SECONDS,))
+        count = db.execute("SELECT count(*) FROM identity_login_attempts WHERE bucket=?", (bucket,)).fetchone()[0]
+        if count >= 8:
+            raise HTTPException(429, "旧密码尝试过多，请稍后重试", headers={"Retry-After": str(WINDOW_SECONDS)})
+        db.execute("INSERT INTO identity_login_attempts VALUES(?,?)", (bucket, now))
+    with password_work():
+        if not PASSWORDS.verify(old_password, row["password_hash"]):
+            # A typing mistake is not session expiry: the caller stays signed in.
+            raise HTTPException(400, "旧密码不正确")
+        replacement = PASSWORDS.hash(new_password)
+    with store.connect(True) as db:
+        current = db.execute(session_query, (digest, time.time())).fetchone()
+        # A reset, logout, expiry or disable that happened during hashing wins.
+        if current is None or current["password_hash"] != row["password_hash"]:
+            raise HTTPException(401, "登录已失效，请重新登录", headers={"WWW-Authenticate": "Bearer"})
+        db.execute("UPDATE identity_accounts SET password_hash=?,updated_at=? WHERE id=?",
+                   (replacement, time.time(), row["id"]))
+        revoke_account_sessions(db, row["id"])
+        db.execute("DELETE FROM identity_login_attempts WHERE bucket=?", (bucket,))
+    return {"ok": True}

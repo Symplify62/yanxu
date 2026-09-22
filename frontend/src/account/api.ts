@@ -5,6 +5,7 @@ const storageKey = "yanxu-account-session-v1";
 const token = ref(sessionStorage.getItem(storageKey) || "");
 export const account = ref<Account | null>(null);
 export const sessionNotice = ref("");
+export const sessionNoticeType = ref<"error" | "success">("error");
 let generation = 0;
 const cleanups = new Set<() => void>();
 export class ApiError extends Error {
@@ -19,12 +20,16 @@ export function onSessionClear(fn: () => void) {
   cleanups.add(fn);
   return () => cleanups.delete(fn);
 }
-export function clearSession(message = "") {
+export function clearSession(
+  message = "",
+  type: "error" | "success" = "error",
+) {
   generation++;
   token.value = "";
   account.value = null;
   sessionStorage.removeItem(storageKey);
   sessionNotice.value = message;
+  sessionNoticeType.value = type;
   for (const cleanup of cleanups) cleanup();
 }
 export async function request<T>(
@@ -52,6 +57,7 @@ export async function request<T>(
     const body = (await response.json().catch(() => ({}))) as {
       detail?: string | { msg: string }[];
     };
+    if (version !== generation) throw new ApiError("会话已切换", 401);
     if (response.status === 401 && path !== "/api/auth/login")
       clearSession("登录已失效，请重新登录");
     if (response.status === 403 && path !== "/api/auth/me" && account.value) {

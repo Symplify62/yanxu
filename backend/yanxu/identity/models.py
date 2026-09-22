@@ -10,6 +10,18 @@ class Login(StrictModel):
     password: str = Field(min_length=1, max_length=256, repr=False)
 
 
+class PasswordChange(StrictModel):
+    oldPassword: str = Field(min_length=1, max_length=256, repr=False)
+    newPassword: str = Field(min_length=6, max_length=256, repr=False)
+    confirmPassword: str = Field(min_length=6, max_length=256, repr=False)
+
+    @model_validator(mode="after")
+    def matching_passwords(self):
+        if self.newPassword != self.confirmPassword:
+            raise ValueError("两次新密码输入不一致")
+        return self
+
+
 class UserCreate(StrictModel):
     name: str = Field(min_length=1, max_length=80)
     detail: str = Field(default="", max_length=200)
