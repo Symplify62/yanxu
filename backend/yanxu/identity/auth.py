@@ -29,8 +29,8 @@ def password_work():
 
 
 def hash_password(value):
-    if not isinstance(value, str) or not 12 <= len(value) <= 256:
-        raise HTTPException(422, "密码须为12至256个字符")
+    if not isinstance(value, str) or not 6 <= len(value) <= 256:
+        raise HTTPException(422, "密码须为6至256个字符")
     with password_work():
         return PASSWORDS.hash(value)
 

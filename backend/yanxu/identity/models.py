@@ -16,7 +16,7 @@ class UserCreate(StrictModel):
     departmentId: str | None = None
     active: bool = True
     username: str | None = Field(default=None, max_length=80)
-    password: str | None = Field(default=None, min_length=12, max_length=256, repr=False)
+    password: str | None = Field(default=None, min_length=6, max_length=256, repr=False)
     roleId: str | None = None
 
     @model_validator(mode="after")
@@ -34,7 +34,7 @@ class UserPatch(StrictModel):
     departmentId: str | None = None
     active: bool | None = None
     username: str | None = Field(default=None, min_length=3, max_length=80)
-    password: str | None = Field(default=None, min_length=12, max_length=256, repr=False)
+    password: str | None = Field(default=None, min_length=6, max_length=256, repr=False)
     roleId: str | None = None
 
 

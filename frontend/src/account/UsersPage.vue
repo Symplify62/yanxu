@@ -75,9 +75,10 @@ async function save() {
   if (
     allowLogin.value &&
     (!form.username.trim() ||
-      (!editing.value?.accountId && form.password.length < 12))
+      ((!editing.value?.accountId || form.password) &&
+        Array.from(form.password).length < 6))
   ) {
-    formError.value = "请填写账号和至少12位密码";
+    formError.value = "请填写账号和至少6位密码";
     return;
   }
   saving.value = true;
@@ -255,7 +256,9 @@ onMounted(load);
               autocomplete="off" /></el-form-item
           ><el-form-item
             :label="
-              editing?.accountId ? '重置密码（留空保留）' : '密码（至少12位）'
+              editing?.accountId
+                ? '重置密码（至少6位，留空保留）'
+                : '密码（至少6位）'
             "
             ><el-input
               v-model="form.password"
