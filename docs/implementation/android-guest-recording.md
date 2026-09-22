@@ -4,11 +4,12 @@
 
 ## 当前交付状态
 
-- 源码版本0.3.1，versionCode 11；原生APK构建通过。
-- 隔离验证通过：`guestchecks`（状态边界及真实回环HTTP上传）、`cloudchecks`、声音采集7项、人员选择界面5项。
-- 实际App页面、登录续接、录音上传和声音录入回归正在由本轮主验收执行，完成后补充结果与截图。尚不能据此声明全部设备验收通过。
-- 实测发现API36登录页“返回”与状态栏重叠，已在源码补充状态栏、导航栏、刘海及键盘安全边距，根容器在旋转时重新接收Insets；该修正等待重新构建并复测原返回路径。
-- 本记录建立时尚未记录0.3.1生产发布、更新清单替换或App自行升级结果；上一版的发布证据见[0.3.0发布验证](identity-voice-release.md)，不替代本版发布验收。
+- 0.3.1/code11已发布到公网更新清单，来源release合并提交`192f806abd797aa49903f849c514c436c7c10f4a`（[PR #13](https://github.com/Symplify62/yanxu/pull/13)）。
+- 隔离原生验证通过：guest身份/真实回环HTTP、cloudchecks、7项采集、5项人员面板、9项声音录入UI与真实隔离cloudapi。
+- 专用API36模拟器5562实际完成：匿名12秒录音的开始/暂停/继续/结束/自动上传；选人后受控录音；未登录选人和声音入口的全屏登录；取消/错误与成功续开原入口；member只看到本人的声音档案。
+- API36状态栏遮挡返回按钮的问题已修复并复测点击返回；横屏可滚动到登录按钮，大字体下重新打开页面可操作。字体设置改变导致Android重建Activity时丢弃未提交密码，不保留敏感草稿。
+- 发布包115476字节，SHA256 `b3f86f4a3cb92ebcbc072740f64807537363dd29d80e54531175cf3d09284ebe`，与0.3.0同包名/同签名。不可变APK和旧下载入口均经公网下载校验。后端未重启，数据库未迁移。
+- App自身从0.3.0升级的最终设备对账结果见下方发布验证段；物理手机拾音、OEM长时录音与真人识别仍未由本次模拟器验证替代。
 
 证据统一保存在被忽略的`.local-data/evidence/guest-recording/`；当前恢复入口是其中的`verification.md`。凭据、设备数据备份和测试库不加入Git。
 
@@ -56,7 +57,7 @@
 | 人员面板 | 5项原生布局/交互通过，使用私有测试资料、不打开麦克风 |
 | 实际页面与业务路径 | 专用5562：未登录开始/暂停/继续/结束得到12秒WAV并上传隔离API，SHA逐字节一致且服务端无owner/名单；登录自动续开选人、声音入口仅本人、取消/错误留页通过；另一次选人录音为managed且仅一位选中人 |
 | 录入UI回归 | 9项通过（模拟输入）；初次因测试设备麦克风权限未授予而拒绝，正常授权后原用例通过，主机麦克风持续关闭 |
-| 发布/自行升级 | 本地验收完成，发布后补提交、APK校验与更新清单 |
+| 发布/自行升级 | 0.3.1/code11清单及不可变APK已发布并核验；App自行升级结果见本页下方 |
 
 实际设备验证仅使用专用模拟器和隔离本地API，关闭主机麦克风；不得把模拟输入或既有合成模型测试称为真人会议准确率。物理手机、不同厂商后台策略、远距离和多人重叠识别仍属于原有未完成验收范围。
 
@@ -67,3 +68,13 @@
 发布完成后在本记录补充实际源码提交、APK路径与SHA256、线上更新清单结果、升级前后录音和设置保留证据。完整自动更新约定见[Android自动更新](android-updates.md)。
 
 设备证据在`.local-data/evidence/guest-recording/`：`guest-home.png`、`guest-recording.png`、`guest-paused.png`、`guest-uploaded.png`，`login-for-people.png`、`login-error.png`、`login-resumed-picker.png`、`login-resumed-own-voice.png`、大字体/横屏图，以及`anonymous-recording-verification.json`和原生检查日志。实际发现全屏登录返回按钮与API36状态栏重叠，修复Insets后原点击返回路径通过；字体缩放会由Android重建Activity并清除登录输入，重新打开大字体界面验证。
+
+
+## 0.3.1发布验证
+
+APK公开下载入口为<https://yanxu.qjl666.xyz/app/yanxu-debug.apk>，不可变文件`/app/releases/yanxu-11-b3f86f4a3cb9.apk`，清单`/app/update.json`。发布前备份旧code10清单与安装包到`/var/lib/yanxu/backups/guest-recording-20260922/`；先写不可变APK及旧下载入口，最后原子替换清单，没有覆盖旧版本文件。线上API及worker代码保持原状态。
+
+本机包`.local-data/artifacts/yanxu-0.3.1-guest-recording-debug.apk`，校验记录`.local-data/evidence/guest-recording/published-verification.json`。服务器发布SOURCE_COMMIT对应192f806，记录在同目录`published-server.txt`。新包不是以ADB覆盖安装作为自动更新证明；独立5562已用code10建立保留3组WAV/meta的旧版基线，再单独走App更新流程。
+
+
+App自行升级终态：专用`Yanxu_Update_030_API36` / emulator-5562从0.3.0/code10经App检查、下载、系统Play Protect扫描及安装确认升至0.3.1/code11；新版阶段未使用ADB安装。安装发起者和installer均为`cn.jiajian.yanxu`，已安装APK与公网SHA相同，签名与code10相同。升级前后的3组WAV/meta（6个文件）以及服务地址设置文件SHA完全一致，自动更新开启状态保留；新版未登录首页直接呈现开始录音、登录、选人和声音入口。证据为`update/after-update.json`、`package-after.txt`、签名和首页截图。旧版基线的准备使用过`adb install -r -d`，不把该准备步骤冒充更新。
