@@ -1,6 +1,6 @@
 # 前端补充入口
 
-当前实施范围优先读[第一阶段：免登录录音与公共结果](../docs/phases/phase-01.md)。v1.3的登录、个人/共享范围、组织角色与发群在本期暂缓，不能据此重新增加本期前置步骤。
+线上基线见[第一阶段](../docs/phases/phase-01.md)；账号、用户/角色/部门/声音后台和受控逐字稿按[当前实施](../docs/implementation/identity-voice-delivery.md)，真实入口`account.html`、实现`src/account/`。扫码和发群仍暂缓。
 
 继承[项目AGENTS](../AGENTS.md)。真实公共结果入口是后端5189的`public.html`，启动在`src/live/`，复用`src/styles`的A主题和`src/records`公共组件；`phase-one.html`保留独立演示。`prototype.html`和`src/design-lab/`保留完整A方案参考，B/C比较已移除。
 

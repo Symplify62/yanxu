@@ -17,35 +17,39 @@ logger = logging.getLogger("yanxu.remote_worker")
 
 
 def backup_database(cfg, client):
+    if not cfg.backup_token:
+        return
     import datetime
-    import sqlite3
+    from .private_backup import MAX_BUNDLE_BYTES, validate_bundle
 
     folder = cfg.data_dir / "cloud-backups"
     folder.mkdir(mode=0o700, parents=True, exist_ok=True)
-    files = sorted(folder.glob("*.sqlite3"))
+    files = sorted(folder.glob("*.tar"))
     if files and time.time() - files[-1].stat().st_mtime < 86400:
         return
     temp = folder / "receiving.tmp"
     size = 0
-    with client.stream("GET", "/internal/asr/backup") as response:
-        response.raise_for_status()
-        with temp.open("wb") as out:
-            temp.chmod(0o600)
-            for chunk in response.iter_bytes(1024 * 1024):
-                size += len(chunk)
-                if size > 512 * 1024**2:
-                    raise ValueError("Database backup too large")
-                out.write(chunk)
-            out.flush()
-            os.fsync(out.fileno())
-    with sqlite3.connect(f"file:{temp}?mode=ro", uri=True) as db:
-        if db.execute("PRAGMA quick_check").fetchone()[0] != "ok":
-            raise ValueError("Invalid database backup")
-    stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    os.replace(temp, folder / (stamp + ".sqlite3"))
-    for old in files[:-29]:
-        old.unlink()
-    logger.info("Cloud database backup saved on Mac")
+    try:
+        with client.stream("GET", "/internal/asr/backup-bundle", headers={"Authorization": "Bearer " + cfg.backup_token}, timeout=180) as response:
+            response.raise_for_status()
+            with temp.open("wb") as out:
+                temp.chmod(0o600)
+                for chunk in response.iter_bytes(1024 * 1024):
+                    size += len(chunk)
+                    if size > MAX_BUNDLE_BYTES:
+                        raise ValueError("Private backup too large")
+                    out.write(chunk)
+                out.flush()
+                os.fsync(out.fileno())
+        evidence = validate_bundle(temp)
+        stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+        os.replace(temp, folder / (stamp + ".tar"))
+        for old in files[:-29]:
+            old.unlink()
+        logger.info("Cloud private backup saved and recovery verified on Mac")
+        return evidence
+    finally:
+        temp.unlink(missing_ok=True)
 
 
 def download(client, cfg, job):

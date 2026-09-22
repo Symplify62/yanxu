@@ -18,6 +18,8 @@ SOURCES = [
     ROOT / 'config/README.md',
     ROOT / 'backend/README.md', ROOT / 'android/README.md',
     ROOT / 'docs/implementation/phase-one-live.md',
+    ROOT / 'docs/implementation/identity-voice-delivery.md',
+    ROOT / 'tools/voice-runtime/README.md',
     *sorted((ROOT / 'docs/research').glob('*.md')),
     ROOT / 'docs/repository/workflow.md', ROOT / 'docs/repository/cleanup.md', ROOT / 'frontend/docs/technical-choice.md',
     ROOT / 'frontend/docs/design-lab/selection.md', ROOT / 'frontend/docs/design-lab/README.md',

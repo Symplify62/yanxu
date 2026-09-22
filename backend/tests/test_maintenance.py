@@ -21,6 +21,7 @@ def test_backup_private_and_cache_only_after_remote_verification(tmp_path, monke
         qiniu_delivery=True,
         worker_stage="analysis",
         worker_token="x" * 40,
+        backup_token="b" * 40,
     )
     app = create_app(cfg)
     c = TestClient(app)
@@ -29,8 +30,9 @@ def test_backup_private_and_cache_only_after_remote_verification(tmp_path, monke
     c.post(f"/api/uploads/{id}/complete", headers=h)
     path = Path(s.get(id)["audio_path"])
     assert c.get("/internal/asr/backup").status_code == 403
+    assert c.get("/internal/asr/backup", headers={"Authorization": "Bearer " + cfg.worker_token}).status_code == 403
     b = c.get(
-        "/internal/asr/backup", headers={"Authorization": "Bearer " + cfg.worker_token}
+        "/internal/asr/backup", headers={"Authorization": "Bearer " + cfg.backup_token}
     )
     assert b.status_code == 200 and b.content.startswith(b"SQLite format 3")
     assert not list((tmp_path / "backups").glob("download-*"))
@@ -64,3 +66,26 @@ def test_disk_reservation_rejects_before_upload(tmp_path, monkeypatch):
         },
     )
     assert r.status_code == 429
+
+
+def test_managed_audio_survives_long_worker_outage(tmp_path, monkeypatch):
+    cfg = Settings(data_dir=tmp_path, storage='qiniu', qiniu_access_key='ak', qiniu_secret_key='sk',
+                   qiniu_bucket='b', qiniu_domain='https://audio.example.com', qiniu_delivery=True, worker_stage='analysis')
+    app = create_app(cfg)
+    c, s = TestClient(app), app.state.store
+    rid, headers, _, _ = upload(c)
+    c.post(f'/api/uploads/{rid}/complete', headers=headers)
+    mirror = SimpleNamespace(ensure=lambda *args: None)
+    monkeypatch.setattr('yanxu.maintenance.QiniuMirror', lambda cfg: mirror)
+    sync_one(s, mirror)
+    path = Path(s.get(rid)['audio_path'])
+    with s.connect(True) as db:
+        db.execute("UPDATE recordings SET owner_account_id='managed-account' WHERE id=?", (rid,))
+        db.execute('UPDATE cloud_objects SET verified_at=?', (time.time() - 9 * 86400,))
+    assert run(cfg)['prunedAudioFiles'] == 0 and path.exists()  # ASR not started yet.
+    with s.connect(True) as db:
+        db.execute("UPDATE recordings SET state='complete',attribution_state='waiting' WHERE id=?", (rid,))
+    assert run(cfg)['prunedAudioFiles'] == 0 and path.exists()  # Explicit re-attribution.
+    with s.connect(True) as db:
+        db.execute("UPDATE recordings SET attribution_state='complete' WHERE id=?", (rid,))
+    assert run(cfg)['prunedAudioFiles'] == 1 and not path.exists()

@@ -29,19 +29,20 @@ public class UploadJob extends JobService {
                 if (stopped) break;
                 try {
                   JSONObject m = LocalStore.read(d);
-                  if (!Arrays.asList("saved", "uploading", "retry").contains(m.optString("state")))
+                  if (!Arrays.asList("saved", "uploading", "retry", "awaiting_login").contains(m.optString("state")))
                     continue;
                   upload(d, m);
                 } catch (Exception e) {
-                  boolean permanent = e instanceof Rejected;
-                  retry |= !permanent;
+                  boolean needsLogin = e instanceof RecordingIdentity.LoginRequired || (e instanceof CloudApi.Failure && ((CloudApi.Failure)e).status == 401);
+                  boolean permanent = e instanceof Rejected || (e instanceof CloudApi.Failure && ((CloudApi.Failure)e).status >= 400 && ((CloudApi.Failure)e).status < 500);
+                  retry |= !permanent && !needsLogin;
                   try {
                     JSONObject m = LocalStore.read(d);
                     String message =
-                        permanent
-                            ? (((Rejected) e).status == 413 ? "文件超过服务容量配置，录音已保留" : "服务拒绝此文件，录音已保留")
+                        needsLogin ? "请登录录制时的账号后继续上传，录音已保留" : permanent
+                            ? (e instanceof CloudApi.Failure ? e.getMessage() : ((Rejected) e).status == 413 ? "文件超过服务容量配置，录音已保留" : "服务拒绝此文件，录音已保留")
                             : "等待网络或服务恢复";
-                    m.put("state", permanent ? "blocked" : "retry").put("message", message);
+                    m.put("state", needsLogin ? "awaiting_login" : permanent ? "blocked" : "retry").put("message", message);
                     LocalStore.save(d, m);
                   } catch (Exception ignored) {
                   }
@@ -62,6 +63,10 @@ public class UploadJob extends JobService {
   }
 
   private void upload(File d, JSONObject m) throws Exception {
+    CloudSession owner = RecordingIdentity.requireOwner(this, m);
+    JSONObject identity = m.optJSONObject("cloudIdentity");
+    String server = identity == null ? m.optString("uploadServer", LocalStore.server(this)) : identity.getString("server");
+    if (!m.has("uploadServer")) { m.put("uploadServer",server); LocalStore.save(d,m); }
     File f = new File(d, m.getString("filename"));
     MessageDigest hash = MessageDigest.getInstance("SHA-256");
     byte[] buffer = new byte[1024 * 1024];
@@ -81,17 +86,16 @@ public class UploadJob extends JobService {
                 "extension",
                 m.getString("filename").substring(m.getString("filename").lastIndexOf('.') + 1))
             .put("interrupted", m.optBoolean("interrupted"));
-    JSONObject session =
-        request(
-            "POST",
-            "/api/recordings",
-            create.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8),
-            null,
-            true);
+    JSONObject session;
+    if (owner != null) {
+      create.put("participants", identity.getJSONArray("participants")).put("rosterClientId",identity.getString("rosterClientId"));
+      session = CloudApi.request(owner,"POST","/api/managed/recordings",create);
+    } else session = request(server,"POST","/api/recordings",
+        create.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8),null,true);
     String id = session.getString("id"), token = session.getString("uploadToken");
     int chunk = session.getInt("chunkSize");
     JSONArray parts =
-        request("GET", "/api/uploads/" + id, null, token, false).getJSONArray("parts");
+        request(server,"GET", "/api/uploads/" + id, null, token, false).getJSONArray("parts");
     Set<Integer> done = new HashSet<>();
     for (int i = 0; i < parts.length(); i++) done.add(parts.getJSONObject(i).getInt("part_no"));
     m.put("state", "uploading");
@@ -100,26 +104,29 @@ public class UploadJob extends JobService {
       long total = f.length();
       for (int i = 0; (long) i * chunk < total; i++) {
         if (stopped) throw new IOException("stopped");
+        RecordingIdentity.requireOwner(this,m);
         if (done.contains(i)) continue;
         in.seek((long) i * chunk);
         byte[] data = new byte[(int) Math.min(chunk, total - (long) i * chunk)];
         in.readFully(data);
-        request("PUT", "/api/uploads/" + id + "/parts/" + i, data, token, false);
+        request(server,"PUT", "/api/uploads/" + id + "/parts/" + i, data, token, false);
         m.put("progress", (int) (((long) i * chunk + data.length) * 100 / total));
         LocalStore.save(d, m);
       }
     }
+    RecordingIdentity.requireOwner(this,m);
     JSONObject result =
-        request("POST", "/api/uploads/" + id + "/complete", new byte[0], token, false);
+        request(server,"POST", "/api/uploads/" + id + "/complete", new byte[0], token, false);
     m.put("duration", result.optDouble("duration"));
     m.put("state", "uploaded").put("server_id", id).put("message", "已上传，自动处理中");
     LocalStore.save(d, m);
   }
 
-  private JSONObject request(String method, String path, byte[] body, String token, boolean json)
+  private JSONObject request(String server, String method, String path, byte[] body, String token, boolean json)
       throws Exception {
-    URL url = new URL(LocalStore.server(this) + path);
+    URL url = new URL(server + path);
     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+    conn.setInstanceFollowRedirects(false);
     conn.setConnectTimeout(15000);
     conn.setReadTimeout(120000);
     conn.setRequestMethod(method);

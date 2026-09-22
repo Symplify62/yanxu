@@ -60,7 +60,7 @@ const segments = computed(() =>
     ? (props.record?.transcript?.segments || []).map((s) => ({
         ...s,
         time: duration(s.start),
-        speaker: s.speaker || "发言",
+        speaker: s.speaker || "未识别",
       }))
     : props.demoTranscript || [],
 );
@@ -216,7 +216,18 @@ async function copy() {
               </ol></template
             ><template v-else-if="tab === 'transcript' && textReady"
               ><h2>逐字稿</h2>
-
+              <p
+                v-if="record?.speakerStatus === 'waiting'"
+                class="p1-secondary"
+              >
+                正在识别发言人
+              </p>
+              <p
+                v-else-if="record?.speakerStatus === 'failed'"
+                class="p1-secondary"
+              >
+                发言人识别未完成，逐字稿已保留
+              </p>
               <article
                 v-for="t in segments"
                 :key="t.time"

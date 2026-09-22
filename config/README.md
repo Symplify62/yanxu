@@ -1,5 +1,7 @@
 # 本地服务配置
 
+账号与声音新增配置见[实施与运行说明](../docs/implementation/identity-voice-delivery.md)。初始化管理员通过终端标准输入设置密码，无默认密码；声音worker和数据库备份各用独立凭证。模型安装在独立环境，公用录音七牛空间保持原用途。
+
 用户已指定DeepSeek做转写后的文本分析。填写本机`config/.env.local`中的`DEEPSEEK_API_KEY`即可准备好密钥；这个文件被Git忽略，不放到前端、不提交。供他人克隆的空模板是[.env.example](.env.example)。
 
 后端已读取此配置，并完成小样本与真实转写文本的DeepSeek调用。ASR仍在本机禁网运行；只有后续分析会将转写文本发送到用户指定的DeepSeek。修改配置后需重启API和worker。此前ASR选型测试没有调用云服务。

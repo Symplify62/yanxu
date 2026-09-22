@@ -112,9 +112,13 @@ onUnmounted(() => {
       <header v-if="!embedded" class="p1-header">
         <a href="#/results" class="p1-brand"
           ><AudioLines :size="24" /><strong>言序</strong></a
-        ><a href="/app/yanxu-debug.apk" class="p1-secondary"
-          >下载 Android 测试版</a
         >
+        <nav class="live-links">
+          <a href="/account.html" class="p1-secondary">账号工作台</a
+          ><a href="/app/yanxu-debug.apk" class="p1-secondary"
+            >下载 Android 测试版</a
+          >
+        </nav>
       </header>
       <main class="p1-main">
         <div v-if="error" role="alert" class="p1-error">
@@ -160,6 +164,13 @@ onUnmounted(() => {
   >
 </template>
 <style>
+.live-links {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
 .live-audio audio {
   width: 100%;
   margin: 20px 0;

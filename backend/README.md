@@ -2,6 +2,8 @@
 
 API＋独立worker＋SQLite WAL＋持久音频。公网运行见[部署记录](../docs/implementation/public-deployment.md)：阿里云API/分析/云同步，Mac远程转写。本页以下启动命令默认指本机旧测试环境，数据在`.local-data/server`，不入Git；ASR依赖`~/.local/share/pcim-asr`的MLX环境。
 
+新增账号、管理后台、私有声音与说话人识别按[实施与运行说明](../docs/implementation/identity-voice-delivery.md)。后台入口 `/account.html`；匿名公共接口仍兼容旧App。新权限、独立备份凭证及数据库迁移需随新版本一并部署，源码实现不表示生产已切换。
+
 ## 启动
 
 在本目录：
@@ -13,7 +15,7 @@ uv run uvicorn yanxu.api:create_app --factory --host 127.0.0.1 --port 5189
 uv run python -m yanxu.worker
 ```
 
-公共页面需先在frontend执行`npm run build`。访问 http://127.0.0.1:5189/ 。API只暴露公共记录和归档音频，不挂载项目目录、配置、ASR日志或原始测试目录。
+公共页面和账号工作台需先在frontend执行`npm run build`。访问 http://127.0.0.1:5189/ 。匿名API暴露公共记录和归档音频；身份、目录和声音档案接口鉴权，不挂载项目目录、配置、ASR日志或原始测试目录。
 
 Android USB联调使用`adb -s <设备ID> reverse tcp:5189 tcp:5189`，App服务地址填`http://127.0.0.1:5189`。若改为局域网联调，显式使用LAN监听地址并在App填Mac地址；当前未开放LAN或公网监听。
 

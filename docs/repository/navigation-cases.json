@@ -52,5 +52,17 @@
     "entry": "AGENTS.md",
     "target": "docs/repository/workflow.md",
     "max_hops": 1
+  },
+  {
+    "task": "真实账号和声音档案实施边界",
+    "entry": "AGENTS.md",
+    "target": "docs/implementation/identity-voice-delivery.md",
+    "max_hops": 1
+  },
+  {
+    "task": "安装独立声音模型运行环境",
+    "entry": "AGENTS.md",
+    "target": "tools/voice-runtime/README.md",
+    "max_hops": 2
   }
 ]
