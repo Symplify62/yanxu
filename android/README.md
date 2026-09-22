@@ -2,7 +2,7 @@
 
 原生AudioRecord采音、麦克风前台服务、PCM/WAV本地保存、JobScheduler可恢复上传。界面沿用A风格；公共结果页在App中读取真实服务。0.3.0接入组织者账号密码、云人员目录、私有声音登记与受保护会议上传；公共WebView仍匿名，登录后的实名逐字稿走原生受保护接口。DeepSeek密钥不进入App。
 
-本轮联网测试版 **0.3.0（versionCode 10）**。保留0.2.0头像选人、全选、真实声音录制和本机持久保存，新增云接入。源码与构建完成不等于部署；仅在目标服务已上线身份/声音接口后登录可用，未支持的服务明确报错。未发布自动更新清单。完整后端及发布边界见[真实身份与声音实施](../docs/implementation/identity-voice-delivery.md)。0.2.0历史验证见[本机人员与声音接入](../docs/implementation/android-local-speakers.md)。
+本轮联网测试版 **0.3.0（versionCode 10）**。保留0.2.0头像选人、全选、真实声音录制和本机持久保存，新增云接入。2026-09-22已上线对应后端并发布自动更新清单；安装与下载入口见[0.3.0发布验证](../docs/implementation/identity-voice-release.md)。旧服务仍会明确报版本不支持。完整后端及发布边界见[真实身份与声音实施](../docs/implementation/identity-voice-delivery.md)。0.2.0历史验证见[本机人员与声音接入](../docs/implementation/android-local-speakers.md)。
 
 App默认连接 `https://yanxu.qjl666.xyz`，联网使用无需USB。曾手动填写其他服务地址的安装会保留原设置，需在“设置”中确认；旧本地已上传记录不批量重新发布。公网运行与实测证据见[部署记录](../docs/implementation/public-deployment.md)。
 
