@@ -4,6 +4,8 @@
 
 ## 已发布版本
 
+2026-09-22个人设置自助改密已上线：release合并提交`a6965e1562b983f4c63686e56f131d240d9134f5`（[PR #11](https://github.com/Symplify62/yanxu/pull/11)），当前目录`/opt/yanxu/releases/20260922-self-password`。所有登录账号可从`/account.html#/settings`输入旧密码、新密码和确认完成本人改密，成功撤销全部本人会话；旧密码错误不退出，6位无组合规则保留。无数据库结构迁移或Android新包，未改实际用户密码；发布备份在`/var/lib/yanxu/backups/self-password-20260922/`。全后端136项、前端33项和8项相关真实API浏览器验证通过；桌面/手机/平板截图已核对。线上临时普通账号通过真实页面改密和新密码登录，旧密码及旧token401，管理员会话不受影响；验证账号随后归档。证据在`.local-data/evidence/self-password/`。以下为更早时点的发布记录。
+
 2026-09-22后续密码规则更新已发布：最低6个字符，无字符组合要求；发布源为release合并提交`ada8b1ee49a591d8959ebc9f423cc23549df8bb6`（[PR #9](https://github.com/Symplify62/yanxu/pull/9)），当前目录`/opt/yanxu/releases/20260922-password-six`。只更新账号校验和页面，未修改现有密码、数据库结构或Android安装包；发布前备份在`/var/lib/yanxu/backups/password-six-20260922/`。全后端113项、浏览器创建/重置/登录与构建通过；生产验证6位数字/字母/符号通过请求校验仍要求认证、5位返回422，线上页面资源已更新。以下0.3.0大版本发布记录保留当时时点。
 
 - 功能提交 `21a22128fec27e466ea66778b5e33d9a62cbabc6`，通过 [PR #7](https://github.com/Symplify62/yanxu/pull/7) 合入release；实际服务来源为合并提交 `096b0e37701ae3e94041c0ef95635aa088abd004`。
