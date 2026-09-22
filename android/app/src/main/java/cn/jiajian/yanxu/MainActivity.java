@@ -35,10 +35,19 @@ public class MainActivity extends Activity {
   private VoiceEnrollmentDialog voiceDialog;
   private TextView participantCount;
   private String pendingVoiceId;
+  private JSONObject pendingRecordingContext;
+  private JSONObject pendingImportContext;
+  private String displayedSession = "";
   private final Handler handler = new Handler(Looper.getMainLooper());
   private final Runnable tick =
       new Runnable() {
         public void run() {
+          if (!sessionDisplayKey().equals(displayedSession)) {
+            cloudUi.dismissProtected();
+            if (voiceDialog != null) voiceDialog.dismiss();
+            pendingVoiceId = null;
+            useAccountStore(); render();
+          }
           if (settingsLabel != null)
             settingsLabel.setText(AppUpdater.needsAction(MainActivity.this) ? "设置 · 更新" : "设置");
           if (tab == 0) {
@@ -151,6 +160,7 @@ public class MainActivity extends Activity {
   }
 
   private void render() {
+    displayedSession = sessionDisplayKey();
     if (peoplePanel != null) {
       peoplePanel.dismiss();
       peoplePanel = null;
@@ -179,6 +189,12 @@ public class MainActivity extends Activity {
     TextView brand = text("言序", 25, GREEN);
     brand.setTypeface(null, Typeface.BOLD);
     top.addView(brand, new LinearLayout.LayoutParams(0, -2, 1));
+    CloudSession headerSession = CloudSession.current(this);
+    TextView account = text(headerSession != null && headerSession.valid() ? "账号" : "登录", 13, GREEN);
+    account.setContentDescription(headerSession != null && headerSession.valid() ? "账号与云端资料" : "账号登录");
+    account.setPadding(dp(12), dp(10), dp(12), dp(10));
+    account.setOnClickListener(v -> cloudUi.account());
+    top.addView(account);
     TextView settings = text("设置", 13, MUTED);
     settingsLabel = settings;
     settings.setPadding(dp(12), dp(10), dp(12), dp(10));
@@ -239,8 +255,7 @@ public class MainActivity extends Activity {
     tp.bottomMargin = dp(12);
     card.addView(timer, tp);
     if (!RecordingService.active) {
-      CloudSession session = CloudSession.current(this);
-      card.addView(button(session == null || !session.valid() ? "登录并录音" : "开始录音", true, this::startRecording));
+      card.addView(button("开始录音", true, this::startRecording));
     } else {
       card.addView(
           button(RecordingService.paused ? "继续录音" : "暂停录音", false, () -> command("pause")));
@@ -256,10 +271,17 @@ public class MainActivity extends Activity {
     body.addView(participantCount);
     updateParticipantCount();
     CloudSession activeSession = CloudSession.current(this);
-    if (activeSession == null || !activeSession.valid()) {
-      body.addView(text("登录后选择参会者和管理声音", 13, MUTED));
-      return;
-    }
+    LinearLayout featureActions = new LinearLayout(this);
+    Button participants = button("选择参会者", false, this::openParticipantPicker);
+    Button voices = button("声音档案", false, this::openVoiceProfiles);
+    LinearLayout.LayoutParams participantLayout = new LinearLayout.LayoutParams(0, dp(50), 1);
+    participantLayout.topMargin = dp(12); participantLayout.rightMargin = dp(6);
+    LinearLayout.LayoutParams voiceLayout = new LinearLayout.LayoutParams(0, dp(50), 1);
+    voiceLayout.topMargin = dp(12); voiceLayout.leftMargin = dp(6);
+    participants.setEnabled(!RecordingService.active); voices.setEnabled(!RecordingService.active);
+    featureActions.addView(participants, participantLayout); featureActions.addView(voices, voiceLayout);
+    body.addView(featureActions);
+    if (activeSession == null || !activeSession.valid() || !activeSession.allows("record")) return;
     body.addView(button("同步人员与声纹", false, () -> cloudUi.sync()));
     peoplePanel =
         new PeoplePanel(
@@ -268,6 +290,7 @@ public class MainActivity extends Activity {
             new PeoplePanel.Listener() {
               @Override
               public void onEnroll(String personId) {
+                if (!requirePeopleLogin(() -> openVoiceProfiles())) return;
                 cloudUi.voice(peopleStore, personId, () -> requestVoiceRecording(personId));
               }
 
@@ -277,10 +300,8 @@ public class MainActivity extends Activity {
               }
 
               @Override public boolean onAddRequested() { cloudUi.addPerson(); return true; }
-              @Override public boolean canAddPeople() {
-                CloudSession session = CloudSession.current(MainActivity.this);
-                return session != null && session.valid() && session.allows("record");
-              }
+              @Override public boolean canAddPeople() { return canChoosePeople(); }
+              @Override public boolean canSelectPeople() { return canChoosePeople(); }
             });
     body.addView(peoplePanel.build());
     if (!RecordingService.active) {
@@ -314,6 +335,9 @@ public class MainActivity extends Activity {
 
   private void updateParticipantCount() {
     if (participantCount == null) return;
+    CloudSession session = CloudSession.current(this);
+    if (session == null || !session.valid() || !session.allows("record")) { participantCount.setVisibility(View.GONE); return; }
+    participantCount.setVisibility(View.VISIBLE);
     try {
       int count = peopleStore.selected().size();
       participantCount.setText(count == 0 ? "未选参会者" : "本场 " + count + " 人 · 录音开始后名单固定");
@@ -323,6 +347,7 @@ public class MainActivity extends Activity {
   }
 
   private void requestVoiceRecording(String personId) {
+    if (!requirePeopleLogin(this::openVoiceProfiles)) return;
     if (RecordingService.active || VoiceEnrollmentDialog.busy) {
       Toast.makeText(this, "请先结束当前录音或声音录入", Toast.LENGTH_SHORT).show();
       return;
@@ -355,11 +380,12 @@ public class MainActivity extends Activity {
         return;
       }
       try {
-        JSONObject roster = peopleStore.snapshot();
-        i.putExtra("participantsSnapshot", roster.toString());
-        i.putExtra("cloudIdentity", RecordingIdentity.capture(this,roster).toString());
+        JSONObject context = pendingRecordingContext;
+        pendingRecordingContext = null;
+        if (context == null) context = RecordingIdentity.captureForRecording(this, peopleStore.snapshot());
+        i.putExtra("recordingContext", context.toString());
       } catch (Exception e) {
-        Toast.makeText(this, e.getMessage() == null ? "无法保存参会名单，尚未开始录音" : e.getMessage(), Toast.LENGTH_LONG).show();
+        recordingBlocked(e);
         return;
       }
       startForegroundService(i);
@@ -371,10 +397,64 @@ public class MainActivity extends Activity {
     peopleStore = session == null ? new PeopleStore(this,CloudSession.scope("signed-out","hidden")) : new PeopleStore(this,session.scope());
   }
 
-  private void startRecording() {
+  private String sessionDisplayKey() {
     CloudSession session = CloudSession.current(this);
-    if (session == null || !session.valid()) { cloudUi.login(); return; }
-    if (!session.allows("record")) { Toast.makeText(this,"当前账号没有录音权限",Toast.LENGTH_LONG).show(); return; }
+    return session == null ? "guest" : session.scope() + ":" + session.valid() + ":" + session.account.optJSONArray("permissions");
+  }
+
+  private boolean canChoosePeople() {
+    CloudSession session = CloudSession.current(this);
+    return session != null && session.valid() && session.allows("record");
+  }
+
+  private boolean requirePeopleLogin(Runnable continuation) {
+    CloudSession session = CloudSession.current(this);
+    if (session == null || !session.valid()) { cloudUi.login(continuation); return false; }
+    return true;
+  }
+
+  private void openParticipantPicker() {
+    if (RecordingService.active || VoiceEnrollmentDialog.busy) {
+      Toast.makeText(this, "请先结束录音或声音录入", Toast.LENGTH_SHORT).show(); return;
+    }
+    if (!requirePeopleLogin(this::openParticipantPicker)) return;
+    if (!canChoosePeople()) { Toast.makeText(this,"当前账号没有选择参会者的权限",Toast.LENGTH_LONG).show(); return; }
+    tab = 0; useAccountStore(); render();
+    if (peoplePanel != null) peoplePanel.showPicker();
+  }
+
+  private void openVoiceProfiles() {
+    if (RecordingService.active || VoiceEnrollmentDialog.busy) {
+      Toast.makeText(this, "请先结束录音或声音录入", Toast.LENGTH_SHORT).show(); return;
+    }
+    if (!requirePeopleLogin(this::openVoiceProfiles)) return;
+    useAccountStore();
+    cloudUi.voices(peopleStore, this::requestVoiceRecording);
+  }
+
+  private void recordingBlocked(Exception error) {
+    try {
+      if (!peopleStore.selected().isEmpty() && !canChoosePeople()) {
+        new AlertDialog.Builder(this).setTitle("本场名单需要登录")
+            .setMessage("重新登录使用已选人员，或清空名单后普通录音。")
+            .setNegativeButton("取消", null)
+            .setNeutralButton("清空本场名单", (d, which) -> {
+              try {
+                ArrayList<String> ids = new ArrayList<>();
+                for (PeopleStore.Person person : peopleStore.selected()) ids.add(person.id);
+                peopleStore.setSelected(ids, false); render();
+              } catch (Exception e) { Toast.makeText(this,"名单未能清空，请重试",Toast.LENGTH_LONG).show(); }
+            })
+            .setPositiveButton("登录", (d, which) -> cloudUi.login()).show();
+        return;
+      }
+    } catch (Exception ignored) {}
+    Toast.makeText(this,error.getMessage() == null ? "尚未开始录音，请重试" : error.getMessage(),Toast.LENGTH_LONG).show();
+  }
+
+  private void startRecording() {
+    try { pendingRecordingContext = RecordingIdentity.captureForRecording(this, peopleStore.snapshot()); }
+    catch (Exception e) { recordingBlocked(e); return; }
     if (checkSelfPermission(Manifest.permission.RECORD_AUDIO)
         != PackageManager.PERMISSION_GRANTED) {
       ArrayList<String> permissions = new ArrayList<>();
@@ -399,6 +479,7 @@ public class MainActivity extends Activity {
       if (checkSelfPermission(Manifest.permission.RECORD_AUDIO)
           == PackageManager.PERMISSION_GRANTED) command("start");
       else {
+        pendingRecordingContext = null;
         RecordingService.message = "请允许麦克风权限";
         render();
       }
@@ -568,7 +649,7 @@ public class MainActivity extends Activity {
     box.setOrientation(1);
     box.setPadding(dp(22), dp(10), dp(22), 0);
     CloudSession session = CloudSession.current(this);
-    box.addView(button(session == null ? "账号登录" : "账号 · " + session.account.optString("displayName",session.account.optString("username")),false,() -> {
+    box.addView(button(session == null || !session.valid() ? "账号登录" : "账号 · " + session.account.optString("displayName",session.account.optString("username")),false,() -> {
       if (settingsDialog != null) settingsDialog.dismiss();
       cloudUi.account();
     }));
@@ -592,8 +673,8 @@ public class MainActivity extends Activity {
                     Toast.makeText(this, "请先结束录音", Toast.LENGTH_SHORT).show();
                     return;
                   }
-                  CloudSession login = CloudSession.current(this);
-                  if (login == null || !login.valid()) { cloudUi.login(); return; }
+                  try { pendingImportContext = RecordingIdentity.captureForRecording(this,new JSONObject().put("participants",new JSONArray())); }
+                  catch (Exception e) { recordingBlocked(e); return; }
                   Intent i =
                       new Intent(Intent.ACTION_OPEN_DOCUMENT)
                           .setType("audio/*")
@@ -636,11 +717,12 @@ public class MainActivity extends Activity {
   @Override
   protected void onActivityResult(int request, int result, Intent data) {
     super.onActivityResult(request, result, data);
-    if (request != 201 || result != RESULT_OK || data == null) return;
+    if (request != 201) return;
+    final JSONObject recordingContext = pendingImportContext;
+    pendingImportContext = null;
+    if (result != RESULT_OK || data == null) return;
     Uri uri = data.getData();
-    final JSONObject identity;
-    try { identity = RecordingIdentity.capture(this,new JSONObject().put("participants",new JSONArray())); }
-    catch (Exception e) { Toast.makeText(this,"请登录后重新导入",Toast.LENGTH_LONG).show(); return; }
+    if (recordingContext == null) { Toast.makeText(this,"导入已中断，请重新选择音频",Toast.LENGTH_LONG).show(); return; }
     synchronized (AppUpdater.GATE) {
       if (AppUpdater.installing(this)) {
         Toast.makeText(this, "正在更新，请稍后导入", Toast.LENGTH_SHORT).show();
@@ -678,8 +760,10 @@ public class MainActivity extends Activity {
                                     .format(new Date()))
                         .put("filename", name)
                         .put("state", "saved")
-                        .put("createdAt", System.currentTimeMillis())
-                        .put("cloudIdentity",identity);
+                        .put("createdAt", System.currentTimeMillis());
+                for (Iterator<String> keys = recordingContext.keys(); keys.hasNext();) {
+                  String key = keys.next(); m.put(key,recordingContext.get(key));
+                }
                 LocalStore.save(dir, m);
                 LocalStore.enqueue(this);
                 runOnUiThread(
@@ -708,7 +792,7 @@ public class MainActivity extends Activity {
 
   private void showMyMeetings(int offset) {
     CloudSession session = CloudSession.current(this);
-    if (session == null || !session.valid()) { cloudUi.login(); return; }
+    if (session == null || !session.valid()) { cloudUi.login(() -> showMyMeetings(offset)); return; }
     new Thread(() -> {
       try {
         JSONObject result = CloudApi.request(session,"GET","/api/managed/recordings?limit=30&offset="+offset,null);

@@ -20,6 +20,7 @@ final class CloudAccountUi {
   private final Runnable changed;
   private final Handler handler = new Handler(Looper.getMainLooper());
   private AlertDialog owned;
+  private LoginPage loginPage;
   private boolean busy;
   CloudAccountUi(Activity activity, Runnable changed) { this.activity = activity; this.changed = changed; }
   interface Work { void run() throws Exception; }
@@ -31,7 +32,8 @@ final class CloudAccountUi {
   private TextView text(String value) { TextView t = new TextView(activity); t.setText(value); t.setTextSize(14); t.setPadding(0,dp(8),0,dp(8)); return t; }
   private Button button(String value, Runnable click) { Button b = new Button(activity); b.setText(value); b.setAllCaps(false); b.setOnClickListener(v -> click.run()); return b; }
   private void show(AlertDialog dialog) { if (owned != null) owned.dismiss(); owned = dialog; dialog.show(); }
-  void close() { if (owned != null) owned.dismiss(); handler.removeCallbacksAndMessages(null); }
+  void dismissProtected() { if (owned != null) owned.dismiss(); }
+  void close() { if (owned != null) owned.dismiss(); if (loginPage != null) loginPage.dismiss(); handler.removeCallbacksAndMessages(null); }
   private void error(Exception e) { if (live()) new AlertDialog.Builder(activity).setTitle("操作未完成")
       .setMessage(e instanceof CloudApi.Failure ? e.getMessage() : e.getMessage() == null ? "网络或存储不可用，请重试" : e.getMessage())
       .setPositiveButton("知道了", null).show(); }
@@ -46,38 +48,49 @@ final class CloudAccountUi {
   }
   private CloudSession require() throws Exception {
     CloudSession session = CloudSession.current(activity);
-    if (session == null || !session.valid()) throw new CloudApi.Failure(401, "请先登录组织者账号");
+    if (session == null || !session.valid()) throw new CloudApi.Failure(401, "请先登录");
     return session;
   }
   private void ensure(CloudSession expected) throws Exception {
     if (!CloudSession.same(activity, expected)) throw new IOException("账号或服务已切换，请重新操作");
   }
-  void login() {
-    LinearLayout box = form();
-    EditText username = new EditText(activity); username.setSingleLine(true); username.setHint("账号"); username.setContentDescription("账号");
-    EditText password = new EditText(activity); password.setSingleLine(true); password.setHint("密码"); password.setContentDescription("密码");
-    password.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-    password.setImportantForAutofill(android.view.View.IMPORTANT_FOR_AUTOFILL_NO);
-    box.addView(username); box.addView(password);
-    AlertDialog dialog = new AlertDialog.Builder(activity).setTitle("账号登录").setView(box).setNegativeButton("取消",null).setPositiveButton("登录",null).create();
-    show(dialog); dialog.getButton(-1).setOnClickListener(v -> {
-      String name = username.getText().toString().trim(), secret = password.getText().toString();
-      if (name.isEmpty() || secret.isEmpty()) { password.setError("请输入账号和密码"); return; }
+  void login() { login(null); }
+  void login(Runnable onReady) {
+    if (owned != null) owned.dismiss();
+    if (loginPage != null) loginPage.dismiss();
+    final LoginPage[] page = new LoginPage[1];
+    page[0] = new LoginPage(activity, (name, secret) -> {
       String server = LocalStore.server(activity);
-      task("正在登录", () -> {
-        JSONObject reply = CloudApi.request(server, null, "POST", "/api/auth/login", new JSONObject().put("username",name).put("password",secret).toString().getBytes(StandardCharsets.UTF_8), "application/json");
-        Object expires = reply.get("expiresAt"); long expiry;
-        if (expires instanceof Number) { expiry = ((Number)expires).longValue(); if (expiry < 100000000000L) expiry *= 1000; }
-        else expiry = Instant.parse(expires.toString()).toEpochMilli();
-        CloudSession next = new CloudSession(server,reply.getString("accessToken"),reply.getJSONObject("account"),expiry);
-        if (!CloudSession.normalize(LocalStore.server(activity)).equals(next.server)) throw new IOException("服务已切换，请重新登录");
-        CloudSession.save(activity,next);
-        // Login succeeds independently of a transient directory outage; explicit sync can retry.
-      }, () -> { password.setText(""); dialog.dismiss(); sync(); LocalStore.enqueue(activity); });
+      new Thread(() -> {
+        CloudSession next = null; Exception failure = null;
+        try {
+          JSONObject reply = CloudApi.request(server, null, "POST", "/api/auth/login", new JSONObject().put("username",name).put("password",secret).toString().getBytes(StandardCharsets.UTF_8), "application/json");
+          Object expires = reply.get("expiresAt"); long expiry;
+          if (expires instanceof Number) { expiry = ((Number)expires).longValue(); if (expiry < 100000000000L) expiry *= 1000; }
+          else expiry = Instant.parse(expires.toString()).toEpochMilli();
+          next = new CloudSession(server,reply.getString("accessToken"),reply.getJSONObject("account"),expiry);
+        } catch (Exception e) { failure = e; }
+        CloudSession authenticated = next; Exception result = failure;
+        activity.runOnUiThread(() -> {
+          if (!live() || loginPage != page[0] || !page[0].isShowing()) { revokeUnused(authenticated); return; }
+          if (result != null) { page[0].failed(result.getMessage() == null ? "登录未完成，请重试" : result.getMessage()); return; }
+          try {
+            if (!CloudSession.normalize(LocalStore.server(activity)).equals(authenticated.server)) throw new IOException("服务已切换，请重新登录");
+            CloudSession.save(activity,authenticated);
+            page[0].dismiss(); changed.run(); LocalStore.enqueue(activity);
+            sync(onReady);
+          } catch (Exception e) { revokeUnused(authenticated); page[0].failed(e.getMessage()); }
+        });
+      }, "yanxu-login").start();
     });
+    loginPage = page[0]; loginPage.show();
+  }
+  private void revokeUnused(CloudSession session) {
+    if (session == null) return;
+    new Thread(() -> { try { CloudApi.request(session,"POST","/api/auth/logout",new JSONObject()); } catch (Exception ignored) {} }, "yanxu-cancelled-login").start();
   }
   void account() {
-    CloudSession session = CloudSession.current(activity); if (session == null) { login(); return; }
+    CloudSession session = CloudSession.current(activity); if (session == null || !session.valid()) { login(); return; }
     LinearLayout box = form(); box.addView(text(session.account.optString("displayName",session.account.optString("username"))));
     box.addView(button("同步人员和声纹状态", this::sync));
     box.addView(button("迁移旧版本机声音", this::migrateLegacy));
@@ -118,7 +131,8 @@ final class CloudAccountUi {
     }, () -> { if (owned != null) owned.dismiss();
       if (!revoked[0]) Toast.makeText(activity,"服务已切换，原服务会话将在到期后失效",Toast.LENGTH_LONG).show(); });
   }
-  void sync() {
+  void sync() { sync(null); }
+  private void sync(Runnable onReady) {
     task("正在同步", () -> {
       CloudSession session = require(); JSONObject me = CloudApi.request(session,"GET","/api/auth/me",null);
       ensure(session); CloudSession refreshed = new CloudSession(session.server,session.token,me,session.expiresAt);
@@ -127,7 +141,7 @@ final class CloudAccountUi {
       JSONObject profiles = CloudApi.request(refreshed,"GET","/api/voice-profiles",null);
       ensure(refreshed);
       new PeopleStore(activity,refreshed.scope()).syncCloud(directory.getJSONArray("items"),profiles.getJSONArray("items"));
-    }, null);
+    }, onReady);
   }
   void addPerson() {
     try {
@@ -165,6 +179,28 @@ final class CloudAccountUi {
               ensure(session); store.cloudStatus(localId,"revoked");
             },null)).show()));
       show(new AlertDialog.Builder(activity).setTitle("声音档案").setView(box).setPositiveButton("完成",null).create());
+    } catch (Exception e) { error(e); }
+  }
+  void voices(PeopleStore store, java.util.function.Consumer<String> record) {
+    try {
+      CloudSession session = require();
+      List<PeopleStore.Person> people = store.all();
+      LinearLayout box = form();
+      if (people.isEmpty()) box.addView(text("还没有人员"));
+      ScrollView scroll = new ScrollView(activity); scroll.addView(box);
+      AlertDialog list = new AlertDialog.Builder(activity).setTitle("声音档案").setView(scroll).setPositiveButton("完成",null).create();
+      for (PeopleStore.Person person : people) {
+        if (!session.allows("record") && !session.allows("voices")
+            && !person.cloudPersonId.equals(session.account.optString("personId"))) continue;
+        // The directory API returns the current member only when they lack directory permissions.
+        box.addView(button(person.name + " · " + voiceLabel(person.cloudStatus), () -> {
+          if (!CloudSession.same(activity,session)) { list.dismiss(); login(() -> changed.run()); return; }
+          list.dismiss(); voice(store,person.id,() -> record.accept(person.id));
+        }));
+      }
+      if (session.allows("record")) box.addView(button("＋ 添加人员", () -> { list.dismiss(); addPerson(); }));
+      box.addView(button("刷新", () -> { list.dismiss(); sync(() -> voices(new PeopleStore(activity,session.scope()),record)); }));
+      show(list);
     } catch (Exception e) { error(e); }
   }
   static String voiceLabel(String status) {

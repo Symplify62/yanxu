@@ -42,6 +42,7 @@ public final class PeoplePanel {
 
     default boolean onAddRequested() { return false; }
     default boolean canAddPeople() { return true; }
+    default boolean canSelectPeople() { return true; }
   }
 
   private static final int GREEN = Color.rgb(70, 107, 79);
@@ -132,7 +133,7 @@ public final class PeoplePanel {
           new ArrayList<>(data.people.subList(0, Math.min(7, data.people.size())));
       Button all =
           button(bulkLabel(visible, data.selected, false), false, () -> toggleAll(visible));
-      enable(all, !RecordingService.active);
+      enable(all, !RecordingService.active && listener.canSelectPeople());
       home.addView(all, new LinearLayout.LayoutParams(-1, dp(44)));
       int width = home.getWidth();
       if (width == 0) width = activity.getResources().getDisplayMetrics().widthPixels - dp(40);
@@ -268,7 +269,7 @@ public final class PeoplePanel {
           visible.size() + " 人 · 当前已选 " + selectedHere + " · 本场共 " + data.selected.size() + " 人");
       pickerNotice.setVisibility(RecordingService.active ? View.VISIBLE : View.GONE);
       pickerAll.setText(bulkLabel(visible, data.selected, true));
-      enable(pickerAll, !RecordingService.active && !visible.isEmpty());
+      enable(pickerAll, !RecordingService.active && listener.canSelectPeople() && !visible.isEmpty());
       enable(pickerAdd, !RecordingService.active && listener.canAddPeople());
       int width = pickerResults.getWidth();
       if (width == 0)
@@ -392,7 +393,7 @@ public final class PeoplePanel {
     name.setEllipsize(TextUtils.TruncateAt.END);
     choice.addView(name, new LinearLayout.LayoutParams(-1, -2));
     choice.setOnClickListener(v -> toggle(person.id));
-    enable(choice, !RecordingService.active);
+    enable(choice, !RecordingService.active && listener.canSelectPeople());
     card.addView(choice, new LinearLayout.LayoutParams(-1, -2));
     String info = person.guest ? "本场来宾" : person.department;
     if (info == null || info.isEmpty()) info = "本机成员";
@@ -422,7 +423,7 @@ public final class PeoplePanel {
   }
 
   private void toggle(String id) {
-    if (!canEdit()) return;
+    if (!canEdit() || !listener.canSelectPeople()) return;
     try {
       store.setSelected(id, !store.isSelected(id));
     } catch (Exception error) {
@@ -433,7 +434,7 @@ public final class PeoplePanel {
   }
 
   private void toggleAll(List<PeopleStore.Person> visible) {
-    if (!canEdit() || visible.isEmpty()) return;
+    if (!canEdit() || !listener.canSelectPeople() || visible.isEmpty()) return;
     try {
       Snapshot current = snapshot();
       boolean select = countSelected(visible, current.selected) < visible.size();

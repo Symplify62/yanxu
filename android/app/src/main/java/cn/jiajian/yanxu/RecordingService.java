@@ -56,6 +56,9 @@ public class RecordingService extends Service {
 
   private void start(Intent intent) {
     try {
+      String rawContext = intent.getStringExtra("recordingContext");
+      if (rawContext == null) throw new IOException("录音信息缺失，请重新开始");
+      JSONObject recordingContext = RecordingIdentity.validateStart(this, new JSONObject(rawContext));
       if (new StatFs(getFilesDir().getAbsolutePath()).getAvailableBytes() < 64L * 1024 * 1024)
         throw new IOException("设备存储空间不足");
       getSystemService(NotificationManager.class)
@@ -76,12 +79,10 @@ public class RecordingService extends Service {
               .put("state", "recording")
               .put("createdAt", System.currentTimeMillis())
               .put("interrupted", false);
-      String identity = intent.getStringExtra("cloudIdentity");
-      if (identity == null) throw new IOException("请先登录组织者账号");
-      meta.put("cloudIdentity",new JSONObject(identity));
-      RecordingIdentity.requireOwner(this,meta);
-      String snapshot = intent.getStringExtra("participantsSnapshot");
-      if (snapshot != null) meta.put("participantsSnapshot", new JSONObject(snapshot));
+      for (Iterator<String> keys = recordingContext.keys(); keys.hasNext();) {
+        String key = keys.next();
+        meta.put(key, recordingContext.get(key));
+      }
       LocalStore.save(dir, meta);
       int size =
           Math.max(
@@ -109,7 +110,10 @@ public class RecordingService extends Service {
       thread = new Thread(() -> capture(size), "yanxu-capture");
       thread.start();
     } catch (Exception e) {
-      message = e instanceof SecurityException ? "请允许麦克风权限" : "无法开始录音，请检查麦克风或存储";
+      message = e instanceof SecurityException ? "请允许麦克风权限"
+          : e instanceof RecordingIdentity.LoginRequired ? "请重新登录后使用本场名单"
+          : e instanceof IOException && e.getMessage() != null ? e.getMessage()
+          : "无法开始录音，请检查麦克风或存储";
       cleanup();
     }
   }
