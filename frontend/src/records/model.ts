@@ -7,6 +7,7 @@ export type Scenario =
   | "analysis-error";
 export interface PublicRecord {
   status?: Stage;
+  speakerStatus?: "none" | "waiting" | "complete" | "failed";
   hasAudio?: boolean;
   interrupted?: boolean;
   error?: string | null;

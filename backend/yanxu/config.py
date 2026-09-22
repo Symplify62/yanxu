@@ -35,6 +35,16 @@ class Settings:
     worker_token: str = field(default="", repr=False)
     remote_api: str = ""
     min_free_bytes: int = 0
+    identity_enabled: bool = True
+    session_hours: int = 24
+    backup_token: str = field(default="", repr=False)
+    voice_worker_token: str = field(default="", repr=False)
+    voice_engine_command: str = ""
+    voice_model_version: str = "wespeaker-cnceleb-resnet34-lm:e7584940aeac8d55:kaldi80-v1"
+    voice_match_threshold: float = 0.75
+    voice_match_margin: float = 0.08
+    voice_private_bucket: str = ""
+    voice_private_domain: str = ""
 
     def __post_init__(self):
         from urllib.parse import urlsplit
@@ -63,6 +73,15 @@ class Settings:
             raise ValueError("无效的 worker 阶段")
         if self.remote_api and not self.remote_api.startswith("https://"):
             raise ValueError("远程转写仅允许 HTTPS")
+        if not 1 <= self.session_hours <= 720:
+            raise ValueError("会话有效期须为1至720小时")
+        if not 0 <= self.voice_match_threshold <= 1 or not 0 <= self.voice_match_margin <= 1:
+            raise ValueError("声音匹配阈值无效")
+        secrets_set = [x for x in (self.worker_token, self.backup_token, self.voice_worker_token) if x]
+        if len(secrets_set) != len(set(secrets_set)):
+            raise ValueError("转写、备份和声音处理必须使用独立凭证")
+        if self.voice_private_bucket and (self.voice_private_bucket == self.qiniu_bucket or not self.qiniu_access_key or not self.qiniu_secret_key):
+            raise ValueError("声音档案镜像需要独立私有空间和服务端存储凭证")
 
     @property
     def db_path(self):
@@ -94,4 +113,14 @@ class Settings:
             worker_token=values.get("YANXU_WORKER_TOKEN", "") or "",
             remote_api=(values.get("YANXU_REMOTE_API", "") or "").rstrip("/"),
             min_free_bytes=int(values.get("YANXU_MIN_FREE_BYTES", 0)),
+            identity_enabled=values.get("YANXU_IDENTITY_ENABLED", "true").lower() == "true",
+            session_hours=int(values.get("YANXU_SESSION_HOURS", 24)),
+            backup_token=values.get("YANXU_BACKUP_TOKEN", "") or "",
+            voice_worker_token=values.get("YANXU_VOICE_WORKER_TOKEN", "") or "",
+            voice_engine_command=values.get("YANXU_VOICE_ENGINE_COMMAND", "") or "",
+            voice_model_version=values.get("YANXU_VOICE_MODEL_VERSION", "wespeaker-cnceleb-resnet34-lm:e7584940aeac8d55:kaldi80-v1"),
+            voice_match_threshold=float(values.get("YANXU_VOICE_MATCH_THRESHOLD", .75)),
+            voice_match_margin=float(values.get("YANXU_VOICE_MATCH_MARGIN", .08)),
+            voice_private_bucket=values.get("YANXU_VOICE_PRIVATE_BUCKET", "") or "",
+            voice_private_domain=values.get("YANXU_VOICE_PRIVATE_DOMAIN", "") or "",
         )

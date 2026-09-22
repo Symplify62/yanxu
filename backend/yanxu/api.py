@@ -4,13 +4,14 @@ from fastapi import FastAPI, HTTPException, Request, Header
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from .config import Settings
 from .store import Store, Conflict, Missing, Busy, public_record
 from .media import file_lock, inspect_audio
 
 
 class RecordingCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     client_id: str = Field(pattern=r"^[a-zA-Z0-9-]{16,80}$")
     title: str = Field(default="", max_length=120)
     total_bytes: int = Field(gt=44)
@@ -35,11 +36,17 @@ def create_app(settings=None):
     app.state.settings = cfg
     from .remote_tasks import router as worker_router
     app.include_router(worker_router)
+    from .identity import router as identity_router
+    from .voice import router as voice_router
+    from .managed_recordings import router as managed_router
+    app.include_router(identity_router)
+    app.include_router(voice_router)
+    app.include_router(managed_router)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["http://127.0.0.1:5178", "http://localhost:5178"],
-        allow_methods=["GET", "POST", "PUT", "HEAD"],
-        allow_headers=["Content-Type", "X-Upload-Token"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"],
+        allow_headers=["Content-Type", "X-Upload-Token", "Authorization"],
     )
 
     @app.exception_handler(Busy)
@@ -233,6 +240,13 @@ def create_app(settings=None):
         if not page.is_file():
             raise HTTPException(503, "公共页面尚未构建")
         return FileResponse(page, headers={"Cache-Control": "no-cache"})
+
+    @app.get("/account.html")
+    def account_page():
+        page = cfg.frontend_dist / "account.html"
+        if not page.is_file():
+            raise HTTPException(503, "账号工作台尚未构建")
+        return FileResponse(page, headers={"Cache-Control": "no-store"})
 
     @app.get("/app/yanxu-debug.apk")
     def apk():

@@ -28,6 +28,13 @@ public class MainActivity extends Activity {
   private String lastLocalSignature = "";
   private boolean previousActive = false, previousPaused = false;
   private WebView web;
+  private PeopleStore peopleStore;
+  private CloudAccountUi cloudUi;
+  private AlertDialog settingsDialog;
+  private PeoplePanel peoplePanel;
+  private VoiceEnrollmentDialog voiceDialog;
+  private TextView participantCount;
+  private String pendingVoiceId;
   private final Handler handler = new Handler(Looper.getMainLooper());
   private final Runnable tick =
       new Runnable() {
@@ -55,6 +62,13 @@ public class MainActivity extends Activity {
     getWindow().setStatusBarColor(BG);
     getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
     LocalStore.recover(this);
+    cloudUi = new CloudAccountUi(this, () -> { useAccountStore(); render(); });
+    useAccountStore();
+    try {
+      if (!VoiceEnrollmentDialog.busy) peopleStore.recover();
+    } catch (Exception e) {
+      Toast.makeText(this, "人员资料恢复异常，请保留应用数据", Toast.LENGTH_LONG).show();
+    }
     render();
     handler.post(tick);
     AppUpdater.recover(this);
@@ -76,15 +90,27 @@ public class MainActivity extends Activity {
 
   @Override
   protected void onPause() {
+    if (voiceDialog != null) voiceDialog.onHostPause();
     UpdateInstaller.foreground.clear();
     super.onPause();
   }
 
   @Override
   protected void onDestroy() {
+    if (cloudUi != null) cloudUi.close();
+    if (settingsDialog != null) settingsDialog.dismiss();
+    if (voiceDialog != null) voiceDialog.dismiss();
+    if (peoplePanel != null) peoplePanel.dismiss();
     handler.removeCallbacks(tick);
     if (web != null) web.destroy();
     super.onDestroy();
+  }
+
+  @Override
+  public void onConfigurationChanged(android.content.res.Configuration configuration) {
+    super.onConfigurationChanged(configuration);
+    if (voiceDialog != null) voiceDialog.onHostPause();
+    render();
   }
 
   private int dp(int n) {
@@ -125,6 +151,11 @@ public class MainActivity extends Activity {
   }
 
   private void render() {
+    if (peoplePanel != null) {
+      peoplePanel.dismiss();
+      peoplePanel = null;
+    }
+    participantCount = null;
     if (web != null) {
       web.destroy();
       web = null;
@@ -170,8 +201,8 @@ public class MainActivity extends Activity {
       nav.addView(item, new LinearLayout.LayoutParams(0, -2, 1));
     }
     LinearLayout.LayoutParams np = new LinearLayout.LayoutParams(-1, -2);
-    np.topMargin = dp(24);
-    np.bottomMargin = dp(tab == 1 ? 0 : 24);
+    np.topMargin = dp(16);
+    np.bottomMargin = dp(tab == 1 ? 0 : 16);
     shell.addView(nav, np);
     content = new LinearLayout(this);
     content.setOrientation(1);
@@ -186,42 +217,164 @@ public class MainActivity extends Activity {
   private void recordView() {
     previousActive = RecordingService.active;
     previousPaused = RecordingService.paused;
+    ScrollView scroll = new ScrollView(this);
+    scroll.setFillViewport(false);
+    LinearLayout body = new LinearLayout(this);
+    body.setOrientation(1);
+    scroll.addView(body);
+    content.addView(scroll, new LinearLayout.LayoutParams(-1, -1));
     LinearLayout card = new LinearLayout(this);
     card.setOrientation(1);
     card.setGravity(Gravity.CENTER);
-    card.setPadding(dp(22), dp(40), dp(22), dp(32));
+    card.setPadding(dp(22), dp(22), dp(22), dp(24));
     card.setBackground(bg(Color.WHITE, 18));
     status = text(RecordingService.message, 14, MUTED);
     status.setGravity(Gravity.CENTER);
     card.addView(status);
-    timer = text(format(RecordingService.frames / 16000), 45, INK);
+    timer = text(format(RecordingService.frames / 16000), 38, INK);
     timer.setGravity(Gravity.CENTER);
     timer.setTypeface(Typeface.MONOSPACE);
     LinearLayout.LayoutParams tp = new LinearLayout.LayoutParams(-1, -2);
-    tp.topMargin = dp(28);
-    tp.bottomMargin = dp(22);
+    tp.topMargin = dp(16);
+    tp.bottomMargin = dp(12);
     card.addView(timer, tp);
     if (!RecordingService.active) {
-      card.addView(button("开始录音", true, this::startRecording));
+      CloudSession session = CloudSession.current(this);
+      card.addView(button(session == null || !session.valid() ? "登录并录音" : "开始录音", true, this::startRecording));
     } else {
       card.addView(
           button(RecordingService.paused ? "继续录音" : "暂停录音", false, () -> command("pause")));
       card.addView(button("结束并保存", true, () -> command("stop")));
     }
-    content.addView(card);
+    body.addView(card);
     TextView hint = text("本地保存 · 自动上传", 11, MUTED);
     hint.setGravity(Gravity.CENTER);
     hint.setPadding(0, dp(18), 0, 0);
-    content.addView(hint);
+    body.addView(hint);
+    participantCount = text("", 12, MUTED);
+    participantCount.setGravity(Gravity.CENTER);
+    body.addView(participantCount);
+    updateParticipantCount();
+    CloudSession activeSession = CloudSession.current(this);
+    if (activeSession == null || !activeSession.valid()) {
+      body.addView(text("登录后选择参会者和管理声音", 13, MUTED));
+      return;
+    }
+    body.addView(button("同步人员与声纹", false, () -> cloudUi.sync()));
+    peoplePanel =
+        new PeoplePanel(
+            this,
+            peopleStore,
+            new PeoplePanel.Listener() {
+              @Override
+              public void onEnroll(String personId) {
+                cloudUi.voice(peopleStore, personId, () -> requestVoiceRecording(personId));
+              }
+
+              @Override
+              public void onSelectionChanged() {
+                updateParticipantCount();
+              }
+
+              @Override public boolean onAddRequested() { cloudUi.addPerson(); return true; }
+              @Override public boolean canAddPeople() {
+                CloudSession session = CloudSession.current(MainActivity.this);
+                return session != null && session.valid() && session.allows("record");
+              }
+            });
+    body.addView(peoplePanel.build());
+    if (!RecordingService.active) {
+      body.addView(
+          button(
+              "准备下一场",
+              false,
+              () ->
+                  new AlertDialog.Builder(this)
+                      .setTitle("准备下一场会议？")
+                      .setMessage("清空本场选择和临时来宾，保留本机成员及其声音。")
+                      .setNegativeButton("取消", null)
+                      .setPositiveButton(
+                          "确认",
+                          (d, which) -> {
+                            if (RecordingService.active || VoiceEnrollmentDialog.busy) {
+                              Toast.makeText(this, "请先结束当前录音或声音录入", Toast.LENGTH_SHORT).show();
+                              return;
+                            }
+                            try {
+                              peopleStore.nextMeeting();
+                              peoplePanel.refresh();
+                              updateParticipantCount();
+                            } catch (Exception e) {
+                              Toast.makeText(this, "无法保存本场名单，请重试", Toast.LENGTH_LONG).show();
+                            }
+                          })
+                      .show()));
+    }
+  }
+
+  private void updateParticipantCount() {
+    if (participantCount == null) return;
+    try {
+      int count = peopleStore.selected().size();
+      participantCount.setText(count == 0 ? "未选参会者" : "本场 " + count + " 人 · 录音开始后名单固定");
+    } catch (Exception e) {
+      participantCount.setText("名单读取失败，请保留应用数据");
+    }
+  }
+
+  private void requestVoiceRecording(String personId) {
+    if (RecordingService.active || VoiceEnrollmentDialog.busy) {
+      Toast.makeText(this, "请先结束当前录音或声音录入", Toast.LENGTH_SHORT).show();
+      return;
+    }
+    if (checkSelfPermission(Manifest.permission.RECORD_AUDIO)
+        != PackageManager.PERMISSION_GRANTED) {
+      pendingVoiceId = personId;
+      requestPermissions(new String[] {Manifest.permission.RECORD_AUDIO}, 101);
+      return;
+    }
+    voiceDialog =
+        new VoiceEnrollmentDialog(
+            this,
+            peopleStore,
+            personId,
+            () -> {
+              if (peoplePanel != null) peoplePanel.refresh();
+              updateParticipantCount();
+              CloudSession session = CloudSession.current(this);
+              if (session != null && session.valid()) cloudUi.consent(peopleStore,personId);
+            });
+    voiceDialog.show();
   }
 
   private void command(String action) {
     Intent i = new Intent(this, RecordingService.class).setAction(action);
-    if ("start".equals(action)) startForegroundService(i);
-    else startService(i);
+    if ("start".equals(action)) {
+      if (VoiceEnrollmentDialog.busy) {
+        Toast.makeText(this, "请先完成或取消声音录入", Toast.LENGTH_SHORT).show();
+        return;
+      }
+      try {
+        JSONObject roster = peopleStore.snapshot();
+        i.putExtra("participantsSnapshot", roster.toString());
+        i.putExtra("cloudIdentity", RecordingIdentity.capture(this,roster).toString());
+      } catch (Exception e) {
+        Toast.makeText(this, e.getMessage() == null ? "无法保存参会名单，尚未开始录音" : e.getMessage(), Toast.LENGTH_LONG).show();
+        return;
+      }
+      startForegroundService(i);
+    } else startService(i);
+  }
+
+  private void useAccountStore() {
+    CloudSession session = CloudSession.current(this);
+    peopleStore = session == null ? new PeopleStore(this,CloudSession.scope("signed-out","hidden")) : new PeopleStore(this,session.scope());
   }
 
   private void startRecording() {
+    CloudSession session = CloudSession.current(this);
+    if (session == null || !session.valid()) { cloudUi.login(); return; }
+    if (!session.allows("record")) { Toast.makeText(this,"当前账号没有录音权限",Toast.LENGTH_LONG).show(); return; }
     if (checkSelfPermission(Manifest.permission.RECORD_AUDIO)
         != PackageManager.PERMISSION_GRANTED) {
       ArrayList<String> permissions = new ArrayList<>();
@@ -236,7 +389,13 @@ public class MainActivity extends Activity {
   @Override
   public void onRequestPermissionsResult(int request, String[] permissions, int[] grants) {
     super.onRequestPermissionsResult(request, permissions, grants);
-    if (request == 100) {
+    if (request == 101) {
+      String personId = pendingVoiceId;
+      pendingVoiceId = null;
+      if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+          && personId != null) requestVoiceRecording(personId);
+      else Toast.makeText(this, "未获得麦克风权限，声音尚未录制", Toast.LENGTH_LONG).show();
+    } else if (request == 100) {
       if (checkSelfPermission(Manifest.permission.RECORD_AUDIO)
           == PackageManager.PERMISSION_GRANTED) command("start");
       else {
@@ -265,11 +424,22 @@ public class MainActivity extends Activity {
     for (File dir : LocalStore.all(this)) {
       try {
         JSONObject m = LocalStore.read(dir);
+        if (!RecordingIdentity.visible(this,m)) continue;
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(1);
         row.setPadding(dp(17), dp(15), dp(17), dp(16));
         row.setBackground(bg(Color.WHITE, 12));
         row.addView(text(m.optString("title", "录音"), 16, INK));
+        JSONObject roster = m.optJSONObject("participantsSnapshot");
+        if (roster != null && m.has("cloudIdentity")) {
+          JSONArray participants = roster.optJSONArray("participants");
+          if (participants != null && participants.length() > 0) {
+            ArrayList<String> names = new ArrayList<>();
+            for (int p = 0; p < participants.length(); p++)
+              names.add(participants.getJSONObject(p).optString("name"));
+            row.addView(text("本场名单：" + String.join("、", names), 12, MUTED));
+          }
+        }
         String state = m.optString("state");
         String label =
             switch (state) {
@@ -278,6 +448,7 @@ public class MainActivity extends Activity {
               case "uploading" -> "上传中 " + m.optInt("progress") + "%";
               case "uploaded" -> "已上传";
               case "retry" -> "等待重试";
+              case "awaiting_login" -> "等待原账号登录";
               case "blocked" -> "上传受阻";
               case "saved" -> "已保存，等待上传";
               default -> "请检查录音";
@@ -300,9 +471,12 @@ public class MainActivity extends Activity {
                   "查看结果",
                   false,
                   () -> {
+                    if (m.has("cloudIdentity")) { showPrivateTranscript(m,id); return; }
+                    String base = m.optString("uploadServer",LocalStore.server(this));
+                    if (!base.equals(LocalStore.server(this))) { Toast.makeText(this,"请切回原服务查看此录音",Toast.LENGTH_LONG).show(); return; }
                     tab = 1;
                     render();
-                    web.loadUrl(LocalStore.server(this) + "/?app=1#/records/" + id);
+                    web.loadUrl(base + "/?app=1#/records/" + id);
                   }));
         } else if (!RecordingService.active)
           row.addView(
@@ -376,7 +550,9 @@ public class MainActivity extends Activity {
             Toast.makeText(this, "已开始下载", Toast.LENGTH_SHORT).show();
           }
         });
-    content.addView(web, new LinearLayout.LayoutParams(-1, -1));
+    CloudSession login = CloudSession.current(this);
+    if (login != null && login.valid()) content.addView(button("我的会议 · 具名逐字稿", false, () -> showMyMeetings(0)));
+    content.addView(web, new LinearLayout.LayoutParams(-1, 0, 1));
     web.loadUrl(LocalStore.server(this) + (id == null ? "/?app=1" : "/?app=1#/records/" + id));
   }
 
@@ -391,6 +567,11 @@ public class MainActivity extends Activity {
     LinearLayout box = new LinearLayout(this);
     box.setOrientation(1);
     box.setPadding(dp(22), dp(10), dp(22), 0);
+    CloudSession session = CloudSession.current(this);
+    box.addView(button(session == null ? "账号登录" : "账号 · " + session.account.optString("displayName",session.account.optString("username")),false,() -> {
+      if (settingsDialog != null) settingsDialog.dismiss();
+      cloudUi.account();
+    }));
     box.addView(text("服务地址", 13, MUTED));
     EditText edit = new EditText(this);
     edit.setSingleLine(true);
@@ -407,10 +588,12 @@ public class MainActivity extends Activity {
             .setNeutralButton(
                 "导入音频",
                 (v, w) -> {
-                  if (RecordingService.active) {
+                  if (RecordingService.active || VoiceEnrollmentDialog.busy) {
                     Toast.makeText(this, "请先结束录音", Toast.LENGTH_SHORT).show();
                     return;
                   }
+                  CloudSession login = CloudSession.current(this);
+                  if (login == null || !login.valid()) { cloudUi.login(); return; }
                   Intent i =
                       new Intent(Intent.ACTION_OPEN_DOCUMENT)
                           .setType("audio/*")
@@ -436,15 +619,17 @@ public class MainActivity extends Activity {
                       if (u.getHost() == null
                           || !("http".equals(u.getScheme()) || "https".equals(u.getScheme()))
                           || u.getQuery() != null
-                          || u.getFragment() != null) {
+                          || u.getFragment() != null || u.getUserInfo() != null
+                          || (u.getPath() != null && !u.getPath().isEmpty() && !"/".equals(u.getPath()))) {
                         edit.setError("请输入有效服务地址");
                         return;
                       }
-                      getSharedPreferences("settings", 0).edit().putString("server", value).apply();
-                      LocalStore.enqueue(this);
+                      if (RecordingService.active || VoiceEnrollmentDialog.busy) { edit.setError("请先结束录音或声音录入"); return; }
+                      if (value.equals(LocalStore.server(this))) { d.dismiss(); return; }
                       d.dismiss();
-                      render();
+                      cloudUi.switchServer(value);
                     }));
+    settingsDialog = d;
     d.show();
   }
 
@@ -453,6 +638,9 @@ public class MainActivity extends Activity {
     super.onActivityResult(request, result, data);
     if (request != 201 || result != RESULT_OK || data == null) return;
     Uri uri = data.getData();
+    final JSONObject identity;
+    try { identity = RecordingIdentity.capture(this,new JSONObject().put("participants",new JSONArray())); }
+    catch (Exception e) { Toast.makeText(this,"请登录后重新导入",Toast.LENGTH_LONG).show(); return; }
     synchronized (AppUpdater.GATE) {
       if (AppUpdater.installing(this)) {
         Toast.makeText(this, "正在更新，请稍后导入", Toast.LENGTH_SHORT).show();
@@ -490,7 +678,8 @@ public class MainActivity extends Activity {
                                     .format(new Date()))
                         .put("filename", name)
                         .put("state", "saved")
-                        .put("createdAt", System.currentTimeMillis());
+                        .put("createdAt", System.currentTimeMillis())
+                        .put("cloudIdentity",identity);
                 LocalStore.save(dir, m);
                 LocalStore.enqueue(this);
                 runOnUiThread(
@@ -507,6 +696,75 @@ public class MainActivity extends Activity {
             },
             "yanxu-import")
         .start();
+  }
+
+  private void showPrivateTranscript(JSONObject metadata, String id) {
+    try {
+      CloudSession owner = RecordingIdentity.requireOwner(this,metadata);
+      if (owner == null) throw new IOException("请登录原账号查看");
+      showPrivateTranscript(owner,id);
+    } catch(Exception e) { Toast.makeText(this,e.getMessage(),Toast.LENGTH_LONG).show(); }
+  }
+
+  private void showMyMeetings(int offset) {
+    CloudSession session = CloudSession.current(this);
+    if (session == null || !session.valid()) { cloudUi.login(); return; }
+    new Thread(() -> {
+      try {
+        JSONObject result = CloudApi.request(session,"GET","/api/managed/recordings?limit=30&offset="+offset,null);
+        JSONArray records = result.getJSONArray("items");
+        runOnUiThread(() -> {
+          if (isFinishing() || isDestroyed() || !CloudSession.same(this,session)) return;
+          LinearLayout body = new LinearLayout(this); body.setOrientation(1); body.setPadding(dp(18),dp(8),dp(18),dp(8));
+          ScrollView scroll = new ScrollView(this);scroll.addView(body);
+          AlertDialog list = new AlertDialog.Builder(this).setTitle("我的会议").setView(scroll).setPositiveButton("完成",null).create();
+          if (records.length()==0) body.addView(text("暂无可查看的会议",14,MUTED));
+          for(int i=0;i<records.length();i++) {
+            JSONObject row=records.optJSONObject(i);if(row==null)continue;
+            String id=row.optString("id");
+            body.addView(button(row.optString("title","会议"),false,()->{list.dismiss();showPrivateTranscript(session,id);}));
+          }
+          if (offset>0) body.addView(button("上一页",false,()->{list.dismiss();showMyMeetings(Math.max(0,offset-30));}));
+          if(offset+records.length()<result.optInt("total"))body.addView(button("下一页",false,()->{list.dismiss();showMyMeetings(offset+30);}));
+          list.show();
+        });
+      }catch(Exception e){runOnUiThread(()->Toast.makeText(this,e.getMessage(),Toast.LENGTH_LONG).show());}
+    },"yanxu-my-meetings").start();
+  }
+
+  private void showPrivateTranscript(CloudSession owner, String id) {
+    new Thread(() -> {
+      try {
+        JSONObject result = CloudApi.request(owner,"GET","/api/managed/recordings/"+CloudApi.id(id),null);
+        runOnUiThread(() -> {
+          if (isFinishing() || isDestroyed() || !CloudSession.same(this,owner)) return;
+          LinearLayout body = new LinearLayout(this); body.setOrientation(1); body.setPadding(dp(18),dp(8),dp(18),dp(8));
+          String speakerNotice = speakerNotice(result.optString("speakerStatus"));
+          if (!speakerNotice.isEmpty()) body.addView(text(speakerNotice,13,MUTED));
+          JSONObject transcript = result.optJSONObject("transcript");
+          JSONArray segments = transcript == null ? null : transcript.optJSONArray("segments");
+          if (segments == null || segments.length() == 0) body.addView(text("正在处理，稍后重新查看",14,MUTED));
+          else for (int i=0;i<segments.length();i++) {
+            JSONObject segment = segments.optJSONObject(i); if (segment == null) continue;
+            Object speaker = segment.opt("speaker"); String label = speaker instanceof JSONObject
+                ? ((JSONObject)speaker).optString("displayName",((JSONObject)speaker).optString("name","未识别"))
+                : speaker == null || speaker == JSONObject.NULL || speaker.toString().isEmpty() ? "未识别" : speaker.toString();
+            body.addView(text(label+" · "+format((long)segment.optDouble("start")),13,GREEN));
+            body.addView(text(segment.optString("text"),16,INK));
+          }
+          ScrollView scroll=new ScrollView(this);scroll.addView(body);
+          new AlertDialog.Builder(this).setTitle("会议逐字稿").setView(scroll).setPositiveButton("完成",null).show();
+        });
+      } catch(Exception e) { runOnUiThread(() -> Toast.makeText(this,e.getMessage(),Toast.LENGTH_LONG).show()); }
+    },"yanxu-private-transcript").start();
+  }
+
+  static String speakerNotice(String status) {
+    return switch(status) {
+      case "waiting" -> "正在识别发言人";
+      case "failed" -> "发言人识别未完成，逐字稿已保留";
+      default -> "";
+    };
   }
 
   private String format(long sec) {

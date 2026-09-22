@@ -2,13 +2,14 @@
 
 仅在需要确认业务/技术范围或不知道权威来源时读取本页。已定位前端工作可直接进入[前端任务导航](../frontend/docs/frontend-guides/README.md)。
 
-当前正在收敛[第一阶段：免登录录音与公网公共结果](phases/phase-01.md)。本期范围与验收以此为先，以下v1.3是完整产品方案的按需来源。
+线上基线为[第一阶段：免登录录音与公网公共结果](phases/phase-01.md)。当前增量实施按[账号与声音档案](implementation/identity-voice-delivery.md)，以下v1.3保留为完整产品方案的按需来源。
 
 ## 来源边界
 
 | 问题 | 权威来源 |
 | --- | --- |
 | 当前第一阶段做什么 | [阶段范围与验收](phases/phase-01.md)，已覆盖本期旧登录/权限/发群前置规则 |
+| 真实登录、管理后台、云端声音和实名逐字稿 | [本轮接口、运行与验证](implementation/identity-voice-delivery.md)，区分本地完成和生产发布 |
 | 当前采用哪套外观/组件 | [A方案确认](../frontend/docs/design-lab/selection.md)；通用前端规范在前端任务导航 |
 | 某页有哪些区域、动作和权限结果 | [DES-10页面级规格](../会议室录音系统_PRD_v1.3/docs/design/DES-10-页面级设计与交互规格.md)对应页面；先搜页名/业务组件名 |
 | 常规流程、人机分工、待决事项 | [BASE-01](../会议室录音系统_PRD_v1.3/docs/rules/BASE-01-需求基线与待决事项.md) |
@@ -25,11 +26,16 @@ Android App采音、Mac本地开发与转写、DeepSeek分析、匿名回听/下
 
 ## 本地运行入口
 
+Android 0.2.0本机参会者/声音样本的历史实现见[本机版本记录](implementation/android-local-speakers.md)；0.3.0真实身份与声音处理的当前状态见[本轮实施](implementation/identity-voice-delivery.md)。
+
 [后端运行与接口](../backend/README.md) · [Android测试App](../android/README.md) · [公网部署与恢复](implementation/public-deployment.md) · [早期本地接入证据](implementation/phase-one-live.md)。公网入口为 https://yanxu.qjl666.xyz/ ，本地5189保留旧测试库。
 
 接入七牛存储、阿里云文件域名、证书与云同步时，读[七牛接入记录](implementation/qiniu-storage.md)和[后端配置](../config/README.md)。文件域名可访问不等于公共应用已部署。
 
 ## 按业务进入
+
+- 会前选人、姓名确认、可复用声音档案（新增需求原型）：[交互设计与边界](phases/speaker-enrollment-prototype.md)。独立设计验证，不代表用户系统已接入第一阶段。
+- 用户/角色/部门、私有声纹登记、会议名单与实名逐字稿后端落地：[实施设计与分阶段验收](phases/speaker-backend-design.md)。本页为设计，不代表后端已实现。
 
 - 平板录音：[PRD-01](../会议室录音系统_PRD_v1.3/docs/product/PRD-01-平板录音端.md)；实际采集/设备实现再读[安卓设计](../会议室录音系统_PRD_v1.3/docs/design/DES-03-安卓端技术设计要求.md)。
 - 上传、音频归档：[PRD-02](../会议室录音系统_PRD_v1.3/docs/product/PRD-02-上传与音频归档.md)。

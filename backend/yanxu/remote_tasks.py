@@ -23,8 +23,16 @@ def authorized(request: Request):
     return request.app.state.store
 
 
+def backup_authorized(request: Request):
+    expected = request.app.state.settings.backup_token
+    header = request.headers.get("authorization", "")
+    if len(expected) < 32 or not hmac.compare_digest(header.encode(), ("Bearer " + expected).encode()):
+        raise HTTPException(403, "备份访问凭证无效")
+    return request.app.state.store
+
+
 @router.get("/backup")
-def backup(store=Depends(authorized)):
+def backup(store=Depends(backup_authorized)):
     import os
     import sqlite3
     import tempfile
@@ -42,6 +50,28 @@ def backup(store=Depends(authorized)):
         filename="yanxu.sqlite3",
         media_type="application/octet-stream",
         headers={"Cache-Control": "no-store"},
+        background=BackgroundTask(path.unlink, missing_ok=True),
+    )
+
+
+@router.get("/backup-bundle")
+def backup_bundle(store=Depends(backup_authorized)):
+    import uuid
+    from .private_backup import create_bundle
+
+    folder = store.settings.data_dir / "backups"
+    folder.mkdir(mode=0o700, exist_ok=True)
+    path = folder / ("download-" + str(uuid.uuid4()) + ".tar")
+    try:
+        create_bundle(store, path)
+    except (OSError, ValueError):
+        path.unlink(missing_ok=True)
+        raise HTTPException(503, "私有备份尚未完成，请稍后重试")
+    return FileResponse(
+        path,
+        filename="yanxu-private-backup.tar",
+        media_type="application/x-tar",
+        headers={"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff"},
         background=BackgroundTask(path.unlink, missing_ok=True),
     )
 

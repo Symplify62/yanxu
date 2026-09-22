@@ -86,9 +86,10 @@ def process_one(store, asr=transcribe, analyzer=None):
         if job["stage"] == "asr":
             value = asr(cfg, row)
         else:
+            from .voice import public_transcript
             provider = analyzer or DeepSeek(cfg, store)
             value = provider.analyze(
-                json.loads(row["transcript"]),
+                public_transcript(json.loads(row["transcript"])),
                 row["id"],
                 cfg.data_dir / "analysis-cache" / row["id"],
             )

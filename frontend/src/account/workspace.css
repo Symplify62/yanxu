@@ -1,0 +1,383 @@
+.account-app {
+  min-height: 100svh;
+  --el-color-primary: #466b4f;
+  --el-border-radius-base: 9px;
+  --el-text-color-primary: var(--full-ink);
+}
+.account-app a {
+  color: inherit;
+  text-decoration: none;
+}
+.account-shell {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  min-height: 100svh;
+}
+.account-nav {
+  background: var(--full-rail);
+  border-right: 1px solid var(--full-line);
+  padding: 28px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  position: sticky;
+  top: 0;
+  height: 100svh;
+}
+.account-brand {
+  color: var(--full-accent) !important;
+  font-size: 27px;
+  font-weight: 650;
+  letter-spacing: 2px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.account-brand span {
+  color: var(--full-muted);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0;
+  padding-top: 6px;
+}
+.account-nav nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.account-nav nav a {
+  min-height: 44px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: 9px;
+}
+.account-nav nav a.selected {
+  color: var(--full-accent);
+  background: #e6edde;
+  font-weight: 600;
+}
+.account-nav nav a:focus-visible {
+  outline: 2px solid var(--full-accent);
+}
+.account-person {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 20px;
+  border-top: 1px solid var(--full-line);
+}
+.account-person strong,
+.account-person small {
+  display: block;
+  max-width: 98px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.account-person small {
+  color: var(--full-muted);
+  font-size: 12px;
+}
+.account-avatar {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--full-soft);
+  color: var(--full-accent);
+}
+.account-workspace {
+  padding: 32px 36px;
+  min-width: 0;
+}
+.workspace-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.workspace-heading h1 {
+  font-size: 24px;
+  margin: 4px 0 0;
+}
+.workspace-heading small,
+.muted-link {
+  color: var(--full-muted) !important;
+  font-size: 12px;
+}
+.workspace-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.workspace-toolbar .el-input {
+  width: 250px;
+  max-width: 100%;
+}
+.workspace-toolbar .toolbar-spacer {
+  flex: 1;
+}
+.workspace-surface {
+  background: var(--full-panel);
+  border: 1px solid var(--full-line);
+  border-radius: 12px;
+  overflow: hidden;
+  min-width: 0;
+}
+.account-app .el-table {
+  --el-table-header-bg-color: #f7f9f3;
+  --el-table-border-color: var(--full-line);
+}
+.account-app .el-table th.el-table__cell {
+  font-weight: 500;
+  color: var(--full-muted);
+}
+.account-app .el-table .cell {
+  padding: 6px 16px;
+}
+.account-app .el-alert {
+  margin-bottom: 16px;
+}
+.person-cell {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.person-cell strong,
+.person-cell small {
+  display: block;
+}
+.person-cell small {
+  color: var(--full-muted);
+  font-size: 12px;
+}
+.panel-note {
+  margin: 12px 0 0;
+  color: var(--full-muted);
+  font-size: 13px;
+}
+.login-wrap {
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--full-paper);
+}
+.login-panel {
+  width: 360px;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.login-panel h1 {
+  font-size: 24px;
+  margin: 20px 0 6px;
+}
+.login-panel label {
+  margin-top: 8px;
+}
+.login-panel .el-input__wrapper {
+  min-height: 42px;
+}
+.login-panel > .el-button {
+  margin-top: 16px;
+  height: 44px;
+}
+.login-panel > .muted-link {
+  align-self: center;
+  margin-top: 10px;
+}
+.account-dialog {
+  max-width: calc(100vw - 32px);
+}
+.account-dialog .el-dialog__body {
+  max-height: 65svh;
+  overflow-y: auto;
+}
+.account-dialog .el-select {
+  width: 100%;
+}
+.account-dialog .el-checkbox {
+  white-space: normal;
+  height: auto;
+  min-height: 32px;
+}
+.account-dialog .el-checkbox__label {
+  white-space: normal;
+}
+.permission-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.status-text {
+  color: var(--full-muted);
+}
+.status-text.ready {
+  color: var(--full-accent);
+}
+.status-text.failed,
+.status-text.revoked {
+  color: #ae5541;
+}
+.department-layout {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 24px;
+}
+.department-layout .el-tree {
+  background: transparent;
+  padding: 10px;
+}
+.department-layout .el-tree-node__content {
+  height: 42px;
+  border-radius: 8px;
+}
+.department-detail {
+  padding: 22px;
+}
+.department-detail h2 {
+  margin-bottom: 18px;
+}
+.voice-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 18px;
+}
+.voice-audio {
+  width: 100%;
+  margin: 12px 0;
+}
+.record-links {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.record-links button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  text-align: left;
+  padding: 20px;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--full-line);
+  color: var(--full-ink);
+}
+.record-links button:hover {
+  background: var(--full-soft);
+}
+.record-links strong,
+.record-links small {
+  display: block;
+}
+.record-links small {
+  color: var(--full-muted);
+  margin-top: 5px;
+}
+.transcript-segment {
+  border-bottom: 1px solid var(--full-line);
+  padding: 18px 0;
+}
+.transcript-segment header {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+.transcript-segment p {
+  margin: 8px 0 0;
+  line-height: 1.9;
+  white-space: pre-wrap;
+}
+@media (max-width: 950px) {
+  .account-shell {
+    grid-template-columns: 185px minmax(0, 1fr);
+  }
+  .account-workspace {
+    padding: 24px 20px;
+  }
+  .account-nav {
+    padding: 24px 12px;
+  }
+  .department-layout {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+}
+@media (max-width: 650px) {
+  .account-shell {
+    display: block;
+  }
+  .account-nav {
+    position: static;
+    height: auto;
+    padding: 16px;
+    gap: 14px;
+    border-right: 0;
+    border-bottom: 1px solid var(--full-line);
+  }
+  .account-brand {
+    font-size: 23px;
+  }
+  .account-nav nav {
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 4px;
+  }
+  .account-nav nav a {
+    flex: none;
+    padding: 8px 10px;
+    gap: 7px;
+  }
+  .account-person {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    padding: 0;
+    border: 0;
+  }
+  .account-person > div,
+  .account-person > .account-avatar {
+    display: none;
+  }
+  .account-workspace {
+    padding: 20px 16px;
+  }
+  .workspace-heading {
+    margin-bottom: 18px;
+  }
+  .workspace-heading h1 {
+    font-size: 22px;
+  }
+  .workspace-heading small {
+    display: none;
+  }
+  .workspace-toolbar {
+    gap: 8px;
+  }
+  .workspace-toolbar .el-input {
+    width: 100%;
+  }
+  .department-layout {
+    grid-template-columns: 1fr;
+  }
+  .department-layout .workspace-surface:first-child {
+    max-height: 260px;
+    overflow: auto;
+  }
+  .permission-list {
+    grid-template-columns: 1fr;
+  }
+  .account-dialog {
+    --el-dialog-margin-top: 6vh;
+  }
+}

@@ -19,6 +19,7 @@ class Store:
     def __init__(self, settings: Settings):
         self.settings = settings
         settings.data_dir.mkdir(parents=True, exist_ok=True)
+        settings.data_dir.chmod(0o700)
         with self.connect() as db:
             db.executescript("""
             PRAGMA journal_mode=WAL;
@@ -39,8 +40,30 @@ class Store:
               recording_id TEXT PRIMARY KEY, bucket TEXT NOT NULL, object_key TEXT NOT NULL,
               status TEXT NOT NULL DEFAULT 'pending', attempts INTEGER NOT NULL DEFAULT 0,
               next_at REAL NOT NULL DEFAULT 0, error TEXT, verified_at REAL);
-            PRAGMA user_version=1;
             """)
+        with self.connect(True) as db:
+            db.execute("CREATE TABLE IF NOT EXISTS feature_schema(module TEXT PRIMARY KEY, version INTEGER NOT NULL)")
+            version = db.execute("SELECT version FROM feature_schema WHERE module='core'").fetchone()
+            if version and version[0] > 2:
+                raise RuntimeError("录音数据库版本较新，请使用兼容的服务版本")
+            columns = {r[1] for r in db.execute("PRAGMA table_info(recordings)")}
+            for name, declaration in (
+                ("owner_account_id", "TEXT"),
+                ("roster_json", "TEXT"),
+                ("roster_client_id", "TEXT"),
+                ("attribution_state", "TEXT NOT NULL DEFAULT 'none'"),
+            ):
+                if name not in columns:
+                    db.execute(f"ALTER TABLE recordings ADD COLUMN {name} {declaration}")
+            db.execute("CREATE INDEX IF NOT EXISTS recordings_owner ON recordings(owner_account_id,created_at)")
+            db.execute("INSERT INTO feature_schema VALUES('core',2) ON CONFLICT(module) DO UPDATE SET version=MAX(version,excluded.version)")
+            if db.execute("PRAGMA user_version").fetchone()[0] < 2:
+                db.execute("PRAGMA user_version=2")
+        from .identity import initialize as identity_initialize
+        from .voice import initialize as voice_initialize
+        identity_initialize(self)
+        voice_initialize(self)
+        settings.db_path.chmod(0o600)
 
     @contextmanager
     def connect(self, write=False):
@@ -66,17 +89,22 @@ class Store:
             raise Missing()
         return dict(row)
 
-    def create(self, value):
-        with self.connect(True) as db:
+    def create(self, value, *, owner=None, roster=None, roster_client_id=None, db=None):
+        from contextlib import nullcontext
+        with (nullcontext(db) if db is not None else self.connect(True)) as db:
             row = db.execute(
                 "SELECT * FROM recordings WHERE client_id=?", (value["client_id"],)
             ).fetchone()
             if row:
+                if row["owner_account_id"] != owner:
+                    raise Conflict("录音会话归属不匹配")
                 if (
                     row["sha256"] != value["sha256"]
                     or row["total_bytes"] != value["total_bytes"]
                 ):
                     raise Conflict("同一录音编号对应的文件已改变")
+                if owner and (json.loads(row["roster_json"] or "[]") != roster or row["roster_client_id"] != roster_client_id):
+                    raise Conflict("录音的参会名单已固定")
                 return dict(row)
             count = db.execute(
                 "SELECT count(*) FROM recordings WHERE state NOT IN ('complete','no-speech')"
@@ -96,7 +124,7 @@ class Store:
                     raise Busy("存储空间不足，请稍后重试；录音请保留在设备上")
             id = str(uuid.uuid4())
             db.execute(
-                "INSERT INTO recordings(id,client_id,upload_token,title,total_bytes,sha256,extension,created_at,interrupted) VALUES(?,?,?,?,?,?,?,?,?)",
+                "INSERT INTO recordings(id,client_id,upload_token,title,total_bytes,sha256,extension,created_at,interrupted,owner_account_id,roster_json,roster_client_id) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
                 (
                     id,
                     value["client_id"],
@@ -107,6 +135,9 @@ class Store:
                     value["extension"],
                     time.time(),
                     int(value.get("interrupted", False)),
+                    owner,
+                    json.dumps(roster, ensure_ascii=False) if owner else None,
+                    roster_client_id,
                 ),
             )
             row = db.execute("SELECT * FROM recordings WHERE id=?", (id,)).fetchone()
@@ -214,6 +245,8 @@ class Store:
                     "UPDATE jobs SET stage='analysis',status='pending',attempts=0,next_at=0,owner=NULL,lease_until=NULL,error=NULL WHERE recording_id=?",
                     (job["recording_id"],),
                 )
+                from .voice import enqueue_attribution
+                enqueue_attribution(self, job["recording_id"], db=db)
             else:
                 db.execute(
                     "UPDATE jobs SET status='complete',owner=NULL,lease_until=NULL,error=NULL WHERE recording_id=?",
@@ -288,16 +321,18 @@ class Store:
 
 
 def public_record(row):
+    from .voice import public_transcript
     return {
         "id": row["id"],
         "title": row["title"],
         "createdAt": round(row["created_at"] * 1000),
         "duration": row["duration"],
         "status": row["state"],
+        "speakerStatus": row.get("attribution_state", "none"),
         "hasAudio": bool(row["audio_path"]),
         "interrupted": bool(row["interrupted"]),
         "error": row["error"],
         "sha256": row["sha256"],
-        "transcript": json.loads(row["transcript"]) if row["transcript"] else None,
+        "transcript": public_transcript(json.loads(row["transcript"])) if row["transcript"] else None,
         "analysis": json.loads(row["analysis"]) if row["analysis"] else None,
     }

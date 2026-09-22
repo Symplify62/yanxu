@@ -88,7 +88,7 @@ final class AppUpdater {
     for (File d : LocalStore.all(c)) {
       try {
         String s = LocalStore.read(d).optString("state");
-        if (java.util.Arrays.asList("recording", "paused", "saved", "uploading", "retry")
+        if (java.util.Arrays.asList("recording", "paused", "saved", "uploading", "retry", "awaiting_login")
             .contains(s)) return true;
       } catch (Exception e) {
         return true;
@@ -98,7 +98,8 @@ final class AppUpdater {
   }
 
   static boolean idle(Context c) {
-    return UpdatePolicy.idle(RecordingService.active, pendingUploads(c), installing(c));
+    return UpdatePolicy.idle(
+        RecordingService.active || VoiceEnrollmentDialog.busy, pendingUploads(c), installing(c));
   }
 
   static void schedule(Context c) {

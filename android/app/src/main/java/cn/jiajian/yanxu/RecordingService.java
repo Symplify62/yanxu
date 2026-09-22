@@ -31,11 +31,14 @@ public class RecordingService extends Service {
     String action = intent == null ? "" : intent.getAction();
     if ("start".equals(action) && !active) {
       synchronized (AppUpdater.GATE) {
-        if (AppUpdater.installing(this)) {
-          android.widget.Toast.makeText(this, "正在安装更新，请稍后录音", android.widget.Toast.LENGTH_SHORT)
+        if (AppUpdater.installing(this) || VoiceEnrollmentDialog.busy) {
+          android.widget.Toast.makeText(
+                  this,
+                  VoiceEnrollmentDialog.busy ? "请先结束声音录入" : "正在安装更新，请稍后录音",
+                  android.widget.Toast.LENGTH_SHORT)
               .show();
           stopSelf();
-        } else start();
+        } else start(intent);
       }
     } else if ("pause".equals(action) && active && running) {
       paused = !paused;
@@ -51,7 +54,7 @@ public class RecordingService extends Service {
     return START_NOT_STICKY;
   }
 
-  private void start() {
+  private void start(Intent intent) {
     try {
       if (new StatFs(getFilesDir().getAbsolutePath()).getAvailableBytes() < 64L * 1024 * 1024)
         throw new IOException("设备存储空间不足");
@@ -73,6 +76,12 @@ public class RecordingService extends Service {
               .put("state", "recording")
               .put("createdAt", System.currentTimeMillis())
               .put("interrupted", false);
+      String identity = intent.getStringExtra("cloudIdentity");
+      if (identity == null) throw new IOException("请先登录组织者账号");
+      meta.put("cloudIdentity",new JSONObject(identity));
+      RecordingIdentity.requireOwner(this,meta);
+      String snapshot = intent.getStringExtra("participantsSnapshot");
+      if (snapshot != null) meta.put("participantsSnapshot", new JSONObject(snapshot));
       LocalStore.save(dir, meta);
       int size =
           Math.max(
@@ -185,8 +194,6 @@ public class RecordingService extends Service {
 
   private void cleanup() {
     running = false;
-    active = false;
-    paused = false;
     if (recorder != null) {
       try {
         recorder.stop();
@@ -198,6 +205,11 @@ public class RecordingService extends Service {
     if (wake != null && wake.isHeld()) wake.release();
     stopForeground(STOP_FOREGROUND_REMOVE);
     stopSelf();
+    // Do not let enrollment or installation take the mic/process before release finishes.
+    synchronized (AppUpdater.GATE) {
+      active = false;
+      paused = false;
+    }
   }
 
   @Override

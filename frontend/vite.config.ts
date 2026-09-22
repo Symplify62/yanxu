@@ -35,6 +35,7 @@ export default defineConfig({
         prototype: "prototype.html",
         phaseOne: "phase-one.html",
         public: "public.html",
+        account: "account.html",
         option: "design-option.html",
       },
     },
