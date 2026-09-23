@@ -18,10 +18,10 @@ import java.util.*;
 import org.json.*;
 
 public class MainActivity extends Activity {
-  private final int GREEN = Color.rgb(70, 107, 79),
-      INK = Color.rgb(39, 61, 49),
-      MUTED = Color.rgb(114, 128, 117),
-      BG = Color.rgb(251, 252, 248);
+  private final int GREEN = AppUi.GREEN,
+      INK = AppUi.INK,
+      MUTED = AppUi.MUTED,
+      BG = AppUi.BG;
   private LinearLayout shell, content, actions;
   private TextView timer, status, settingsLabel;
   private int tab = 0;
@@ -30,7 +30,7 @@ public class MainActivity extends Activity {
   private WebView web;
   private PeopleStore peopleStore;
   private CloudAccountUi cloudUi;
-  private AlertDialog settingsDialog;
+  private Dialog settingsDialog, settingsChild;
   private PeoplePanel peoplePanel;
   private VoiceEnrollmentDialog voiceDialog;
   private TextView participantCount;
@@ -46,7 +46,8 @@ public class MainActivity extends Activity {
             cloudUi.dismissProtected();
             if (voiceDialog != null) voiceDialog.dismiss();
             pendingVoiceId = null;
-            useAccountStore(); render();
+            useAccountStore();
+            render();
           }
           if (settingsLabel != null)
             settingsLabel.setText(AppUpdater.needsAction(MainActivity.this) ? "设置 · 更新" : "设置");
@@ -83,7 +84,7 @@ public class MainActivity extends Activity {
     AppUpdater.recover(this);
     AppUpdater.schedule(this);
     if (getIntent().getBooleanExtra("showUpdates", false))
-      handler.post(() -> UpdateDialog.show(this));
+      handler.post(() -> settingsChild = UpdateDialog.show(this));
   }
 
   @Override
@@ -108,6 +109,7 @@ public class MainActivity extends Activity {
   protected void onDestroy() {
     if (cloudUi != null) cloudUi.close();
     if (settingsDialog != null) settingsDialog.dismiss();
+    if (settingsChild != null) settingsChild.dismiss();
     if (voiceDialog != null) voiceDialog.dismiss();
     if (peoplePanel != null) peoplePanel.dismiss();
     handler.removeCallbacks(tick);
@@ -130,7 +132,7 @@ public class MainActivity extends Activity {
     GradientDrawable g = new GradientDrawable();
     g.setColor(color);
     g.setCornerRadius(dp(radius));
-    g.setStroke(dp(1), Color.rgb(227, 232, 223));
+    g.setStroke(dp(1), AppUi.LINE);
     return g;
   }
 
@@ -144,17 +146,9 @@ public class MainActivity extends Activity {
   }
 
   private Button button(String label, boolean primary, Runnable action) {
-    Button b = new Button(this);
-    b.setText(label);
-    b.setTextSize(14);
-    b.setAllCaps(false);
-    b.setTextColor(primary ? Color.WHITE : INK);
-    b.setBackground(bg(primary ? GREEN : Color.WHITE, 10));
-    b.setPadding(dp(16), 0, dp(16), 0);
-    b.setMinHeight(dp(48));
-    b.setOnClickListener(v -> action.run());
-    LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, dp(50));
-    p.topMargin = dp(12);
+    Button b = AppUi.button(this, label, primary, action);
+    LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, -2);
+    p.topMargin = dp(10);
     b.setLayoutParams(p);
     return b;
   }
@@ -173,28 +167,44 @@ public class MainActivity extends Activity {
     shell = new LinearLayout(this);
     shell.setOrientation(1);
     shell.setBackgroundColor(BG);
-    shell.setPadding(dp(20), dp(14), dp(20), dp(16));
+    int gutter = Math.max(dp(20), (getResources().getDisplayMetrics().widthPixels - dp(680)) / 2);
+    shell.setPadding(gutter, dp(4), gutter, dp(8));
     if (Build.VERSION.SDK_INT >= 21)
       shell.setOnApplyWindowInsetsListener(
           (v, insets) -> {
             v.setPadding(
-                dp(20),
-                dp(14) + insets.getSystemWindowInsetTop(),
-                dp(20),
-                dp(16) + insets.getSystemWindowInsetBottom());
+                gutter + insets.getSystemWindowInsetLeft(),
+                dp(4) + insets.getSystemWindowInsetTop(),
+                gutter + insets.getSystemWindowInsetRight(),
+                dp(8) + insets.getSystemWindowInsetBottom());
             return insets;
           });
     LinearLayout top = new LinearLayout(this);
     top.setGravity(Gravity.CENTER_VERTICAL);
-    TextView brand = text("言序", 25, GREEN);
+    TextView brand = text("言序", 22, GREEN);
     brand.setTypeface(null, Typeface.BOLD);
     top.addView(brand, new LinearLayout.LayoutParams(0, -2, 1));
     CloudSession headerSession = CloudSession.current(this);
-    TextView account = text(headerSession != null && headerSession.valid() ? "账号" : "登录", 13, GREEN);
-    account.setContentDescription(headerSession != null && headerSession.valid() ? "账号与云端资料" : "账号登录");
-    account.setPadding(dp(12), dp(10), dp(12), dp(10));
+    boolean signedIn = headerSession != null && headerSession.valid();
+    FrameLayout account = new FrameLayout(this);
+    account.setBackground(AppUi.ripple(this, AppUi.PALE, 24, false));
+    account.setContentDescription(signedIn ? "头像，个人设置" : "头像，登录");
+    account.setFocusable(true);
+    if (signedIn) {
+      String name =
+          headerSession.account.optString(
+              "displayName", headerSession.account.optString("username"));
+      TextView initial = AppUi.avatar(this, name, 44);
+      initial.setTextSize(18);
+      initial.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+      account.addView(initial, new FrameLayout.LayoutParams(-1, -1));
+    } else {
+      ImageView person = new ImageView(this);
+      person.setImageResource(R.drawable.ic_account);
+      account.addView(person, new FrameLayout.LayoutParams(dp(22), dp(22), Gravity.CENTER));
+    }
     account.setOnClickListener(v -> cloudUi.account());
-    top.addView(account);
+    top.addView(account, new LinearLayout.LayoutParams(dp(44), dp(44)));
     TextView settings = text("设置", 13, MUTED);
     settingsLabel = settings;
     settings.setPadding(dp(12), dp(10), dp(12), dp(10));
@@ -205,9 +215,12 @@ public class MainActivity extends Activity {
     String[] labels = {"快速录音", "公共记录", "本地录音"};
     for (int i = 0; i < 3; i++) {
       final int target = i;
-      TextView item = text(labels[i], 13, tab == i ? GREEN : MUTED);
+      TextView item = text(labels[i], 14, tab == i ? GREEN : MUTED);
       item.setGravity(Gravity.CENTER);
-      if (tab == i) item.setBackground(bg(Color.rgb(234, 240, 228), 8));
+      if (tab == i) {
+        item.setBackground(AppUi.shape(this, Color.WHITE, 10, false));
+        item.setTypeface(null, Typeface.BOLD);
+      }
       item.setPadding(dp(6), dp(12), dp(6), dp(12));
       item.setOnClickListener(
           v -> {
@@ -217,7 +230,9 @@ public class MainActivity extends Activity {
       nav.addView(item, new LinearLayout.LayoutParams(0, -2, 1));
     }
     LinearLayout.LayoutParams np = new LinearLayout.LayoutParams(-1, -2);
-    np.topMargin = dp(16);
+    nav.setPadding(dp(4), dp(4), dp(4), dp(4));
+    nav.setBackground(AppUi.shape(this, AppUi.PALE, 14, false));
+    np.topMargin = dp(8);
     np.bottomMargin = dp(tab == 1 ? 0 : 16);
     shell.addView(nav, np);
     content = new LinearLayout(this);
@@ -242,14 +257,14 @@ public class MainActivity extends Activity {
     LinearLayout card = new LinearLayout(this);
     card.setOrientation(1);
     card.setGravity(Gravity.CENTER);
-    card.setPadding(dp(22), dp(22), dp(22), dp(24));
-    card.setBackground(bg(Color.WHITE, 18));
+    card.setPadding(dp(20), dp(20), dp(20), dp(20));
+    card.setBackground(AppUi.shape(this, Color.WHITE, 20, false));
     status = text(RecordingService.message, 14, MUTED);
     status.setGravity(Gravity.CENTER);
     card.addView(status);
-    timer = text(format(RecordingService.frames / 16000), 38, INK);
+    timer = text(format(RecordingService.frames / 16000), 34, INK);
     timer.setGravity(Gravity.CENTER);
-    timer.setTypeface(Typeface.MONOSPACE);
+    timer.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
     LinearLayout.LayoutParams tp = new LinearLayout.LayoutParams(-1, -2);
     tp.topMargin = dp(16);
     tp.bottomMargin = dp(12);
@@ -264,25 +279,23 @@ public class MainActivity extends Activity {
     body.addView(card);
     TextView hint = text("本地保存 · 自动上传", 11, MUTED);
     hint.setGravity(Gravity.CENTER);
-    hint.setPadding(0, dp(18), 0, 0);
+    hint.setPadding(0, dp(12), 0, dp(12));
     body.addView(hint);
     participantCount = text("", 12, MUTED);
     participantCount.setGravity(Gravity.CENTER);
     body.addView(participantCount);
     updateParticipantCount();
     CloudSession activeSession = CloudSession.current(this);
-    LinearLayout featureActions = new LinearLayout(this);
-    Button participants = button("选择参会者", false, this::openParticipantPicker);
-    Button voices = button("声音档案", false, this::openVoiceProfiles);
-    LinearLayout.LayoutParams participantLayout = new LinearLayout.LayoutParams(0, dp(50), 1);
-    participantLayout.topMargin = dp(12); participantLayout.rightMargin = dp(6);
-    LinearLayout.LayoutParams voiceLayout = new LinearLayout.LayoutParams(0, dp(50), 1);
-    voiceLayout.topMargin = dp(12); voiceLayout.leftMargin = dp(6);
-    participants.setEnabled(!RecordingService.active); voices.setEnabled(!RecordingService.active);
-    featureActions.addView(participants, participantLayout); featureActions.addView(voices, voiceLayout);
-    body.addView(featureActions);
-    if (activeSession == null || !activeSession.valid() || !activeSession.allows("record")) return;
-    body.addView(button("同步人员与声纹", false, () -> cloudUi.sync()));
+    boolean organizer =
+        activeSession != null && activeSession.valid() && activeSession.allows("record");
+    if (!organizer) {
+      body.addView(AppUi.item(this, "选择参会者", null, this::openParticipantPicker));
+      body.addView(AppUi.item(this, "声音档案", null, this::openVoiceProfiles));
+    }
+    if (!organizer) {
+      body.addView(AppUi.quiet(this, "导入音频", this::importAudio));
+      return;
+    }
     peoplePanel =
         new PeoplePanel(
             this,
@@ -299,16 +312,35 @@ public class MainActivity extends Activity {
                 updateParticipantCount();
               }
 
-              @Override public boolean onAddRequested() { cloudUi.addPerson(); return true; }
-              @Override public boolean canAddPeople() { return canChoosePeople(); }
-              @Override public boolean canSelectPeople() { return canChoosePeople(); }
+              @Override
+              public boolean onAddRequested() {
+                cloudUi.addPerson();
+                return true;
+              }
+
+              @Override
+              public boolean canAddPeople() {
+                return canChoosePeople();
+              }
+
+              @Override
+              public boolean canSelectPeople() {
+                return canChoosePeople();
+              }
             });
     body.addView(peoplePanel.build());
+    LinearLayout extras = AppUi.row(this);
+    extras.addView(
+        AppUi.quiet(this, "声音档案", this::openVoiceProfiles),
+        new LinearLayout.LayoutParams(0, -2, 1));
+    extras.addView(
+        AppUi.quiet(this, "导入音频", this::importAudio), new LinearLayout.LayoutParams(0, -2, 1));
+    body.addView(extras);
     if (!RecordingService.active) {
       body.addView(
-          button(
+          AppUi.quiet(
+              this,
               "准备下一场",
-              false,
               () ->
                   new AlertDialog.Builder(this)
                       .setTitle("准备下一场会议？")
@@ -336,11 +368,14 @@ public class MainActivity extends Activity {
   private void updateParticipantCount() {
     if (participantCount == null) return;
     CloudSession session = CloudSession.current(this);
-    if (session == null || !session.valid() || !session.allows("record")) { participantCount.setVisibility(View.GONE); return; }
-    participantCount.setVisibility(View.VISIBLE);
+    if (session == null || !session.valid() || !session.allows("record")) {
+      participantCount.setVisibility(View.GONE);
+      return;
+    }
+    participantCount.setVisibility(View.GONE);
     try {
       int count = peopleStore.selected().size();
-      participantCount.setText(count == 0 ? "未选参会者" : "本场 " + count + " 人 · 录音开始后名单固定");
+      participantCount.setText(count == 0 ? "" : "本场 " + count + " 人");
     } catch (Exception e) {
       participantCount.setText("名单读取失败，请保留应用数据");
     }
@@ -501,15 +536,28 @@ public class MainActivity extends Activity {
     LinearLayout list = new LinearLayout(this);
     list.setOrientation(1);
     scroll.addView(list);
-    content.addView(scroll);
+    LinearLayout tools = AppUi.row(this);
+    tools.addView(
+        AppUi.quiet(this, "导入音频", this::importAudio), new LinearLayout.LayoutParams(0, -2, 1));
+    tools.addView(
+        AppUi.quiet(
+            this,
+            "刷新",
+            () -> {
+              LocalStore.enqueue(this);
+              render();
+            }),
+        new LinearLayout.LayoutParams(0, -2, 1));
+    content.addView(tools);
+    content.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
     for (File dir : LocalStore.all(this)) {
       try {
         JSONObject m = LocalStore.read(dir);
-        if (!RecordingIdentity.visible(this,m)) continue;
+        if (!RecordingIdentity.visible(this, m)) continue;
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(1);
         row.setPadding(dp(17), dp(15), dp(17), dp(16));
-        row.setBackground(bg(Color.WHITE, 12));
+        row.setBackground(AppUi.ripple(this, Color.WHITE, 16, false));
         row.addView(text(m.optString("title", "录音"), 16, INK));
         JSONObject roster = m.optJSONObject("participantsSnapshot");
         if (roster != null && m.has("cloudIdentity")) {
@@ -547,18 +595,23 @@ public class MainActivity extends Activity {
           row.addView(text("录音中断，已保留现有内容", 11, Color.rgb(150, 107, 46)));
         if ("uploaded".equals(state)) {
           String id = m.getString("server_id");
-          row.addView(
-              button(
-                  "查看结果",
-                  false,
-                  () -> {
-                    if (m.has("cloudIdentity")) { showPrivateTranscript(m,id); return; }
-                    String base = m.optString("uploadServer",LocalStore.server(this));
-                    if (!base.equals(LocalStore.server(this))) { Toast.makeText(this,"请切回原服务查看此录音",Toast.LENGTH_LONG).show(); return; }
-                    tab = 1;
-                    render();
-                    web.loadUrl(base + "/?app=1#/records/" + id);
-                  }));
+          row.setContentDescription(m.optString("title", "录音") + "，查看结果");
+          row.setFocusable(true);
+          row.setOnClickListener(
+              v -> {
+                if (m.has("cloudIdentity")) {
+                  showPrivateTranscript(m, id);
+                  return;
+                }
+                String base = m.optString("uploadServer", LocalStore.server(this));
+                if (!base.equals(LocalStore.server(this))) {
+                  Toast.makeText(this, "请切回原服务查看此录音", Toast.LENGTH_LONG).show();
+                  return;
+                }
+                tab = 1;
+                render();
+                web.loadUrl(base + "/?app=1#/records/" + id);
+              });
         } else if (!RecordingService.active)
           row.addView(
               button(
@@ -581,14 +634,6 @@ public class MainActivity extends Activity {
       }
     }
     if (list.getChildCount() == 0) list.addView(text("暂无本地录音", 15, MUTED));
-    list.addView(
-        button(
-            "刷新",
-            false,
-            () -> {
-              LocalStore.enqueue(this);
-              render();
-            }));
   }
 
   private void webView(String id) {
@@ -645,73 +690,94 @@ public class MainActivity extends Activity {
   }
 
   private void settings() {
-    LinearLayout box = new LinearLayout(this);
-    box.setOrientation(1);
-    box.setPadding(dp(22), dp(10), dp(22), 0);
+    AppPage page = new AppPage(this, "设置", true);
     CloudSession session = CloudSession.current(this);
-    box.addView(button(session == null || !session.valid() ? "账号登录" : "账号 · " + session.account.optString("displayName",session.account.optString("username")),false,() -> {
-      if (settingsDialog != null) settingsDialog.dismiss();
-      cloudUi.account();
-    }));
-    box.addView(text("服务地址", 13, MUTED));
+    page.body.addView(AppUi.section(this, "账号"));
+    page.body.addView(
+        AppUi.item(
+            this,
+            session == null || !session.valid() ? "账号登录" : "个人设置",
+            session == null || !session.valid()
+                ? null
+                : session.account.optString("displayName", session.account.optString("username")),
+            () -> {
+              page.dismiss();
+              cloudUi.account();
+            }));
+    page.body.addView(AppUi.section(this, "应用"));
+    page.body.addView(
+        AppUi.item(
+            this, "应用更新", "当前版本 " + AppUpdater.versionName(this), () -> settingsChild = UpdateDialog.show(this)));
+    page.body.addView(AppUi.item(this, "高级设置", null, this::serverSettings));
+    TextView about = AppUi.text(this, "言序  " + AppUpdater.versionName(this), 13, MUTED);
+    about.setGravity(Gravity.CENTER);
+    about.setPadding(0, dp(32), 0, 0);
+    page.body.addView(about);
+    settingsDialog = page;
+    page.show();
+  }
+
+  private void serverSettings() {
+    AppPage page = new AppPage(this, "高级设置", true);
+    settingsChild = page;
+    page.body.addView(AppUi.section(this, "服务地址"));
     EditText edit = new EditText(this);
+    AppUi.input(edit);
     edit.setSingleLine(true);
+    edit.setContentDescription("服务地址");
     edit.setInputType(
         android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_URI);
     edit.setText(LocalStore.server(this));
-    box.addView(edit);
-    AlertDialog d =
-        new AlertDialog.Builder(this)
-            .setTitle("连接设置")
-            .setView(box)
-            .setNegativeButton("取消", null)
-            .setPositiveButton("保存", null)
-            .setNeutralButton(
-                "导入音频",
-                (v, w) -> {
-                  if (RecordingService.active || VoiceEnrollmentDialog.busy) {
-                    Toast.makeText(this, "请先结束录音", Toast.LENGTH_SHORT).show();
-                    return;
-                  }
-                  try { pendingImportContext = RecordingIdentity.captureForRecording(this,new JSONObject().put("participants",new JSONArray())); }
-                  catch (Exception e) { recordingBlocked(e); return; }
-                  Intent i =
-                      new Intent(Intent.ACTION_OPEN_DOCUMENT)
-                          .setType("audio/*")
-                          .addCategory(Intent.CATEGORY_OPENABLE);
-                  startActivityForResult(i, 201);
-                })
-            .create();
-    box.addView(
-        button(
-            "应用更新 · " + AppUpdater.versionName(this),
-            false,
-            () -> {
-              d.dismiss();
-              UpdateDialog.show(this);
-            }));
-    d.setOnShowListener(
-        v ->
-            d.getButton(AlertDialog.BUTTON_POSITIVE)
-                .setOnClickListener(
-                    b -> {
-                      String value = edit.getText().toString().trim().replaceAll("/+$", "");
-                      Uri u = Uri.parse(value);
-                      if (u.getHost() == null
-                          || !("http".equals(u.getScheme()) || "https".equals(u.getScheme()))
-                          || u.getQuery() != null
-                          || u.getFragment() != null || u.getUserInfo() != null
-                          || (u.getPath() != null && !u.getPath().isEmpty() && !"/".equals(u.getPath()))) {
-                        edit.setError("请输入有效服务地址");
-                        return;
-                      }
-                      if (RecordingService.active || VoiceEnrollmentDialog.busy) { edit.setError("请先结束录音或声音录入"); return; }
-                      if (value.equals(LocalStore.server(this))) { d.dismiss(); return; }
-                      d.dismiss();
-                      cloudUi.switchServer(value);
-                    }));
-    settingsDialog = d;
-    d.show();
+    page.body.addView(edit);
+    TextView note = AppUi.section(this, "切换服务后需重新登录，已有录音仍保留原上传地址。");
+    page.body.addView(note);
+    page.action(
+        -1,
+        "保存服务地址",
+        true,
+        () -> {
+          String value = edit.getText().toString().trim().replaceAll("/+$", "");
+          Uri u = Uri.parse(value);
+          if (u.getHost() == null
+              || !("http".equals(u.getScheme()) || "https".equals(u.getScheme()))
+              || u.getQuery() != null
+              || u.getFragment() != null
+              || u.getUserInfo() != null
+              || (u.getPath() != null && !u.getPath().isEmpty() && !"/".equals(u.getPath()))) {
+            edit.setError("请输入有效服务地址");
+            return;
+          }
+          if (RecordingService.active || VoiceEnrollmentDialog.busy) {
+            edit.setError("请先结束录音或声音录入");
+            return;
+          }
+          page.dismiss();
+          if (!value.equals(LocalStore.server(this))) {
+            if (settingsDialog != null) settingsDialog.dismiss();
+            cloudUi.switchServer(value);
+          }
+        });
+    page.show();
+  }
+
+  private void importAudio() {
+    if (RecordingService.active || VoiceEnrollmentDialog.busy) {
+      Toast.makeText(this, "请先结束录音", Toast.LENGTH_SHORT).show();
+      return;
+    }
+    try {
+      pendingImportContext =
+          RecordingIdentity.captureForRecording(
+              this, new JSONObject().put("participants", new JSONArray()));
+    } catch (Exception e) {
+      recordingBlocked(e);
+      return;
+    }
+    Intent i =
+        new Intent(Intent.ACTION_OPEN_DOCUMENT)
+            .setType("audio/*")
+            .addCategory(Intent.CATEGORY_OPENABLE);
+    startActivityForResult(i, 201);
   }
 
   @Override

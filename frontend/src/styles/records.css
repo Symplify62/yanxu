@@ -1179,3 +1179,113 @@
   margin: 4px 0 0;
   color: var(--p1-muted);
 }
+
+/* Mobile reading and record items share the native App's compact content rhythm. */
+.p1-complete-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: -8px 0 20px;
+  color: var(--p1-accent);
+  font-size: 13px;
+}
+@media (max-width: 650px) {
+  .p1-result-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 12px;
+    padding: 16px;
+    margin-bottom: 10px;
+    border-radius: 16px;
+  }
+  .p1-result-main {
+    grid-column: 1 / -1;
+  }
+  .p1-result-main h2 {
+    font-size: 17px;
+    line-height: 1.5;
+    margin: 6px 0 8px;
+  }
+  .p1-row-date,
+  .p1-row-meta {
+    font-size: 12px;
+  }
+  .p1-status {
+    justify-self: start;
+    font-size: 12px;
+    padding: 3px 8px;
+  }
+  .p1-row-arrow {
+    justify-self: end;
+  }
+  .p1-back {
+    margin: 0 0 12px;
+    min-height: 44px;
+  }
+  .p1-detail-head {
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .p1-detail-head h1 {
+    font-size: 22px;
+    line-height: 1.4;
+    letter-spacing: 0;
+    margin: 0 0 10px;
+  }
+  .p1-detail-head > .el-button {
+    margin-top: 0;
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .p1-detail-head .p1-secondary {
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .p1-complete-status {
+    margin: 0 0 16px;
+  }
+  .p1-detail-tabs {
+    padding: 0 12px;
+    gap: 12px;
+    overflow-x: auto;
+  }
+  .p1-detail-tabs button {
+    font-size: 13px;
+    min-height: 48px;
+    padding: 12px 0;
+  }
+  .p1-detail-tabs svg {
+    display: none;
+  }
+  .p1-reading-body {
+    padding: 20px 16px;
+  }
+  .p1-summary {
+    font-size: 16px;
+    line-height: 1.8;
+    margin-bottom: 24px;
+  }
+  .p1-content-kicker {
+    font-size: 13px;
+    margin-bottom: 10px;
+  }
+  .p1-points,
+  .p1-decisions {
+    font-size: 14px;
+  }
+  .p1-transcript {
+    gap: 10px;
+    padding: 16px 0;
+  }
+  .p1-transcript > span {
+    font-size: 12px;
+  }
+  .p1-transcript strong {
+    font-size: 13px;
+  }
+  .p1-transcript p {
+    font-size: 15px;
+    line-height: 1.8;
+    margin-top: 6px;
+  }
+}

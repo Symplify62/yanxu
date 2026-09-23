@@ -6,7 +6,6 @@ import android.app.AlertDialog;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.graphics.drawable.GradientDrawable;
 import android.media.MediaPlayer;
 import android.os.Handler;
 import android.os.Looper;
@@ -20,7 +19,6 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 import java.io.File;
@@ -31,10 +29,10 @@ import java.util.function.Supplier;
 public final class VoiceEnrollmentDialog {
   public static volatile boolean busy;
   private static VoiceEnrollmentDialog owner;
-  private static final int GREEN = Color.rgb(70, 107, 79);
-  private static final int INK = Color.rgb(39, 61, 49);
-  private static final int MUTED = Color.rgb(114, 128, 117);
-  private static final int BG = Color.rgb(251, 252, 248);
+  private static final int GREEN = AppUi.GREEN;
+  private static final int INK = AppUi.INK;
+  private static final int MUTED = AppUi.MUTED;
+  private static final int BG = AppUi.BG;
   private final Activity activity;
   private final PeopleStore store;
   private final String personId;
@@ -42,7 +40,9 @@ public final class VoiceEnrollmentDialog {
   private final Supplier<VoiceSampleRecorder> recorderFactory;
   private final Handler main = new Handler(Looper.getMainLooper());
   private PeopleStore.Person person;
-  private AlertDialog dialog, discardDialog;
+  private AppPage dialog;
+  private AlertDialog discardDialog;
+  private LinearLayout confirmations;
   private EditText name;
   private TextView status, clock, error;
   private CheckBox confirmed, consent;
@@ -102,14 +102,13 @@ public final class VoiceEnrollmentDialog {
   }
 
   private void build() {
-    LinearLayout body = new LinearLayout(activity);
-    body.setOrientation(LinearLayout.VERTICAL);
-    body.setPadding(dp(22), dp(8), dp(22), dp(20));
-    body.setBackgroundColor(BG);
+    dialog = new AppPage(activity, "录制本人声音", true);
+    LinearLayout body = dialog.body;
     body.addView(label("姓名", 13, MUTED));
     name = new EditText(activity);
+    AppUi.input(name);
     name.setSingleLine(true);
-    name.setTextSize(19);
+    name.setTextSize(16);
     name.setTextColor(INK);
     name.setSelectAllOnFocus(true);
     name.setText(person.name);
@@ -123,7 +122,8 @@ public final class VoiceEnrollmentDialog {
     status.setGravity(Gravity.CENTER);
     body.addView(status);
     clock = label("00:00", 36, INK);
-    clock.setTypeface(Typeface.MONOSPACE);
+    clock.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
+    clock.setPadding(0, dp(20), 0, dp(20));
     clock.setGravity(Gravity.CENTER);
     body.addView(clock);
     capture = action("开始录制", true, this::captureClicked);
@@ -131,19 +131,22 @@ public final class VoiceEnrollmentDialog {
     playback = action(person.hasVoice() ? "试听已保存声音" : "试听本次录音", false, this::play);
     playback.setVisibility(person.hasVoice() ? View.VISIBLE : View.GONE);
     body.addView(playback);
+    confirmations = AppUi.column(activity);
+    confirmations.setVisibility(View.GONE);
+    body.addView(confirmations);
     confirmed = new CheckBox(activity);
     confirmed.setText("已核对姓名，录音为本人声音");
     confirmed.setTextColor(INK);
     confirmed.setTextSize(13);
     confirmed.setEnabled(false);
-    body.addView(confirmed);
+    confirmations.addView(confirmed);
     if (!person.guest) {
       consent = new CheckBox(activity);
       consent.setText("同意在本机保留声音，供后续会议使用");
       consent.setTextColor(INK);
       consent.setTextSize(13);
       consent.setEnabled(false);
-      body.addView(consent);
+      confirmations.addView(consent);
     } else {
       body.addView(label("临时来宾：声音仅保留本场。", 12, MUTED));
     }
@@ -151,7 +154,11 @@ public final class VoiceEnrollmentDialog {
     error.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
     error.setVisibility(View.GONE);
     body.addView(error);
-    body.addView(label(person.cloudPersonId.isEmpty() ? "声音先保存在本机，关联人员后可登记云端。" : "姓名来自云端目录，保存后另行确认云端登记。", 12, MUTED));
+    confirmations.addView(
+        label(
+            person.cloudPersonId.isEmpty() ? "声音先保存在本机，关联人员后可登记云端。" : "姓名来自云端目录，保存后另行确认云端登记。",
+            12,
+            MUTED));
     name.addTextChangedListener(
         new TextWatcher() {
           public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -162,16 +169,9 @@ public final class VoiceEnrollmentDialog {
 
           public void afterTextChanged(Editable value) {}
         });
-    ScrollView scroll = new ScrollView(activity);
-    scroll.setFillViewport(true);
-    scroll.addView(body);
-    dialog =
-        new AlertDialog.Builder(activity)
-            .setTitle("录制本人声音")
-            .setView(scroll)
-            .setNegativeButton("取消", null)
-            .setPositiveButton("确认保存", null)
-            .create();
+    dialog.action(AlertDialog.BUTTON_NEGATIVE, "取消", false, this::requestDismiss);
+    save = dialog.action(AlertDialog.BUTTON_POSITIVE, "确认保存", true, this::save);
+    dialog.onBack(this::requestDismiss);
     dialog.setCanceledOnTouchOutside(false);
     dialog.setCancelable(false);
     dialog.setOnKeyListener(
@@ -187,7 +187,7 @@ public final class VoiceEnrollmentDialog {
     dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
     dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener(v -> requestDismiss());
     save = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
-    save.setTextColor(GREEN);
+
     save.setEnabled(false);
     save.setOnClickListener(v -> save());
   }
@@ -220,6 +220,7 @@ public final class VoiceEnrollmentDialog {
       }
       try {
         discardStaged();
+        confirmations.setVisibility(View.GONE);
         confirmed.setChecked(false);
         confirmed.setEnabled(false);
         if (consent != null) {
@@ -280,6 +281,7 @@ public final class VoiceEnrollmentDialog {
     capture.setText("重新录制");
     playback.setText("试听本次录音");
     playback.setVisibility(View.VISIBLE);
+    confirmations.setVisibility(View.VISIBLE);
     confirmed.setEnabled(true);
     if (consent != null) consent.setEnabled(true);
     save.setEnabled(true);
@@ -480,16 +482,7 @@ public final class VoiceEnrollmentDialog {
   }
 
   private Button action(String title, boolean primary, Runnable run) {
-    Button view = new Button(activity);
-    view.setText(title);
-    view.setTextSize(15);
-    view.setAllCaps(false);
-    view.setTextColor(primary ? Color.WHITE : GREEN);
-    GradientDrawable shape = new GradientDrawable();
-    shape.setColor(primary ? GREEN : Color.WHITE);
-    shape.setCornerRadius(dp(12));
-    shape.setStroke(dp(1), Color.rgb(227, 232, 223));
-    view.setBackground(shape);
+    Button view = AppUi.button(activity, title, primary, run);
     LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, dp(48));
     params.topMargin = dp(8);
     params.bottomMargin = dp(8);

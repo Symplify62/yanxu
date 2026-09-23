@@ -77,6 +77,9 @@ public class SpeakersInstrumentation extends Instrumentation {
                 new Intent(context, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
         out.putString("ui", VoiceEnrollmentUiChecks.run(this, activity));
         out.putString("result", "PASS: native enrollment UI with deterministic test input");
+      } else if ("navigation".equals(mode)) {
+        activity = startActivitySync(new Intent(context, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        out.putString("result",NavigationUiChecks.run(this,activity));
       } else if ("panel".equals(mode)) {
         activity =
             startActivitySync(

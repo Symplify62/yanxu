@@ -13,8 +13,6 @@ import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.Gravity;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -40,22 +38,31 @@ public final class PeoplePanel {
 
     void onSelectionChanged();
 
-    default boolean onAddRequested() { return false; }
-    default boolean canAddPeople() { return true; }
-    default boolean canSelectPeople() { return true; }
+    default boolean onAddRequested() {
+      return false;
+    }
+
+    default boolean canAddPeople() {
+      return true;
+    }
+
+    default boolean canSelectPeople() {
+      return true;
+    }
   }
 
-  private static final int GREEN = Color.rgb(70, 107, 79);
-  private static final int INK = Color.rgb(39, 61, 49);
-  private static final int MUTED = Color.rgb(114, 128, 117);
-  private static final int LINE = Color.rgb(227, 232, 223);
-  private static final int PALE = Color.rgb(234, 240, 228);
-  private static final int BG = Color.rgb(251, 252, 248);
+  private static final int GREEN = AppUi.GREEN;
+  private static final int INK = AppUi.INK;
+  private static final int MUTED = AppUi.MUTED;
+  private static final int LINE = AppUi.LINE;
+  private static final int PALE = AppUi.PALE;
+  private static final int BG = AppUi.BG;
   private final Activity activity;
   private final PeopleStore store;
   private final Listener listener;
   private LinearLayout home;
-  private AlertDialog picker, addDialog, feedback;
+  private AppPage picker;
+  private AlertDialog addDialog, feedback;
   private LinearLayout pickerResults;
   private ScrollView pickerScroll;
   private Spinner departmentPicker;
@@ -116,7 +123,7 @@ public final class PeoplePanel {
               INK);
       title.setTypeface(null, Typeface.BOLD);
       heading.addView(title, new LinearLayout.LayoutParams(0, -2, 1));
-      Button more = button("更多人员", false, this::showPicker);
+      Button more = AppUi.quiet(activity, "更多人员", this::showPicker);
       heading.addView(more, new LinearLayout.LayoutParams(-2, dp(44)));
       home.addView(heading);
       if (RecordingService.active) home.addView(text("录音结束后可修改参会者和声音", 12, MUTED));
@@ -129,15 +136,20 @@ public final class PeoplePanel {
         home.addView(add, new LinearLayout.LayoutParams(-1, dp(48)));
         return;
       }
-      List<PeopleStore.Person> visible =
-          new ArrayList<>(data.people.subList(0, Math.min(7, data.people.size())));
+      List<PeopleStore.Person> ordered = new ArrayList<>(data.people);
+      // Keep this meeting's attendees visible before filling remaining slots with directory entries.
+      ordered.sort(java.util.Comparator.comparing(p -> !data.selected.contains(p.id)));
+      int limit = activity.getResources().getConfiguration().screenWidthDp >= 600 ? 8 : 3;
+      List<PeopleStore.Person> visible = new ArrayList<>(ordered.subList(0, Math.min(limit, ordered.size())));
       Button all =
           button(bulkLabel(visible, data.selected, false), false, () -> toggleAll(visible));
       enable(all, !RecordingService.active && listener.canSelectPeople());
+      all.setBackgroundColor(Color.TRANSPARENT);
+      all.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
       home.addView(all, new LinearLayout.LayoutParams(-1, dp(44)));
       int width = home.getWidth();
       if (width == 0) width = activity.getResources().getDisplayMetrics().widthPixels - dp(40);
-      addCards(home, visible, data.selected, Math.max(2, Math.min(4, width / dp(104))));
+      addCards(home, visible, data.selected, Math.max(2, Math.min(4, width / dp(112))));
     } catch (Exception error) {
       home.addView(text("人员未能读取，请重试", 14, INK));
       home.addView(button("重新读取", false, this::refreshHome));
@@ -149,8 +161,8 @@ public final class PeoplePanel {
       refreshPicker();
       return;
     }
-    LinearLayout body = column();
-    body.setPadding(dp(16), dp(8), dp(16), dp(8));
+    picker = new AppPage(activity, "选择参会者", false);
+    LinearLayout body = picker.body;
     EditText search = field("搜索姓名或部门", 80);
     search.setText(query);
     search.setContentDescription("搜索姓名或部门");
@@ -176,6 +188,8 @@ public final class PeoplePanel {
                 showError("人员未能读取，请重试", error);
               }
             });
+    pickerAll.setBackgroundColor(Color.TRANSPARENT);
+    pickerAll.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
     body.addView(pickerAll, new LinearLayout.LayoutParams(-1, dp(44)));
     pickerScroll = new ScrollView(activity);
     pickerScroll.setFillViewport(false);
@@ -186,15 +200,8 @@ public final class PeoplePanel {
     scrollLayout.topMargin = dp(8);
     body.addView(pickerScroll, scrollLayout);
     pickerAdd = button("＋ 添加人员", false, this::showAdd);
-    LinearLayout.LayoutParams addLayout = new LinearLayout.LayoutParams(-1, dp(48));
-    addLayout.topMargin = dp(8);
-    body.addView(pickerAdd, addLayout);
-    picker =
-        new AlertDialog.Builder(activity)
-            .setTitle("选择参会者")
-            .setView(body)
-            .setPositiveButton("完成", null)
-            .create();
+    picker.footer.addView(pickerAdd, new LinearLayout.LayoutParams(0, -2, 1));
+    picker.action(-1, "完成", true, () -> picker.dismiss());
     picker.setOnDismissListener(
         dialog -> {
           picker = null;
@@ -203,13 +210,6 @@ public final class PeoplePanel {
           departmentPicker = null;
         });
     picker.show();
-    Window window = picker.getWindow();
-    if (window != null) {
-      int width = activity.getResources().getDisplayMetrics().widthPixels - dp(24);
-      int height = Math.round(activity.getResources().getDisplayMetrics().heightPixels * 0.86f);
-      window.setLayout(Math.min(width, dp(660)), height);
-      window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
-    }
     // Mutating children from onLayoutChange can leave the replacement rows unmeasured.
     // Reflow after this layout, and only if the available width changes the column count.
     LinearLayout results = pickerResults;
@@ -269,7 +269,8 @@ public final class PeoplePanel {
           visible.size() + " 人 · 当前已选 " + selectedHere + " · 本场共 " + data.selected.size() + " 人");
       pickerNotice.setVisibility(RecordingService.active ? View.VISIBLE : View.GONE);
       pickerAll.setText(bulkLabel(visible, data.selected, true));
-      enable(pickerAll, !RecordingService.active && listener.canSelectPeople() && !visible.isEmpty());
+      enable(
+          pickerAll, !RecordingService.active && listener.canSelectPeople() && !visible.isEmpty());
       enable(pickerAdd, !RecordingService.active && listener.canAddPeople());
       int width = pickerResults.getWidth();
       if (width == 0)
@@ -362,10 +363,12 @@ public final class PeoplePanel {
 
   private LinearLayout personCard(PeopleStore.Person person, boolean selected) {
     LinearLayout card = column();
+    card.setPadding(dp(8), dp(8), dp(8), 0);
+    card.setBackground(shape(selected ? PALE : Color.WHITE, 16));
     LinearLayout choice = column();
     choice.setGravity(Gravity.CENTER);
-    choice.setPadding(dp(4), dp(8), dp(4), dp(5));
-    choice.setBackground(ripple(selected ? PALE : Color.WHITE, 12));
+    choice.setPadding(dp(4), dp(4), dp(4), 0);
+    choice.setBackground(AppUi.ripple(activity, Color.TRANSPARENT, 12, false));
     choice.setSelected(selected);
     choice.setFocusable(true);
     choice.setContentDescription(
@@ -374,8 +377,8 @@ public final class PeoplePanel {
     TextView avatar = text(initial(person.name), 20, selected ? Color.WHITE : GREEN);
     avatar.setPadding(0, 0, 0, 0);
     avatar.setGravity(Gravity.CENTER);
-    avatar.setBackground(shape(selected ? GREEN : PALE, 26));
-    FrameLayout.LayoutParams circle = new FrameLayout.LayoutParams(dp(48), dp(48), Gravity.CENTER);
+    avatar.setBackground(AppUi.shape(activity, selected ? GREEN : PALE, 26, false));
+    FrameLayout.LayoutParams circle = new FrameLayout.LayoutParams(dp(40), dp(40), Gravity.CENTER);
     portrait.addView(avatar, circle);
     if (selected) {
       TextView tick = text("✓", 13, GREEN);
@@ -385,26 +388,37 @@ public final class PeoplePanel {
       portrait.addView(
           tick, new FrameLayout.LayoutParams(dp(20), dp(20), Gravity.RIGHT | Gravity.BOTTOM));
     }
-    choice.addView(portrait, new LinearLayout.LayoutParams(dp(60), dp(52)));
+    choice.addView(portrait, new LinearLayout.LayoutParams(dp(54), dp(44)));
     TextView name = text(person.name, 13, INK);
     name.setGravity(Gravity.CENTER);
     name.setMaxLines(2);
     name.setMinLines(2);
+    name.setPadding(0, dp(4), 0, 0);
     name.setEllipsize(TextUtils.TruncateAt.END);
     choice.addView(name, new LinearLayout.LayoutParams(-1, -2));
     choice.setOnClickListener(v -> toggle(person.id));
     enable(choice, !RecordingService.active && listener.canSelectPeople());
     card.addView(choice, new LinearLayout.LayoutParams(-1, -2));
     String info = person.guest ? "本场来宾" : person.department;
-    if (info == null || info.isEmpty()) info = "本机成员";
+    if (info == null || info.isEmpty()) info = "";
     TextView detail = text(info, 11, MUTED);
     detail.setSingleLine(true);
     detail.setEllipsize(TextUtils.TruncateAt.END);
     detail.setGravity(Gravity.CENTER);
     card.addView(detail, new LinearLayout.LayoutParams(-1, -2));
-    TextView voice = text(person.cloudPersonId.isEmpty() ? (person.hasVoice() ? "声音已保存\n仅本机" : "未录制声音") : CloudAccountUi.voiceLabel(person.cloudStatus), 11, MUTED);
+    TextView voice =
+        text(
+            person.cloudPersonId.isEmpty()
+                ? (person.hasVoice() ? "已存本机" : "未录声音")
+                : CloudAccountUi.voiceLabel(person.cloudStatus)
+                    .replace("云端声纹可用", "声纹可用")
+                    .replace("云端未登记", "待录声音")
+                    .replace("云端", ""),
+            12,
+            MUTED);
     voice.setGravity(Gravity.CENTER);
-    voice.setMinLines(2);
+    voice.setSingleLine(true);
+    voice.setEllipsize(TextUtils.TruncateAt.END);
     card.addView(voice, new LinearLayout.LayoutParams(-1, -2));
     Button enroll =
         button(
@@ -414,7 +428,8 @@ public final class PeoplePanel {
               if (!canEdit()) return;
               listener.onEnroll(person.id);
             });
-    enroll.setTextSize(12);
+    enroll.setTextSize(13);
+    enroll.setBackgroundColor(Color.TRANSPARENT);
     enroll.setPadding(dp(3), 0, dp(3), 0);
     enroll.setContentDescription(person.name + "，" + (person.hasVoice() ? "重新录制声音" : "录制声音"));
     enable(enroll, !RecordingService.active);
@@ -604,18 +619,8 @@ public final class PeoplePanel {
   }
 
   private Button button(String label, boolean primary, Runnable action) {
-    Button result = new Button(activity);
-    result.setText(label);
+    Button result = AppUi.button(activity, label, primary, action);
     result.setTextSize(13);
-    result.setAllCaps(false);
-    result.setTextColor(primary ? Color.WHITE : GREEN);
-    result.setBackground(ripple(primary ? GREEN : Color.WHITE, 10));
-    result.setMinHeight(dp(44));
-    result.setMinimumHeight(dp(44));
-    result.setMinWidth(0);
-    result.setMinimumWidth(0);
-    result.setPadding(dp(10), 0, dp(10), 0);
-    result.setOnClickListener(v -> action.run());
     return result;
   }
 
