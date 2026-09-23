@@ -6,6 +6,11 @@ public class AudioOriginTest {
     String good = "https://audio.qjl666.xyz" + path;
     if (!AudioOrigin.allows(good) || !AudioOrigin.allows(good + "?attname=recording.wav"))
       throw new AssertionError("Valid audio rejected");
+    String testing = good.replace("audio.qjl666.xyz", "audio-test.qjl666.xyz");
+    if (!AudioOrigin.allows(testing, "https://audio-test.qjl666.xyz")
+        || AudioOrigin.allows(good, "https://audio-test.qjl666.xyz")
+        || AudioOrigin.allows(testing, "https://audio.qjl666.xyz"))
+      throw new AssertionError("Audio origins crossed environments");
     for (String bad : new String[] {
       good.replace("https:", "http:"), good.replace("audio.qjl666.xyz", "audio.qjl666.xyz.evil.test"),
       good.replace("audio.qjl666.xyz", "evil@audio.qjl666.xyz"), good.replace(".xyz", ".xyz:8443"),

@@ -647,13 +647,13 @@ public class MainActivity extends Activity {
         new WebViewClient() {
           @Override
           public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest r) {
-            return !sameServer(r.getUrl()) && !AudioOrigin.allows(r.getUrl().toString());
+            return !sameServer(r.getUrl()) && !AudioOrigin.allows(r.getUrl().toString(), BuildConfig.YANXU_AUDIO_ORIGIN);
           }
         });
     web.setDownloadListener(
         (url, ua, cd, mime, len) -> {
           Uri uri = Uri.parse(url);
-          if (sameServer(uri) || AudioOrigin.allows(url)) {
+          if (sameServer(uri) || AudioOrigin.allows(url, BuildConfig.YANXU_AUDIO_ORIGIN)) {
             DownloadManager.Request request =
                 new DownloadManager.Request(uri)
                     .setNotificationVisibility(
@@ -712,6 +712,12 @@ public class MainActivity extends Activity {
     AppPage page = new AppPage(this, "高级设置", true);
     settingsChild = page;
     page.body.addView(AppUi.section(this, "服务地址"));
+    if (!"development".equals(BuildConfig.YANXU_ENVIRONMENT)) {
+      page.body.addView(AppUi.item(this, "当前服务", BuildConfig.YANXU_SERVER_ORIGIN, null));
+      page.body.addView(AppUi.section(this, "服务地址由安装包对应的环境配置决定。"));
+      page.show();
+      return;
+    }
     EditText edit = new EditText(this);
     AppUi.input(edit);
     edit.setSingleLine(true);

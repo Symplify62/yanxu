@@ -16,6 +16,7 @@
 | 后端/处理任务/运行恢复 | [后端说明](backend/README.md) | 真实接入与验证见实施记录 |
 | 账号/管理后台、声音档案、说话人归属 | [账号与声音实施](docs/implementation/identity-voice-delivery.md) | 接口、授权范围、App迁移、模型验证和发布边界 |
 | 公网部署、域名证书、Mac转写服务、备份恢复 | [公网部署记录](docs/implementation/public-deployment.md) | 区分云端主库与本机旧测试库，按记录操作服务与回退 |
+| 开发/测试/生产环境选择、配置或测试部署 | [环境隔离](docs/implementation/environment-separation.md) | 配置字段以 `config/environments/` 为准；机密项按环境独立保存 |
 | Android录音/上传/构建 | [App说明](android/README.md) | 先区分模拟器证据与物理手机实测 |
 | 前端接口、状态管理、身份或mock | [前端工程实施](frontend/docs/frontend-guides/05-工程实施.md) | 涉及对象范围/会话时读其链接的ACL/STATE与接口契约 |
 | 第一阶段范围/验收或暂缓功能 | [第一阶段范围](docs/phases/phase-01.md) | 本期优先读此页，完整方案差异再查业务文档 |

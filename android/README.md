@@ -4,7 +4,7 @@
 
 当前已发布 **0.3.1（versionCode 11）**，访客录音与按需登录的实施、验证和发布状态见[0.3.1实施记录](../docs/implementation/android-guest-recording.md)。保留头像选人、全选、本人声音录制及云端登记。上一版0.3.0已于2026-09-22上线对应后端并发布自动更新清单，历史安装与验证见[0.3.0发布验证](../docs/implementation/identity-voice-release.md)；0.3.1以本轮实施记录中的新鲜发布校验为准。完整后端及发布边界见[真实身份与声音实施](../docs/implementation/identity-voice-delivery.md)。0.2.0历史验证见[本机人员与声音接入](../docs/implementation/android-local-speakers.md)。
 
-App默认连接 `https://yanxu.qjl666.xyz`，联网使用无需USB。曾手动填写其他服务地址的安装会保留原设置，需在“设置”中确认；旧本地已上传记录不批量重新发布。公网运行与实测证据见[部署记录](../docs/implementation/public-deployment.md)。
+默认生产构建连接 `https://yanxu.qjl666.xyz`，联网使用无需USB。0.3.6 起测试和生产包固定各自服务地址；开发包仍可在高级设置切换本机服务。既有录音继续使用创建时冻结的上传地址，不因安装新包改派；旧本地已上传记录不批量重新发布。公网运行与实测证据见[部署记录](../docs/implementation/public-deployment.md)。
 
 ## 移动端视觉整理
 
@@ -24,9 +24,13 @@ JDK17、Android SDK35；`local.properties`设置本机sdk.dir（不入库）。�
 
 ```sh
 ./gradlew assembleDebug
+# 独立测试版，与生产版共存：
+./gradlew -PyanxuEnvironment=testing assembleDebug
 ```
 
 调试构建输出：`app/build/outputs/apk/debug/app-debug.apk`；本轮交付使用上方带版本的安装包。debug允许HTTP连接本地开发服务，release不允许明文；当前是测试包，不是商店发布包。
+
+环境包从[版本化配置](../config/README.md#环境配置)读取服务入口、应用包名和更新地址。默认构建保持生产包名；测试构建使用独立包名、测试域名和测试更新清单。安装前核对实际 APK 的 `package` 和应用名称，避免把默认构建当作测试版安装。环境隔离见[实施记录](../docs/implementation/environment-separation.md)。
 
 USB调试时在Mac执行`adb -s <设备ID> reverse tcp:5189 tcp:5189`，App“设置”中的服务地址用`http://127.0.0.1:5189`。离开USB转发后这个地址不再指向Mac；局域网方式需另行配置Mac监听和地址。
 

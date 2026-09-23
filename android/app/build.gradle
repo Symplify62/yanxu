@@ -1,8 +1,40 @@
 plugins { id 'com.android.application' }
+def yanxuEnvironment = (project.findProperty('yanxuEnvironment') ?: 'production').toString()
+if (!['development', 'testing', 'production'].contains(yanxuEnvironment)) throw new GradleException('Unknown Yanxu environment')
+def environmentFile = rootProject.file("../config/environments/${yanxuEnvironment}.env")
+if (!environmentFile.isFile()) throw new GradleException('Missing Yanxu environment file')
+def environment = new Properties()
+environmentFile.withReader('UTF-8') { environment.load(it) }
+def serverOrigin = environment.getProperty('YANXU_PUBLIC_ORIGIN')
+def audioOrigin = environment.getProperty('YANXU_AUDIO_ORIGIN', '')
+def updateOrigin = environment.getProperty('YANXU_UPDATE_ORIGIN', '')
+def appId = environment.getProperty('ANDROID_APPLICATION_ID')
+def appLabel = environment.getProperty('ANDROID_APP_LABEL')
+def updateEnabled = environment.getProperty('ANDROID_UPDATE_ENABLED') == 'true'
+if (!serverOrigin || !appId || !appLabel || environment.getProperty('YANXU_ENVIRONMENT') != yanxuEnvironment)
+    throw new GradleException('Incomplete Yanxu environment identity')
+if (yanxuEnvironment != 'development' && (!serverOrigin.startsWith('https://') || updateOrigin != serverOrigin))
+    throw new GradleException('Test and production endpoints must use matching HTTPS origins')
+if (yanxuEnvironment != 'development' &&
+    (!audioOrigin.startsWith('https://') || audioOrigin != environment.getProperty('QINIU_PUBLIC_BASE_URL')))
+    throw new GradleException('Test and production audio must match their HTTPS storage domain')
 android {
     namespace 'cn.jiajian.yanxu'
     compileSdk 35
-    defaultConfig { testInstrumentationRunner (project.findProperty('yanxuTestRunner') ?: 'cn.jiajian.yanxu.UpdateInstrumentation'); applicationId 'cn.jiajian.yanxu'; minSdk 26; targetSdk 35; versionCode = (project.findProperty('yanxuVersionCode') ?: '15').toInteger(); versionName = (project.findProperty('yanxuVersionName') ?: '0.3.5') }
+    buildFeatures { buildConfig true }
+    defaultConfig {
+        testInstrumentationRunner (project.findProperty('yanxuTestRunner') ?: 'cn.jiajian.yanxu.UpdateInstrumentation')
+        applicationId appId
+        minSdk 26; targetSdk 35
+        versionCode = (project.findProperty('yanxuVersionCode') ?: '16').toInteger()
+        versionName = (project.findProperty('yanxuVersionName') ?: '0.3.6')
+        buildConfigField 'String', 'YANXU_ENVIRONMENT', '"' + yanxuEnvironment + '"'
+        buildConfigField 'String', 'YANXU_SERVER_ORIGIN', '"' + serverOrigin + '"'
+        buildConfigField 'String', 'YANXU_AUDIO_ORIGIN', '"' + audioOrigin + '"'
+        buildConfigField 'String', 'YANXU_UPDATE_ORIGIN', '"' + updateOrigin + '"'
+        buildConfigField 'boolean', 'YANXU_UPDATE_ENABLED', updateEnabled.toString()
+        resValue 'string', 'app_name', appLabel
+    }
     compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
     buildTypes { release { minifyEnabled false } }
 }

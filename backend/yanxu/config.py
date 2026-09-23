@@ -9,6 +9,9 @@ ROOT = Path(__file__).resolve().parents[2]
 @dataclass
 class Settings:
     data_dir: Path = field(default_factory=lambda: ROOT / ".local-data/server")
+    environment: str = "legacy"
+    public_origin: str = "https://yanxu.qjl666.xyz"
+    android_package_name: str = "cn.jiajian.yanxu"
     api_key: str = field(default="", repr=False)
     base_url: str = "https://api.deepseek.com"
     model: str = "deepseek-flash"
@@ -48,6 +51,24 @@ class Settings:
 
     def __post_init__(self):
         from urllib.parse import urlsplit
+
+        public = urlsplit(self.public_origin)
+        if (public.scheme not in ("https", "http") or not public.hostname
+                or public.username or public.password or public.query or public.fragment
+                or public.path not in ("", "/")
+                or (public.scheme == "http" and public.hostname not in ("127.0.0.1", "localhost"))
+                or (self.environment in ("testing", "production") and public.scheme != "https")):
+            raise ValueError("环境公网入口必须为无路径的 HTTPS 地址；本机开发可使用回环 HTTP")
+        if self.environment not in ("legacy", "development", "testing", "production"):
+            raise ValueError("无效的言序环境")
+        if self.environment in ("testing", "production") and self.remote_api and self.remote_api != self.public_origin:
+            raise ValueError("远程 worker 地址与当前环境不匹配")
+        if self.environment == "testing" and self.data_dir.resolve().is_relative_to(Path("/var/lib/yanxu").resolve()):
+            raise ValueError("测试数据不能写入生产目录")
+        if self.environment == "production" and self.data_dir.resolve().is_relative_to(Path("/var/lib/yanxu-test").resolve()):
+            raise ValueError("生产数据不能写入测试目录")
+        if not self.android_package_name.startswith("cn.jiajian.yanxu"):
+            raise ValueError("Android 包名与环境配置不匹配")
 
         if self.storage not in ("local", "qiniu"):
             raise ValueError("YANXU_STORAGE 必须为 local 或 qiniu")
@@ -89,11 +110,38 @@ class Settings:
 
     @classmethod
     def load(cls):
-        values = {**dotenv_values(ROOT / "config/.env.local"), **os.environ}
+        selected = os.environ.get("YANXU_ENVIRONMENT", "").strip()
+        if selected:
+            if selected not in ("development", "testing", "production"):
+                raise ValueError("YANXU_ENVIRONMENT 只能为 development、testing 或 production")
+            profile_path = ROOT / "config/environments" / f"{selected}.env"
+            if not profile_path.is_file():
+                raise ValueError("环境配置文件不存在")
+            profile = dotenv_values(profile_path)
+        else:
+            selected = "legacy"
+            profile = dotenv_values(ROOT / "config/.env.local")
+        secret_path = os.environ.get("YANXU_SECRET_FILE", "")
+        secrets = {}
+        if secret_path:
+            path = Path(secret_path)
+            if not path.is_absolute() or not path.is_file() or path.is_symlink() or path.stat().st_mode & 0o077:
+                raise ValueError("机密配置必须是权限 600 的绝对路径文件")
+            secrets = dotenv_values(path)
+        values = {**profile, **secrets, **os.environ}
+        if selected in ("testing", "production"):
+            if profile.get("YANXU_AUDIO_ORIGIN") != profile.get("QINIU_PUBLIC_BASE_URL"):
+                raise ValueError("Android 音频域名与当前存储域名不匹配")
+            for key in ("YANXU_PUBLIC_ORIGIN", "YANXU_AUDIO_ORIGIN", "QINIU_BUCKET", "QINIU_PUBLIC_BASE_URL", "ANDROID_APPLICATION_ID", "YANXU_REMOTE_API"):
+                if values.get(key) != profile.get(key):
+                    raise ValueError("运行环境与版本化配置冲突：" + key)
         return cls(
             data_dir=Path(values.get("YANXU_DATA_DIR", ROOT / ".local-data/server"))
             .expanduser()
             .resolve(),
+            environment=selected,
+            public_origin=(values.get("YANXU_PUBLIC_ORIGIN", "https://yanxu.qjl666.xyz") or "").rstrip("/"),
+            android_package_name=values.get("ANDROID_APPLICATION_ID", "cn.jiajian.yanxu"),
             api_key=values.get("DEEPSEEK_API_KEY", "") or "",
             base_url=(
                 values.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com") or ""

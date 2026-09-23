@@ -10,6 +10,11 @@ public class UpdatePolicyTest {
     String sha = UpdatePolicy.hex(MessageDigest.getInstance("SHA-256").digest(data));
     String good = "https://yanxu.qjl666.xyz/app/releases/yanxu-8-" + sha.substring(0, 12) + ".apk";
     if (!UpdatePolicy.allows(good, 8, sha)) throw new AssertionError("Rejected trusted release");
+    String testing = good.replace("yanxu.qjl666.xyz", "test-yanxu.qjl666.xyz");
+    if (!UpdatePolicy.allows(testing, 8, sha, "https://test-yanxu.qjl666.xyz")
+        || UpdatePolicy.allows(good, 8, sha, "https://test-yanxu.qjl666.xyz")
+        || UpdatePolicy.allows(testing, 8, sha, "https://yanxu.qjl666.xyz"))
+      throw new AssertionError("Update origin crossed environments");
     for (String bad :
         new String[] {
           good.replace("https:", "http:"),
@@ -40,6 +45,11 @@ public class UpdatePolicyTest {
     }
     if (!UpdatePolicy.identity("cn.jiajian.yanxu", 8, "sig", "sig", 8, 7))
       throw new AssertionError();
+    if (!UpdatePolicy.identity("cn.jiajian.yanxu.testing", 8, "sig", "sig", 8, 7,
+            "cn.jiajian.yanxu.testing")
+        || UpdatePolicy.identity("cn.jiajian.yanxu", 8, "sig", "sig", 8, 7,
+            "cn.jiajian.yanxu.testing"))
+      throw new AssertionError("Test package identity crossed environments");
     if (UpdatePolicy.identity("cn.jiajian.yanxu", 8, "evil", "sig", 8, 7)
         || UpdatePolicy.identity("evil.app", 8, "sig", "sig", 8, 7)
         || UpdatePolicy.identity("cn.jiajian.yanxu", 7, "sig", "sig", 7, 8)

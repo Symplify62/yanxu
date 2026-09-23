@@ -9,12 +9,20 @@ final class UpdatePolicy {
   static final long MAX_BYTES = 100L * 1024 * 1024;
 
   static boolean allows(String url, long version, String sha) {
+    return allows(url, version, sha, ORIGIN);
+  }
+
+  static boolean allows(String url, long version, String sha, String origin) {
     try {
       URI u = new URI(url);
+      URI expected = new URI(origin);
       return version > 0
           && sha.matches("[a-f0-9]{64}")
           && "https".equals(u.getScheme())
-          && "yanxu.qjl666.xyz".equals(u.getHost())
+          && "https".equals(expected.getScheme())
+          && expected.getHost().equals(u.getHost())
+          && expected.getPort() == -1
+          && (expected.getRawPath() == null || expected.getRawPath().isEmpty())
           && u.getPort() == -1
           && u.getRawUserInfo() == null
           && u.getRawQuery() == null
@@ -50,7 +58,18 @@ final class UpdatePolicy {
       String installedSigner,
       long offered,
       long installed) {
-    return "cn.jiajian.yanxu".equals(name)
+    return identity(name, version, signer, installedSigner, offered, installed, "cn.jiajian.yanxu");
+  }
+
+  static boolean identity(
+      String name,
+      long version,
+      String signer,
+      String installedSigner,
+      long offered,
+      long installed,
+      String expectedPackage) {
+    return expectedPackage.equals(name)
         && version == offered
         && version > installed
         && signer != null
