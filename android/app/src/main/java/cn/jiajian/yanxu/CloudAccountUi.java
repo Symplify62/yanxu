@@ -19,11 +19,16 @@ import org.json.*;
 final class CloudAccountUi {
   private final Activity activity;
   private final Runnable changed;
+  private final Runnable openSettings;
   private final Handler handler = new Handler(Looper.getMainLooper());
   private Dialog owned;
   private LoginPage loginPage;
   private boolean busy;
-  CloudAccountUi(Activity activity, Runnable changed) { this.activity = activity; this.changed = changed; }
+  CloudAccountUi(Activity activity, Runnable changed, Runnable openSettings) {
+    this.activity = activity;
+    this.changed = changed;
+    this.openSettings = openSettings;
+  }
   interface Work { void run() throws Exception; }
   private boolean live() { return !activity.isFinishing() && !activity.isDestroyed(); }
   private int dp(int n) { return Math.round(n * activity.getResources().getDisplayMetrics().density); }
@@ -83,6 +88,9 @@ final class CloudAccountUi {
           } catch (Exception e) { revokeUnused(authenticated); page[0].failed(e.getMessage()); }
         });
       }, "yanxu-login").start();
+    }, () -> {
+      if (loginPage != null) loginPage.dismiss();
+      openSettings.run();
     });
     loginPage = page[0]; loginPage.show();
   }
@@ -109,6 +117,10 @@ final class CloudAccountUi {
     } catch(Exception ignored) { /* The explicit migration flow retains its own recovery/error checks. */ }
     box.addView(AppUi.section(activity,"账号"));
     box.addView(AppUi.item(activity,"修改密码",null,this::changePassword));
+    box.addView(AppUi.item(activity,"应用设置",null,() -> {
+      if (owned != null) owned.dismiss();
+      openSettings.run();
+    }));
     box.addView(button("退出登录", () -> {
       if (RecordingService.active || VoiceEnrollmentDialog.busy) { error(new IOException("请先结束录音或声音录入")); return; }
       final boolean[] revoked = {true};

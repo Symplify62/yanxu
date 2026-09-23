@@ -23,7 +23,7 @@ public class MainActivity extends Activity {
       MUTED = AppUi.MUTED,
       BG = AppUi.BG;
   private LinearLayout shell, content, actions;
-  private TextView timer, status, settingsLabel;
+  private TextView timer, status;
   private int tab = 0;
   private String lastLocalSignature = "";
   private boolean previousActive = false, previousPaused = false;
@@ -49,8 +49,6 @@ public class MainActivity extends Activity {
             useAccountStore();
             render();
           }
-          if (settingsLabel != null)
-            settingsLabel.setText(AppUpdater.needsAction(MainActivity.this) ? "设置 · 更新" : "设置");
           if (tab == 0) {
             if (timer != null) timer.setText(format(RecordingService.frames / 16000));
             if (status != null) status.setText(RecordingService.message);
@@ -72,7 +70,7 @@ public class MainActivity extends Activity {
     getWindow().setStatusBarColor(BG);
     getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
     LocalStore.recover(this);
-    cloudUi = new CloudAccountUi(this, () -> { useAccountStore(); render(); });
+    cloudUi = new CloudAccountUi(this, () -> { useAccountStore(); render(); }, this::settings);
     useAccountStore();
     try {
       if (!VoiceEnrollmentDialog.busy) peopleStore.recover();
@@ -205,11 +203,6 @@ public class MainActivity extends Activity {
     }
     account.setOnClickListener(v -> cloudUi.account());
     top.addView(account, new LinearLayout.LayoutParams(dp(44), dp(44)));
-    TextView settings = text("设置", 13, MUTED);
-    settingsLabel = settings;
-    settings.setPadding(dp(12), dp(10), dp(12), dp(10));
-    settings.setOnClickListener(v -> settings());
-    top.addView(settings);
     shell.addView(top);
     LinearLayout nav = new LinearLayout(this);
     String[] labels = {"快速录音", "公共记录", "本地录音"};
@@ -277,10 +270,6 @@ public class MainActivity extends Activity {
       card.addView(button("结束并保存", true, () -> command("stop")));
     }
     body.addView(card);
-    TextView hint = text("本地保存 · 自动上传", 11, MUTED);
-    hint.setGravity(Gravity.CENTER);
-    hint.setPadding(0, dp(12), 0, dp(12));
-    body.addView(hint);
     participantCount = text("", 12, MUTED);
     participantCount.setGravity(Gravity.CENTER);
     body.addView(participantCount);

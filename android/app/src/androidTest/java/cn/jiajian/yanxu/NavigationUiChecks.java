@@ -22,6 +22,8 @@ final class NavigationUiChecks {
         () -> {
           View avatar = find(a.getWindow().getDecorView(), "头像，登录", true);
           check(avatar != null && avatar.isClickable(), "guest avatar opens account");
+          check(find(a.getWindow().getDecorView(), "设置", false) == null,
+              "recorder header has no separate settings control");
           avatar.performClick();
         });
     runner.waitForIdleSync();
@@ -31,6 +33,8 @@ final class NavigationUiChecks {
         runner,
         () -> {
           check(login.isShowing(), "avatar opens full-page login");
+          check(find(login.getWindow().getDecorView(), "应用设置", false) != null,
+              "guest can reach settings from login");
           click(login.getWindow().getDecorView(), "登录");
           check(
               find(login.getWindow().getDecorView(), "请输入账号和密码", false) != null,
@@ -48,7 +52,10 @@ final class NavigationUiChecks {
         () -> {
           check(contextual.isShowing(), "people remain authenticated");
           contextual.dismiss();
-          click(a.getWindow().getDecorView(), "设置");
+          View avatar = find(a.getWindow().getDecorView(), "头像，登录", true);
+          avatar.performClick();
+          LoginPage reopened = field(cloud, "loginPage");
+          click(reopened.getWindow().getDecorView(), "应用设置");
         });
     AppPage settings = field(a, "settingsDialog");
     onMain(

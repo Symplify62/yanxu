@@ -34,7 +34,7 @@ final class LoginPage extends Dialog {
   private final Submit listener;
   private boolean submitting;
 
-  LoginPage(Activity activity, Submit listener) {
+  LoginPage(Activity activity, Submit listener, Runnable openSettings) {
     super(activity, android.R.style.Theme_Material_Light_NoActionBar);
     this.listener = listener;
     page = new LinearLayout(activity);
@@ -144,6 +144,10 @@ final class LoginPage extends Dialog {
     LinearLayout.LayoutParams action = new LinearLayout.LayoutParams(-1, dp(52));
     action.topMargin = dp(26);
     content.addView(submit, action);
+    Button settings = AppUi.quiet(activity, "应用设置", openSettings);
+    LinearLayout.LayoutParams settingsLayout = new LinearLayout.LayoutParams(-1, dp(48));
+    settingsLayout.topMargin = dp(12);
+    content.addView(settings, settingsLayout);
     setContentView(page);
     setOnDismissListener(d -> password.setText(""));
     Window window = getWindow();
