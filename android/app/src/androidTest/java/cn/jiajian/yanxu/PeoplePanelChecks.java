@@ -115,7 +115,8 @@ public final class PeoplePanelChecks {
           () -> {
             visible(decor(panel.get()), "Alice");
             check(findText(decor(panel.get()), "Bob") == null, "search removes Bob from results");
-            clickPrefix(decor(panel.get()), "全选筛选结果");
+            visibleDescription(decor(panel.get()), "全选筛选结果，共1人");
+            clickPrefix(decor(panel.get()), "全选");
             return null;
           });
       rendered(instrumentation, decor(panel.get()));
@@ -134,7 +135,8 @@ public final class PeoplePanelChecks {
       onMain(
           instrumentation,
           () -> {
-            clickPrefix(decor(panel.get()), "✓ 取消全选筛选结果");
+            visibleDescription(decor(panel.get()), "取消全选筛选结果，共1人");
+            clickPrefix(decor(panel.get()), "取消全选");
             return null;
           });
       rendered(instrumentation, decor(panel.get()));
