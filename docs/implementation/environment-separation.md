@@ -6,9 +6,9 @@
 
 当前生产入口为 `https://yanxu.qjl666.xyz`，ECS 只有一台 2 vCPU／2 GiB 实例；Workbench 实测约 1.0 GiB 可用内存、33 GiB 可用磁盘。生产数据在 `/var/lib/yanxu/data`，API 监听本机 5189；Mac 运行生产 ASR 与声音远程 worker。本机 5189 是旧测试服务，5198 是隔离的本机联调服务，二者均不是可供同事长期使用的测试环境。
 
-非机密配置的唯一执行来源是 `config/environments/{development,testing,production}.env`。测试入口为 `https://test-yanxu.qjl666.xyz`，测试音频域名为 `https://audio-test.qjl666.xyz`，独立七牛空间为 `yanxu-test-recordings`；A/CNAME 已创建。测试应用域名的 HTTPS 证书、音频域名绑定和正式测试服务仍需运行验收，不能把 DNS 指向成功当作服务可用。
+新版本的非机密配置以 `config/environments/{development,testing,production}.env` 为执行来源。测试入口 `https://test-yanxu.qjl666.xyz`、测试音频域名 `https://audio-test.qjl666.xyz` 和独立七牛空间 `yanxu-test-recordings` 已接通；当前生产服务仍运行旧部署和 `/etc/yanxu.env`，尚未切换到版本化生产配置。
 
-2026-09-23 已用合成 WAV 验证测试七牛空间写入并取得 `ready`，尚未验证该域名 HTTPS 回听。`audio-test.qjl666.xyz` 的 Let's Encrypt 证书已签发并上传七牛证书库，有效期至 2026-12-22；域名绑定与公网访问尚待验证。该证书采用手动 DNS 验证，当前没有自动续期钩子，必须在到期前重新签发、上传和切换。
+`audio-test.qjl666.xyz` 的 Let's Encrypt 证书已绑定并实测 HTTPS 回听、Range 206 和原件 SHA256，有效期至 2026-12-22。它采用手动 DNS 验证，没有自动续期钩子，须在到期前重新签发、上传和切换。测试应用域名的证书也有效至 2026-12-22；ECS 上已有 `certbot.timer` 和成功续期后重载 Nginx 的 deploy hook，尚未执行续期演练。
 
 ## 目标边界
 
@@ -20,7 +20,7 @@
 | 音频存储 | 本地 | 独立七牛测试空间与域名 | 现有生产七牛空间与域名 |
 | 凭证 | 本机私有文件 | 独立服务／worker 凭证 | `/etc/yanxu.env` 等既有生产凭证 |
 
-仓库只保存非机密配置：环境名称、域名、包名、服务端口、目录和存储空间名称。真实 API Key、七牛密钥和 worker token 始终放在忽略文件或服务器 600 权限的环境文件，不进入 Android、Git 或前端资源。测试与生产实际部署各加载自己的版本化配置，再叠加自己的机密环境变量；缺少配置时明确失败。
+仓库只保存非机密配置：环境名称、域名、包名、服务端口、目录和存储空间名称。真实 API Key、七牛密钥和 worker token 始终放在忽略文件或服务器 600 权限的环境文件，不进入 Android、Git 或前端资源。测试服务已显式加载 `testing.env` 与 `/etc/yanxu-test.env`；未来生产升级时才显式加载 `production.env` 与生产机密文件。两套身份和资源配置冲突时启动失败。
 
 当前测试密钥文件复用既有 DeepSeek／七牛供应商账号凭证，但测试 worker、备份和声音处理令牌已独立生成。测试资源由固定测试空间和服务端配置隔离；供应商凭证本身尚未做到独立受限，不能把此状态描述为凭证层完全隔离。
 
@@ -32,6 +32,13 @@
 4. **隔离验收**：用合成账号、音频和声音样本在测试环境完成登录、录音、转写、AI、声纹归属、公共编号／授权姓名、更新清单检查。核对生产人员／录音数量、服务和更新清单未变。测试 App 与生产 App 可同时安装，互不读取对方数据。物理麦克风识别准确率需另用真实同事样本验收。
 
 证据放 `.local-data/evidence/staging-environment-20260923/`。每个阶段记录实际服务、版本、端口、数据目录、SHA、健康检查和回退入口；没有真实证据的项目保持待验状态。
+
+## 运行验证（2026-09-23）
+
+- ECS 测试版本位于 `/opt/yanxu-test/releases/20260923-env-separation`，以 `yanxu-test` 用户运行 API／分析／云同步和维护 timer，数据位于 `/var/lib/yanxu-test/data`；公网健康检查正常。重跑修正后的部署脚本也通过。生产三个服务仍为 active，生产健康检查正常，公共记录数仍为 8，生产更新清单仍指向既有包名和 versionCode 11。
+- 测试公共记录现有 2 条合成语音。匿名录音已自动完成转写、DeepSeek 分析和七牛原音分发，回听／下载的 SHA256 与本机原件一致。合成声音档案经独立 Mac 测试声音 worker 处理为 `ready`；具名测试录音的公共逐字稿只显示“说话人 1”，受控逐字稿显示“合成声线A”。这些合成样本证明链路，不代表真人会议识别准确率。
+- 测试管理员 `yanxu_test_admin` 的密码仅在本机权限 600 的 `.local-data/credentials/staging-admin.txt` 中，服务器初始化临时副本已删除。账号登录、用户管理接口和网页工作台已验证；华为手机同时装有生产包和 `cn.jiajian.yanxu.testing` 测试包。测试 App 可见测试公共记录，登录后个人设置出现“管理后台”并打开测试域名的网页登录页。手机麦克风未在本轮开启；实际手机采音、长会与同事声纹效果仍待专项验收。
+- 测试更新清单为 versionCode 16，下载 APK 的哈希与本机测试包一致。测试 Mac ASR／声音 LaunchAgent 使用独立标签、数据目录和 token；云端独立备份已由测试 ASR worker 拉取并校验。
 
 ## 部署与回退入口
 

@@ -22,6 +22,7 @@ cd "$release/backend"
 export UV_PYTHON_INSTALL_DIR=/opt/yanxu-python
 /opt/yanxu-tools/uv python install 3.13
 /opt/yanxu-tools/uv sync --frozen --no-dev --python 3.13
+chmod -R a+rX "$release"
 chmod -R o+rX /opt/yanxu-python
 ln -sfn "$release" /opt/yanxu-test/current
 
