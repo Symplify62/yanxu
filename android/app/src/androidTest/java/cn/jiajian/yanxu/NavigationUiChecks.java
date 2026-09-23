@@ -20,6 +20,14 @@ final class NavigationUiChecks {
     onMain(
         runner,
         () -> {
+          View root = a.getWindow().getDecorView();
+          View recorderCard = (View) find(root, "开始录音", false).getParent();
+          View peopleItem = (View) ((View) find(root, "选择参会者", false).getParent()).getParent();
+          View voicesItem = (View) ((View) find(root, "声音档案", false).getParent()).getParent();
+          check(gap(recorderCard, peopleItem) >= AppUi.dp(a, 12),
+              "recorder and people entry need a visible surface boundary");
+          check(gap(peopleItem, voicesItem) >= AppUi.dp(a, 12),
+              "sibling entries need the shared surface spacing");
           View avatar = find(a.getWindow().getDecorView(), "头像，登录", true);
           check(avatar != null && avatar.isClickable(), "guest avatar opens account");
           check(find(a.getWindow().getDecorView(), "设置", false) == null,
@@ -62,6 +70,10 @@ final class NavigationUiChecks {
         runner,
         () -> {
           check(settings.isShowing(), "settings is a page");
+          View update = (View) ((View) find(settings.body, "应用更新", false).getParent()).getParent();
+          View advanced = (View) ((View) find(settings.body, "高级设置", false).getParent()).getParent();
+          check(gap(update, advanced) >= AppUi.dp(a, 12),
+              "settings rows follow the same surface spacing");
           check(
               find(settings.body, "服务地址", false) == null,
               "connection fields kept under advanced settings");
@@ -136,5 +148,13 @@ final class NavigationUiChecks {
 
   private static void check(boolean value, String message) {
     if (!value) throw new AssertionError(message);
+  }
+
+  private static int gap(View upper, View lower) {
+    int[] first = new int[2];
+    int[] second = new int[2];
+    upper.getLocationOnScreen(first);
+    lower.getLocationOnScreen(second);
+    return second[1] - first[1] - upper.getHeight();
   }
 }

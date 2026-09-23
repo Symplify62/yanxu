@@ -20,6 +20,7 @@ final class AppUi {
       PALE = 0xffe9efe6,
       LINE = 0xffe1e7df,
       DANGER = 0xffac463a;
+  static final int SURFACE_GAP_DP = 12;
 
   static int dp(Context c, int n) {
     return Math.round(n * c.getResources().getDisplayMetrics().density);
@@ -134,7 +135,7 @@ final class AppUi {
       r.setFocusable(true);
     }
     LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, -2);
-    p.bottomMargin = dp(c, 6);
+    p.bottomMargin = dp(c, SURFACE_GAP_DP);
     r.setLayoutParams(p);
     return r;
   }

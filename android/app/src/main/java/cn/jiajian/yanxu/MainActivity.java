@@ -269,7 +269,9 @@ public class MainActivity extends Activity {
           button(RecordingService.paused ? "继续录音" : "暂停录音", false, () -> command("pause")));
       card.addView(button("结束并保存", true, () -> command("stop")));
     }
-    body.addView(card);
+    LinearLayout.LayoutParams cardLayout = new LinearLayout.LayoutParams(-1, -2);
+    cardLayout.bottomMargin = dp(AppUi.SURFACE_GAP_DP);
+    body.addView(card, cardLayout);
     participantCount = text("", 12, MUTED);
     participantCount.setGravity(Gravity.CENTER);
     body.addView(participantCount);
@@ -617,7 +619,7 @@ public class MainActivity extends Activity {
                     Toast.makeText(this, "已安排上传", Toast.LENGTH_SHORT).show();
                   }));
         LinearLayout.LayoutParams rp = new LinearLayout.LayoutParams(-1, -2);
-        rp.bottomMargin = dp(13);
+        rp.bottomMargin = dp(AppUi.SURFACE_GAP_DP);
         list.addView(row, rp);
       } catch (Exception ignored) {
       }
