@@ -81,6 +81,7 @@ public final class PeoplePanelChecks {
             visible(home.get(), "Alice");
             return null;
           });
+      screenshot(instrumentation, activity, "people-home-visible.png");
       passed++;
 
       onMain(
@@ -95,6 +96,8 @@ public final class PeoplePanelChecks {
           () -> {
             visible(decor(panel.get()), "Alice");
             visibleDescription(decor(panel.get()), "Alice，录制声音");
+            check(findText(decor(panel.get()), "未录声音") == null,
+                "person cards do not expose explanatory voice copy");
             return null;
           });
       screenshot(instrumentation, activity, "people-picker-visible.png");

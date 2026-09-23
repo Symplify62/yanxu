@@ -18,6 +18,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -66,7 +67,7 @@ public final class PeoplePanel {
   private LinearLayout pickerResults;
   private ScrollView pickerScroll;
   private Spinner departmentPicker;
-  private TextView pickerCount, pickerNotice;
+  private TextView pickerNotice;
   private Button pickerAll, pickerAdd;
   private String query = "", department = "";
   private final List<String> departmentValues = new ArrayList<>();
@@ -175,8 +176,6 @@ public final class PeoplePanel {
     body.addView(departmentPicker, filterLayout);
     pickerNotice = text("录音结束后可修改参会者和声音", 12, MUTED);
     body.addView(pickerNotice);
-    pickerCount = text("", 12, MUTED);
-    body.addView(pickerCount);
     pickerAll =
         button(
             "全选筛选结果",
@@ -264,9 +263,6 @@ public final class PeoplePanel {
       Snapshot data = snapshot();
       updateDepartments(data.people);
       List<PeopleStore.Person> visible = filtered(data.people);
-      int selectedHere = countSelected(visible, data.selected);
-      pickerCount.setText(
-          visible.size() + " 人 · 当前已选 " + selectedHere + " · 本场共 " + data.selected.size() + " 人");
       pickerNotice.setVisibility(RecordingService.active ? View.VISIBLE : View.GONE);
       pickerAll.setText(bulkLabel(visible, data.selected, true));
       enable(
@@ -361,18 +357,18 @@ public final class PeoplePanel {
     return result;
   }
 
-  private LinearLayout personCard(PeopleStore.Person person, boolean selected) {
-    LinearLayout card = column();
-    card.setPadding(dp(8), dp(8), dp(8), 0);
+  private View personCard(PeopleStore.Person person, boolean selected) {
+    FrameLayout card = new FrameLayout(activity);
     card.setBackground(shape(selected ? PALE : Color.WHITE, 16));
     LinearLayout choice = column();
     choice.setGravity(Gravity.CENTER);
-    choice.setPadding(dp(4), dp(4), dp(4), 0);
+    choice.setPadding(dp(7), dp(14), dp(7), dp(12));
     choice.setBackground(AppUi.ripple(activity, Color.TRANSPARENT, 12, false));
     choice.setSelected(selected);
     choice.setFocusable(true);
     choice.setContentDescription(
-        person.name + (selected ? "，已选，点击取消" : "，未选，点击选择") + (person.guest ? "，本场来宾" : ""));
+        person.name + (selected ? "，已选，点击取消" : "，未选，点击选择")
+            + "，" + (person.hasVoice() ? "声音已保存" : CloudAccountUi.voiceLabel(person.cloudStatus)));
     FrameLayout portrait = new FrameLayout(activity);
     TextView avatar = text(initial(person.name), 20, selected ? Color.WHITE : GREEN);
     avatar.setPadding(0, 0, 0, 0);
@@ -388,52 +384,29 @@ public final class PeoplePanel {
       portrait.addView(
           tick, new FrameLayout.LayoutParams(dp(20), dp(20), Gravity.RIGHT | Gravity.BOTTOM));
     }
-    choice.addView(portrait, new LinearLayout.LayoutParams(dp(54), dp(44)));
+    choice.addView(portrait, new LinearLayout.LayoutParams(dp(54), dp(48)));
     TextView name = text(person.name, 13, INK);
     name.setGravity(Gravity.CENTER);
     name.setMaxLines(2);
-    name.setMinLines(2);
-    name.setPadding(0, dp(4), 0, 0);
+    name.setPadding(0, dp(8), 0, 0);
     name.setEllipsize(TextUtils.TruncateAt.END);
     choice.addView(name, new LinearLayout.LayoutParams(-1, -2));
     choice.setOnClickListener(v -> toggle(person.id));
     enable(choice, !RecordingService.active && listener.canSelectPeople());
-    card.addView(choice, new LinearLayout.LayoutParams(-1, -2));
-    String info = person.guest ? "本场来宾" : person.department;
-    if (info == null || info.isEmpty()) info = "";
-    TextView detail = text(info, 11, MUTED);
-    detail.setSingleLine(true);
-    detail.setEllipsize(TextUtils.TruncateAt.END);
-    detail.setGravity(Gravity.CENTER);
-    card.addView(detail, new LinearLayout.LayoutParams(-1, -2));
-    TextView voice =
-        text(
-            person.cloudPersonId.isEmpty()
-                ? (person.hasVoice() ? "已存本机" : "未录声音")
-                : CloudAccountUi.voiceLabel(person.cloudStatus)
-                    .replace("云端声纹可用", "声纹可用")
-                    .replace("云端未登记", "待录声音")
-                    .replace("云端", ""),
-            12,
-            MUTED);
-    voice.setGravity(Gravity.CENTER);
-    voice.setSingleLine(true);
-    voice.setEllipsize(TextUtils.TruncateAt.END);
-    card.addView(voice, new LinearLayout.LayoutParams(-1, -2));
-    Button enroll =
-        button(
-            RecordingService.active ? "会后录制" : (person.hasVoice() ? "重新录制" : "录制声音"),
-            false,
-            () -> {
-              if (!canEdit()) return;
-              listener.onEnroll(person.id);
-            });
-    enroll.setTextSize(13);
-    enroll.setBackgroundColor(Color.TRANSPARENT);
-    enroll.setPadding(dp(3), 0, dp(3), 0);
+    card.addView(choice, new FrameLayout.LayoutParams(-1, -2));
+    ImageButton enroll = new ImageButton(activity);
+    enroll.setImageResource(R.drawable.ic_voice);
+    enroll.setImageTintList(ColorStateList.valueOf(MUTED));
+    enroll.setBackground(AppUi.ripple(activity, Color.TRANSPARENT, 20, false));
+    enroll.setPadding(dp(14), dp(14), dp(14), dp(14));
+    enroll.setOnClickListener(v -> {
+      if (!canEdit()) return;
+      listener.onEnroll(person.id);
+    });
     enroll.setContentDescription(person.name + "，" + (person.hasVoice() ? "重新录制声音" : "录制声音"));
     enable(enroll, !RecordingService.active);
-    card.addView(enroll, new LinearLayout.LayoutParams(-1, dp(44)));
+    FrameLayout.LayoutParams voiceLayout = new FrameLayout.LayoutParams(dp(44), dp(44), Gravity.TOP | Gravity.RIGHT);
+    card.addView(enroll, voiceLayout);
     return card;
   }
 

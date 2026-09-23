@@ -58,6 +58,29 @@ public class SpeakersInstrumentation extends Instrumentation {
         CloudIdentityChecks.writeWav(wav, 4);
         store.saveVoice(candidate.id, candidate.name, wav, 4, true);
         out.putString("result", "PASS: synthetic local UI consent fixture only; person=" + candidate.name);
+      } else if ("visualfixture".equals(mode)) {
+        String server = LocalStore.server(context);
+        if (!"http://10.0.2.2:5198".equals(server))
+          throw new IllegalArgumentException("Visual fixture requires the isolated local backend");
+        String username = args.getString("apiUser", "");
+        String password = args.getString("apiPassword", "");
+        if (username.isEmpty() || password.isEmpty())
+          throw new IllegalArgumentException("Local test credentials are required");
+        org.json.JSONObject login = CloudApi.request(server, null, "POST", "/api/auth/login",
+            new org.json.JSONObject().put("username", username).put("password", password).toString()
+                .getBytes(java.nio.charset.StandardCharsets.UTF_8), "application/json");
+        Object expires = login.get("expiresAt");
+        long expiry = expires instanceof Number ? ((Number) expires).longValue()
+            : java.time.Instant.parse(expires.toString()).toEpochMilli();
+        if (expiry < 100000000000L) expiry *= 1000;
+        CloudSession session = new CloudSession(server, login.getString("accessToken"),
+            login.getJSONObject("account"), expiry);
+        CloudSession.save(context, session);
+        org.json.JSONObject directory = CloudApi.request(session, "GET", "/api/people", null);
+        org.json.JSONObject profiles = CloudApi.request(session, "GET", "/api/voice-profiles", null);
+        new PeopleStore(context, session.scope()).syncCloud(directory.getJSONArray("items"),
+            profiles.getJSONArray("items"));
+        out.putString("result", "PASS: isolated account and people rendered without microphone");
       } else if ("checks".equals(mode)) {
         out.putString("store", PeopleStoreChecks.run(context));
         out.putInt("captureChecks", VoiceSampleRecorderChecks.run(context));
