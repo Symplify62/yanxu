@@ -117,18 +117,16 @@ public final class PeoplePanel {
     try {
       Snapshot data = snapshot();
       LinearLayout heading = row();
-      TextView title =
-          text(
-              "参会者" + (data.selected.isEmpty() ? "" : " · " + data.selected.size() + " 人"),
-              16,
-              INK);
+      TextView title = text("参会者", 16, INK);
       title.setTypeface(null, Typeface.BOLD);
+      title.setContentDescription("参会者，已选" + data.selected.size() + "人");
       heading.addView(title, new LinearLayout.LayoutParams(0, -2, 1));
-      Button more = AppUi.quiet(activity, "更多人员", this::showPicker);
-      heading.addView(more, new LinearLayout.LayoutParams(-2, dp(44)));
-      home.addView(heading);
-      if (RecordingService.active) home.addView(text("录音结束后可修改参会者和声音", 12, MUTED));
+      Button more = AppUi.quiet(activity, "更多", this::showPicker);
+      more.setContentDescription("更多人员");
       if (data.people.isEmpty()) {
+        heading.addView(more, new LinearLayout.LayoutParams(-2, dp(44)));
+        home.addView(heading);
+        if (RecordingService.active) home.addView(text("录音结束后可修改参会者和声音", 12, MUTED));
         TextView empty = text("还没有人员", 14, MUTED);
         empty.setPadding(dp(4), dp(14), 0, dp(10));
         home.addView(empty);
@@ -142,12 +140,13 @@ public final class PeoplePanel {
       ordered.sort(java.util.Comparator.comparing(p -> !data.selected.contains(p.id)));
       int limit = activity.getResources().getConfiguration().screenWidthDp >= 600 ? 8 : 3;
       List<PeopleStore.Person> visible = new ArrayList<>(ordered.subList(0, Math.min(limit, ordered.size())));
-      Button all =
-          button(bulkLabel(visible, data.selected, false), false, () -> toggleAll(visible));
+      Button all = AppUi.quiet(activity, bulkLabel(visible, data.selected), () -> toggleAll(visible));
+      all.setContentDescription(bulkDescription(visible, data.selected, false));
       enable(all, !RecordingService.active && listener.canSelectPeople());
-      all.setBackgroundColor(Color.TRANSPARENT);
-      all.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
-      home.addView(all, new LinearLayout.LayoutParams(-1, dp(44)));
+      heading.addView(all, new LinearLayout.LayoutParams(-2, dp(44)));
+      heading.addView(more, new LinearLayout.LayoutParams(-2, dp(44)));
+      home.addView(heading);
+      if (RecordingService.active) home.addView(text("录音结束后可修改参会者和声音", 12, MUTED));
       int width = home.getWidth();
       if (width == 0) width = activity.getResources().getDisplayMetrics().widthPixels - dp(40);
       addCards(home, visible, data.selected, Math.max(2, Math.min(4, width / dp(112))));
@@ -170,26 +169,22 @@ public final class PeoplePanel {
     body.addView(search, new LinearLayout.LayoutParams(-1, dp(48)));
     departmentPicker = new Spinner(activity);
     departmentValues.clear();
-    departmentPicker.setContentDescription("部门筛选");
+    departmentPicker.setContentDescription("部门或备注筛选");
+    LinearLayout filters = row();
+    filters.addView(departmentPicker, new LinearLayout.LayoutParams(0, dp(48), 1));
+    pickerAll = AppUi.quiet(activity, "全选", () -> {
+      try {
+        toggleAll(filtered(snapshot().people));
+      } catch (Exception error) {
+        showError("人员未能读取，请重试", error);
+      }
+    });
+    filters.addView(pickerAll, new LinearLayout.LayoutParams(-2, dp(48)));
     LinearLayout.LayoutParams filterLayout = new LinearLayout.LayoutParams(-1, dp(48));
     filterLayout.topMargin = dp(8);
-    body.addView(departmentPicker, filterLayout);
+    body.addView(filters, filterLayout);
     pickerNotice = text("录音结束后可修改参会者和声音", 12, MUTED);
     body.addView(pickerNotice);
-    pickerAll =
-        button(
-            "全选筛选结果",
-            false,
-            () -> {
-              try {
-                toggleAll(filtered(snapshot().people));
-              } catch (Exception error) {
-                showError("人员未能读取，请重试", error);
-              }
-            });
-    pickerAll.setBackgroundColor(Color.TRANSPARENT);
-    pickerAll.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
-    body.addView(pickerAll, new LinearLayout.LayoutParams(-1, dp(44)));
     pickerScroll = new ScrollView(activity);
     pickerScroll.setFillViewport(false);
     pickerResults = column();
@@ -264,7 +259,8 @@ public final class PeoplePanel {
       updateDepartments(data.people);
       List<PeopleStore.Person> visible = filtered(data.people);
       pickerNotice.setVisibility(RecordingService.active ? View.VISIBLE : View.GONE);
-      pickerAll.setText(bulkLabel(visible, data.selected, true));
+      pickerAll.setText(bulkLabel(visible, data.selected));
+      pickerAll.setContentDescription(bulkDescription(visible, data.selected, true));
       enable(
           pickerAll, !RecordingService.active && listener.canSelectPeople() && !visible.isEmpty());
       enable(pickerAdd, !RecordingService.active && listener.canAddPeople());
@@ -335,7 +331,7 @@ public final class PeoplePanel {
     departmentValues.addAll(next);
     if (!departmentValues.contains(department)) department = "";
     List<String> labels = new ArrayList<>(next);
-    labels.set(0, "全部部门／备注");
+    labels.set(0, "全部");
     ArrayAdapter<String> adapter =
         new ArrayAdapter<>(activity, android.R.layout.simple_spinner_item, labels);
     adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -436,14 +432,16 @@ public final class PeoplePanel {
     changed();
   }
 
-  private String bulkLabel(
-      List<PeopleStore.Person> people, Set<String> selected, boolean filtered) {
+  private String bulkLabel(List<PeopleStore.Person> people, Set<String> selected) {
     int count = countSelected(people, selected);
-    String scope = filtered ? "筛选结果" : "当前人员";
-    if (!people.isEmpty() && count == people.size())
-      return "✓ 取消全选" + scope + "（" + people.size() + "）";
-    if (count > 0) return "－ 全选" + scope + "（" + count + "/" + people.size() + "）";
-    return "全选" + scope + "（" + people.size() + "）";
+    return !people.isEmpty() && count == people.size() ? "取消全选" : "全选";
+  }
+
+  private String bulkDescription(
+      List<PeopleStore.Person> people, Set<String> selected, boolean filtered) {
+    return bulkLabel(people, selected)
+        + (filtered ? "筛选结果" : "当前展示人员")
+        + "，共" + people.size() + "人";
   }
 
   private int countSelected(List<PeopleStore.Person> people, Set<String> selected) {

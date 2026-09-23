@@ -53,3 +53,11 @@
 - Android `assembleDebug`、`assembleDebugAndroidTest` 构建成功；`navigation`、`panel`、`ui`、`cloudchecks`、`guestchecks` 五组模拟器回归通过。选人卡片的视觉内容只有头像和姓名，角上的无文字录声图标保持独立点击目标；筛选全选不改变范围外人员。
 - API36 模拟器检查访客首页、登录页设置入口、已登录首页、选人页、个人设置到应用设置；360dp 且字体比例 1.3 的首页/选人页也已截图。凭证只用于本地 5198 隔离服务，没有录制真实声音。
 - 测试 APK：`.local-data/artifacts/yanxu-0.3.3-avatar-people-debug.apk`，125217 字节，SHA-256 `e2ccbd676609a4194c8bcaed9b199b102cbddd08c3d35475770ed3f6c65e7648`。对比预览仍位于 `.local-data/evidence/mobile-visual-system-20260923/preview/index.html`，其中首页与选人“修改后”截图已换为 0.3.3。
+
+## 0.3.4 选择操作精简
+
+用户指出“参会者 · 1 人”和“全选当前人员（1/3）”、以及“全部部门／备注”和“全选筛选结果（1/8）”重复。首页只显示“参会者｜全选／取消全选｜更多”，选人页将“全部”筛选与全选放在同一行。可见文案不重复显示人数；辅助读出保留全选作用域和当前范围人数。首页全选仍只作用于展示的人员，更多人员页全选仍只作用于筛选结果；筛选范围外的选择保留。
+
+实施和截图证据位于 `.local-data/evidence/compact-participant-actions-20260923/`，使用本地隔离人员验证，无真实麦克风录入。
+
+0.3.4 Android 构建及选人面板 5 项回归通过；标准手机与 360dp、1.3 倍字体截图已检查。测试 APK：`.local-data/artifacts/yanxu-0.3.4-compact-participants-debug.apk`，125189 字节，SHA-256 `0bf2afa5c076d9eeeb6beafc4fc4a77335929eadea73a9e0a17003f7b94bfb11`。原对比预览的“修改后”录音页和选人页截图已更新为 0.3.4。
