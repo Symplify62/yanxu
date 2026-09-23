@@ -6,7 +6,9 @@
 
 当前生产入口为 `https://yanxu.qjl666.xyz`，ECS 只有一台 2 vCPU／2 GiB 实例；Workbench 实测约 1.0 GiB 可用内存、33 GiB 可用磁盘。生产数据在 `/var/lib/yanxu/data`，API 监听本机 5189；Mac 运行生产 ASR 与声音远程 worker。本机 5189 是旧测试服务，5198 是隔离的本机联调服务，二者均不是可供同事长期使用的测试环境。
 
-非机密配置的唯一执行来源是 `config/environments/{development,testing,production}.env`。测试入口为 `https://test-yanxu.qjl666.xyz`，测试音频域名为 `https://audio-test.qjl666.xyz`，独立七牛空间为 `yanxu-test-recordings`；A/CNAME 已创建。测试域名的 HTTPS 证书和正式测试服务仍需运行验收，不能把 DNS 指向成功当作服务可用。
+非机密配置的唯一执行来源是 `config/environments/{development,testing,production}.env`。测试入口为 `https://test-yanxu.qjl666.xyz`，测试音频域名为 `https://audio-test.qjl666.xyz`，独立七牛空间为 `yanxu-test-recordings`；A/CNAME 已创建。测试应用域名的 HTTPS 证书、音频域名绑定和正式测试服务仍需运行验收，不能把 DNS 指向成功当作服务可用。
+
+2026-09-23 已用合成 WAV 验证测试七牛空间写入并取得 `ready`，尚未验证该域名 HTTPS 回听。`audio-test.qjl666.xyz` 的 Let's Encrypt 证书已签发并上传七牛证书库，有效期至 2026-12-22；域名绑定与公网访问尚待验证。该证书采用手动 DNS 验证，当前没有自动续期钩子，必须在到期前重新签发、上传和切换。
 
 ## 目标边界
 
