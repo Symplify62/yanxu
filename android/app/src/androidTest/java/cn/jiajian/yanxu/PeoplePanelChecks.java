@@ -174,7 +174,7 @@ public final class PeoplePanelChecks {
             return null;
           });
       rendered(instrumentation, decor(panel.get()));
-      AlertDialog closingPicker =
+      AppPage closingPicker =
           onMain(
               instrumentation,
               () -> {
@@ -183,7 +183,7 @@ public final class PeoplePanelChecks {
                 check(
                     "研发".equals(departments.getSelectedItem()),
                     "refresh preserves selected department");
-                AlertDialog current = dialog(panel.get());
+                AppPage current = dialog(panel.get());
                 current.getButton(AlertDialog.BUTTON_POSITIVE).performClick();
                 return current;
               });
@@ -311,7 +311,7 @@ public final class PeoplePanelChecks {
     return (EditText) findDescription(decor(panel), "搜索姓名或部门");
   }
 
-  private static AlertDialog dialog(PeoplePanel panel) throws Exception {
+  private static AppPage dialog(PeoplePanel panel) throws Exception {
     return field(panel, "picker");
   }
 

@@ -9,6 +9,7 @@ import {
   ListChecks,
   LoaderCircle,
   AlertCircle,
+  Headphones,
 } from "@lucide/vue";
 import { duration } from "../domain/presentation";
 import { stageOf, stageLabels, type PublicRecord } from "./model";
@@ -147,6 +148,9 @@ async function copy() {
         <strong>未检测到语音</strong>
         <p>录音已保留，已跳过 AI 分析。</p>
       </div>
+      <p v-else-if="analysisReady" class="p1-complete-status" role="status">
+        <Check :size="15" />已完成
+      </p>
       <div v-else class="p1-progress" aria-label="处理进度">
         <div
           v-for="(label, i) in [
@@ -195,6 +199,9 @@ async function copy() {
             >
               <Sparkles v-if="t[0] === 'analysis'" :size="15" /><FileText
                 v-else-if="t[0] === 'transcript'"
+                :size="15"
+              /><Headphones
+                v-else-if="t[0] === 'audio'"
                 :size="15"
               /><ListChecks v-else :size="15" />{{ t[1] }}
             </button>

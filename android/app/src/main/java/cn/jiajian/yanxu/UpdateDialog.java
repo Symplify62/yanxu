@@ -8,14 +8,15 @@ import android.provider.Settings;
 import android.widget.*;
 
 final class UpdateDialog {
-  static void show(Activity a) {
+  static AppPage show(Activity a) {
     int pad = (int) (24 * a.getResources().getDisplayMetrics().density);
-    LinearLayout box = new LinearLayout(a);
-    box.setOrientation(1);
-    box.setPadding(pad, pad / 2, pad, 0);
+    AppPage dialog = new AppPage(a, "应用更新", true);
+    LinearLayout box = dialog.body;
     TextView version = new TextView(a);
     version.setText("当前版本 " + AppUpdater.versionName(a));
-    version.setTextSize(15);
+    version.setTextSize(22);
+    version.setTextColor(AppUi.INK);
+    version.setPadding(0, pad, 0, pad);
     box.addView(version);
     Switch automatic = new Switch(a);
     automatic.setText("自动更新");
@@ -24,19 +25,16 @@ final class UpdateDialog {
     box.addView(automatic);
     TextView state = new TextView(a);
     state.setTextSize(14);
+    state.setTextColor(AppUi.GREEN);
+    state.setPadding(0, pad / 2, 0, 0);
     box.addView(state);
     TextView note = new TextView(a);
-    note.setTextSize(12);
+    note.setTextSize(13);
+    note.setTextColor(AppUi.MUTED);
     note.setText("录音和上传期间暂缓安装");
     note.setPadding(0, pad / 2, 0, pad / 2);
     box.addView(note);
-    AlertDialog dialog =
-        new AlertDialog.Builder(a)
-            .setTitle("应用更新")
-            .setView(box)
-            .setNegativeButton("关闭", null)
-            .setPositiveButton("检查更新", null)
-            .create();
+    dialog.action(-1, "检查更新", true, () -> {});
     automatic.setOnCheckedChangeListener(
         (b, on) -> {
           AppUpdater.prefs(a).edit().putBoolean("automatic", on).apply();
@@ -86,5 +84,6 @@ final class UpdateDialog {
         });
     dialog.setOnDismissListener(v -> handler.removeCallbacks(refresh));
     dialog.show();
+    return dialog;
   }
 }

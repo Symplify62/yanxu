@@ -274,7 +274,7 @@ public final class VoiceEnrollmentUiChecks {
     }
   }
 
-  private static AlertDialog dialog(VoiceEnrollmentDialog enrollment) throws Exception {
+  private static AppPage dialog(VoiceEnrollmentDialog enrollment) throws Exception {
     return field(enrollment, "dialog");
   }
 
