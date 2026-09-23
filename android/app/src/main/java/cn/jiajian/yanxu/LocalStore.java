@@ -16,7 +16,8 @@ final class LocalStore {
   }
 
   static String server(Context c) {
-    return c.getSharedPreferences("settings", 0).getString("server", "https://yanxu.qjl666.xyz");
+    if (!"development".equals(BuildConfig.YANXU_ENVIRONMENT)) return BuildConfig.YANXU_SERVER_ORIGIN;
+    return c.getSharedPreferences("settings", 0).getString("server", BuildConfig.YANXU_SERVER_ORIGIN);
   }
 
   static synchronized JSONObject read(File dir) throws Exception {

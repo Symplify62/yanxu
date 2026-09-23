@@ -104,7 +104,7 @@ final class AppUpdater {
 
   static void schedule(Context c) {
     JobScheduler scheduler = c.getSystemService(JobScheduler.class);
-    if (!automatic(c)) {
+    if (!BuildConfig.YANXU_UPDATE_ENABLED || !automatic(c)) {
       scheduler.cancel(JOB);
       return;
     }
@@ -125,6 +125,7 @@ final class AppUpdater {
   }
 
   static boolean run(Context c, boolean manual, BooleanSupplier cancelled) {
+    if (!BuildConfig.YANXU_UPDATE_ENABLED) return true;
     if ((!manual && !automatic(c)) || !working.compareAndSet(false, true)) return true;
     try {
       if (installing(c)) return true;
@@ -151,7 +152,7 @@ final class AppUpdater {
           status(c, "latest", "已是最新版本");
           return true;
         }
-        validateRelease(info);
+        validateRelease(c, info);
         if (info.getInt("minSdk") > Build.VERSION.SDK_INT) {
           status(c, "failed", "新版暂不支持当前安卓版本");
           return true;
@@ -198,12 +199,12 @@ final class AppUpdater {
     }
   }
 
-  static void validateRelease(JSONObject m) throws Exception {
+  static void validateRelease(Context c, JSONObject m) throws Exception {
     long v = m.getLong("versionCode");
     String sha = m.getString("sha256");
     long size = m.getLong("size");
-    if (!UpdatePolicy.allows(m.getString("url"), v, sha)
-        || !"cn.jiajian.yanxu".equals(m.getString("packageName"))
+    if (!UpdatePolicy.allows(m.getString("url"), v, sha, BuildConfig.YANXU_UPDATE_ORIGIN)
+        || !c.getPackageName().equals(m.getString("packageName"))
         || size <= 0
         || size > UpdatePolicy.MAX_BYTES
         || m.getString("versionName").length() > 40
@@ -220,7 +221,7 @@ final class AppUpdater {
   }
 
   private static byte[] fetchManifest(BooleanSupplier cancelled) throws Exception {
-    HttpURLConnection conn = open(UpdatePolicy.ORIGIN + "/app/update.json");
+    HttpURLConnection conn = open(BuildConfig.YANXU_UPDATE_ORIGIN + "/app/update.json");
     try {
       if (conn.getResponseCode() != 200) throw new IOException("Update unavailable");
       try (InputStream in = conn.getInputStream();
@@ -268,7 +269,7 @@ final class AppUpdater {
   }
 
   static void verifyPackage(Context c, JSONObject m, File f) throws Exception {
-    validateRelease(m);
+    validateRelease(c, m);
     UpdatePolicy.verify(f, m.getLong("size"), m.getString("sha256"));
     int flag =
         Build.VERSION.SDK_INT >= 28
@@ -283,7 +284,8 @@ final class AppUpdater {
             signer(offered),
             signer(installed),
             m.getLong("versionCode"),
-            version(c))
+            version(c),
+            c.getPackageName())
         || offered.applicationInfo.minSdkVersion > Build.VERSION.SDK_INT)
       throw new SecurityException("Package identity mismatch");
   }

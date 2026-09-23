@@ -10,6 +10,7 @@
 | --- | --- |
 | 当前第一阶段做什么 | [阶段范围与验收](phases/phase-01.md)，已覆盖本期旧登录/权限/发群前置规则 |
 | 真实登录、管理后台、云端声音和实名逐字稿 | [本轮接口、运行与验证](implementation/identity-voice-delivery.md)，区分本地完成和生产发布 |
+| 开发、测试、生产配置及隔离部署 | [环境隔离与验证](implementation/environment-separation.md)；具体非机密字段见[环境配置](../config/README.md) |
 | 当前采用哪套外观/组件 | [A方案确认](../frontend/docs/design-lab/selection.md)；通用前端规范在前端任务导航 |
 | 某页有哪些区域、动作和权限结果 | [DES-10页面级规格](../会议室录音系统_PRD_v1.3/docs/design/DES-10-页面级设计与交互规格.md)对应页面；先搜页名/业务组件名 |
 | 常规流程、人机分工、待决事项 | [BASE-01](../会议室录音系统_PRD_v1.3/docs/rules/BASE-01-需求基线与待决事项.md) |

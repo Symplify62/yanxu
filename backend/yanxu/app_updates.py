@@ -6,7 +6,6 @@ from fastapi.responses import FileResponse, JSONResponse
 
 router = APIRouter(prefix="/app")
 NAME = re.compile(r"yanxu-[1-9][0-9]*-[a-f0-9]{12}\.apk")
-ORIGIN = "https://yanxu.qjl666.xyz"
 
 
 def require(condition):
@@ -21,16 +20,18 @@ def artifacts(request):
 @router.get("/update.json")
 def latest(request: Request):
     folder = artifacts(request)
+    origin = request.app.state.settings.public_origin
+    package = request.app.state.settings.android_package_name
     path = folder / "android-update.json"
     if not path.is_file():
         return JSONResponse({"available": False}, headers={"Cache-Control": "no-store"})
     try:
         value = json.loads(path.read_text())
         require(isinstance(value["url"], str))
-        filename = value["url"].removeprefix(ORIGIN + "/app/releases/")
+        filename = value["url"].removeprefix(origin + "/app/releases/")
         require(NAME.fullmatch(filename))
-        require(value["url"] == ORIGIN + "/app/releases/" + filename)
-        require(value["packageName"] == "cn.jiajian.yanxu")
+        require(value["url"] == origin + "/app/releases/" + filename)
+        require(value["packageName"] == package)
         require(type(value["versionCode"]) is int and value["versionCode"] > 0)
         require(isinstance(value["versionName"], str) and 1 <= len(value["versionName"]) <= 40)
         require(type(value["minSdk"]) is int and value["minSdk"] >= 26)

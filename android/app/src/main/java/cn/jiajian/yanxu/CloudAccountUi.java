@@ -2,6 +2,7 @@ package cn.jiajian.yanxu;
 
 import android.app.*;
 import android.content.*;
+import android.net.Uri;
 import android.graphics.Color;
 import android.os.Handler;
 import android.os.Looper;
@@ -117,6 +118,20 @@ final class CloudAccountUi {
     } catch(Exception ignored) { /* The explicit migration flow retains its own recovery/error checks. */ }
     box.addView(AppUi.section(activity,"账号"));
     box.addView(AppUi.item(activity,"修改密码",null,this::changePassword));
+    String managementRoute = session.allows("users") ? "users"
+        : session.allows("roles") ? "roles"
+        : session.allows("departments") ? "departments"
+        : session.allows("voices") ? "voices" : "";
+    if (!managementRoute.isEmpty()) {
+      box.addView(AppUi.section(activity,"管理"));
+      box.addView(AppUi.item(activity,"管理后台",null,() -> {
+        Intent browser = new Intent(Intent.ACTION_VIEW,
+            Uri.parse(LocalStore.server(activity) + "/account.html#/" + managementRoute));
+        browser.addCategory(Intent.CATEGORY_BROWSABLE);
+        activity.startActivity(browser);
+      }));
+    }
+    box.addView(AppUi.section(activity,"应用"));
     box.addView(AppUi.item(activity,"应用设置",null,() -> {
       if (owned != null) owned.dismiss();
       openSettings.run();

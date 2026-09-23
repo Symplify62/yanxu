@@ -5,11 +5,22 @@ import java.net.URI;
 /** The sole external origin used for verified recording playback and downloads. */
 final class AudioOrigin {
   static boolean allows(String value) {
+    return allows(value, "https://audio.qjl666.xyz");
+  }
+
+  static boolean allows(String value, String expectedOrigin) {
     try {
       URI uri = URI.create(value);
+      URI expected = URI.create(expectedOrigin);
       String query = uri.getRawQuery();
       return "https".equalsIgnoreCase(uri.getScheme())
-          && "audio.qjl666.xyz".equalsIgnoreCase(uri.getHost())
+          && "https".equalsIgnoreCase(expected.getScheme())
+          && expected.getHost() != null
+          && expected.getHost().equalsIgnoreCase(uri.getHost())
+          && expected.getRawPath().isEmpty()
+          && expected.getRawQuery() == null
+          && expected.getRawFragment() == null
+          && expected.getPort() == -1
           && uri.getUserInfo() == null
           && (uri.getPort() == -1 || uri.getPort() == 443)
           && uri.getFragment() == null

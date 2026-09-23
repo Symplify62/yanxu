@@ -1,5 +1,11 @@
 # 本地服务配置
 
+## 环境配置
+
+版本化的非机密配置位于 [`environments/`](environments/)：`development.env`、`testing.env`、`production.env`。启动后端时显式设置 `YANXU_ENVIRONMENT` 选择一份配置；未设置时继续使用旧本机 `.env.local`，以兼容正在运行的服务。测试和生产的入口、七牛空间、音频域名、Android 包名与更新来源以所选文件为准，跨环境覆盖会导致启动失败。
+
+密钥、服务令牌与密码保存在各环境独立的私有文件，后端可通过 `YANXU_SECRET_FILE` 读取权限 600 的绝对路径文件；systemd 可通过对应的 `EnvironmentFile` 注入。Android 构建用 `-PyanxuEnvironment=development|testing|production` 选择同一组非机密配置，默认生产；测试版以独立包名与生产版共存。实际部署与验收边界见[环境隔离](../docs/implementation/environment-separation.md)。
+
 账号与声音新增配置见[实施与运行说明](../docs/implementation/identity-voice-delivery.md)。初始化管理员通过终端标准输入设置密码，无默认密码；声音worker和数据库备份各用独立凭证。模型安装在独立环境，公用录音七牛空间保持原用途。
 
 用户已指定DeepSeek做转写后的文本分析。填写本机`config/.env.local`中的`DEEPSEEK_API_KEY`即可准备好密钥；这个文件被Git忽略，不放到前端、不提交。供他人克隆的空模板是[.env.example](.env.example)。

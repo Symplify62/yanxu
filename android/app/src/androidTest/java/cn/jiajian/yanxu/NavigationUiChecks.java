@@ -84,13 +84,19 @@ final class NavigationUiChecks {
     onMain(
         runner,
         () -> {
-          EditText address = (EditText) find(advanced.body, "服务地址", true);
-          address.setText("not-a-server");
-          advanced.getButton(-1).performClick();
-          check(
-              address.getError() != null && advanced.isShowing(),
-              "invalid address keeps editable form");
-          check(server.equals(LocalStore.server(a)), "invalid save cannot change server");
+          if ("development".equals(BuildConfig.YANXU_ENVIRONMENT)) {
+            EditText address = (EditText) find(advanced.body, "服务地址", true);
+            address.setText("not-a-server");
+            advanced.getButton(-1).performClick();
+            check(address.getError() != null && advanced.isShowing(),
+                "invalid address keeps editable form");
+          } else {
+            check(find(advanced.body, "当前服务", false) != null,
+                "test and production service identity is visible");
+            check(find(advanced.body, "服务地址", true) == null,
+                "test and production service identity cannot be edited");
+          }
+          check(server.equals(LocalStore.server(a)), "settings cannot change this recording destination");
           advanced.onBackPressed();
           check(settings.isShowing(), "advanced back returns to settings");
           settings.onBackPressed();
