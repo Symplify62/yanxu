@@ -30,6 +30,11 @@ const filtered = computed(() =>
       .includes(query.value.toLowerCase()),
   ),
 );
+const roleName = (person: Person) =>
+  person.roleName ||
+  roles.value.find((role) => role.id === person.roleId)?.name ||
+  (person.username ? "未分配角色" : "无账号");
+const original = ref("");
 async function load() {
   loading.value = true;
   error.value = "";
@@ -64,6 +69,7 @@ function edit(person: Person | null) {
     password: "",
     roleId: person?.roleId || "member",
   });
+  original.value = JSON.stringify({ ...form, allowLogin: allowLogin.value });
   open.value = true;
 }
 async function save() {
@@ -127,7 +133,9 @@ async function remove(person: Person) {
 }
 async function close(done: () => void) {
   if (saving.value) return;
-  if (form.name || form.username || form.password) {
+  if (
+    JSON.stringify({ ...form, allowLogin: allowLogin.value }) !== original.value
+  ) {
     try {
       await ElMessageBox.confirm("放弃本次编辑？", "关闭编辑", {
         confirmButtonText: "放弃",
@@ -161,9 +169,9 @@ onMounted(load);
         :loading="loading"
         @click="load"
         >刷新</el-button
-      ><el-button type="primary" @click="edit(null)">新增用户</el-button>
+      ><el-button type="primary" @click="edit(null)">新增人员</el-button>
     </div>
-    <div class="workspace-surface">
+    <div class="workspace-surface desktop-people">
       <el-table v-loading="loading" :data="filtered" empty-text="暂无用户">
         <el-table-column label="人员" min-width="190"
           ><template #default="{ row }"
@@ -186,6 +194,11 @@ onMounted(load);
             row.username || "无需登录"
           }}</template></el-table-column
         >
+        <el-table-column label="角色" min-width="110"
+          ><template #default="{ row }">{{
+            roleName(row as Person)
+          }}</template></el-table-column
+        >
         <el-table-column label="状态" width="90"
           ><template #default="{ row }"
             ><span
@@ -206,9 +219,34 @@ onMounted(load);
         >
       </el-table>
     </div>
+    <div class="workspace-surface mobile-people">
+      <div v-if="!filtered.length" class="mobile-person status-text">
+        暂无用户
+      </div>
+      <div v-for="person in filtered" :key="person.id" class="mobile-person">
+        <div class="mobile-person-head">
+          <span class="account-avatar">{{ person.name.slice(0, 1) }}</span
+          ><strong>{{ person.name }}</strong
+          ><span class="toolbar-spacer" /><span
+            class="status-text"
+            :class="person.active ? 'ready' : 'revoked'"
+            >{{ person.active ? "启用" : "停用" }}</span
+          >
+        </div>
+        <div class="mobile-person-meta">
+          <span>{{ person.departmentName || "未分配部门" }}</span
+          ><span>{{ person.username || "无账号" }}</span
+          ><span>{{ roleName(person) }}</span>
+        </div>
+        <div class="mobile-person-actions">
+          <el-button size="small" @click="edit(person)">编辑</el-button
+          ><el-button size="small" @click="remove(person)">归档</el-button>
+        </div>
+      </div>
+    </div>
     <el-dialog
       v-model="open"
-      :title="editing ? '编辑用户' : '新增用户'"
+      :title="editing ? '编辑人员' : '新增人员'"
       width="480px"
       class="account-dialog"
       :close-on-click-modal="false"

@@ -123,6 +123,38 @@ def test_user_maintenance_permission_does_not_grant_other_meetings(env):
     assert c.get('/api/managed/recordings/' + rid, headers=h).status_code == 200
 
 
+def test_system_admin_inventory_includes_guest_and_account_recordings(env):
+    c, s, h, a, _ = env
+    owned_id = sealed(c, login(c, 'speaker-a'), a)
+    audio = wav_bytes()
+    payload = {'client_id': 'guest-inventory-0001', 'title': '访客录音', 'total_bytes': len(audio),
+               'sha256': hashlib.sha256(audio).hexdigest(), 'extension': 'wav'}
+    created = c.post('/api/recordings', json=payload).json()
+    guest_id = created['id']
+    upload_headers = {'X-Upload-Token': created['uploadToken']}
+    assert c.put(f'/api/uploads/{guest_id}/parts/0', content=audio, headers=upload_headers).status_code == 200
+    assert c.post(f'/api/uploads/{guest_id}/complete', headers=upload_headers).status_code == 200
+    pending = c.post('/api/recordings', json={**payload, 'client_id': 'guest-inventory-0002', 'title': '未完成上传'}).json()
+
+    admin = c.get('/api/admin/recordings', headers=h)
+    assert admin.status_code == 200 and admin.json()['total'] == 3
+    records = {item['id']: item for item in admin.json()['items']}
+    assert records[owned_id]['source'] == 'account' and records[owned_id]['ownerName'] == '真实甲'
+    assert records[guest_id]['source'] == 'guest' and records[guest_id]['hasAudio']
+    assert records[pending['id']]['source'] == 'guest' and not records[pending['id']]['hasAudio']
+    assert c.get('/api/admin/recordings?source=guest', headers=h).json()['total'] == 2
+    assert c.get('/api/admin/recordings?status=processing', headers=h).json()['total'] == 3
+    assert c.get('/api/admin/recordings?q=访客', headers=h).json()['total'] == 1
+    assert c.get('/api/admin/recordings?limit=1&offset=1', headers=h).json()['total'] == 3
+    detail = c.get('/api/admin/recordings/' + guest_id, headers=h).json()
+    assert detail['hasAudio'] and detail['source'] == 'guest' and 'uploadToken' not in detail
+    assert c.get('/api/admin/recordings?status=other', headers=h).status_code == 422
+    assert c.get('/api/admin/recordings').status_code == 401
+    assert c.get('/api/admin/recordings', headers=login(c, 'speaker-a')).status_code == 403
+    assert c.get('/api/admin/recordings/' + guest_id, headers=login(c, 'speaker-a')).status_code == 403
+    assert c.get('/api/managed/recordings', headers=login(c, 'speaker-a')).json()['total'] == 1
+
+
 def test_core_migration_preserves_legacy_data_and_newer_version(tmp_path):
     cfg = Settings(data_dir=tmp_path)
     s = Store(cfg)

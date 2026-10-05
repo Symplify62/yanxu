@@ -4,6 +4,8 @@ API＋独立worker＋SQLite WAL＋持久音频。公网运行见[部署记录](.
 
 新增账号、管理后台、私有声音与说话人识别按[实施与运行说明](../docs/implementation/identity-voice-delivery.md)。后台入口 `/account.html`；匿名公共接口仍兼容旧App。新权限、独立备份凭证及数据库迁移需随新版本一并部署，源码实现不表示生产已切换。
 
+系统管理员的全量录音查询与管理后台导航见[管理后台与版本管理](../docs/implementation/admin-console-version-management.md)。`/api/admin/recordings` 包含访客和账号录音；个人 `/api/managed/recordings` 保持原有范围。
+
 ## 启动
 
 在本目录：
@@ -60,4 +62,4 @@ Android USB联调使用`adb -s <设备ID> reverse tcp:5189 tcp:5189`，App服务
 
 ## Android版本分发
 
-`GET /app/update.json` 返回最新版本清单（no-store），`GET /app/releases/{filename}` 提供带版本/哈希文件名的APK；发布文件位于数据目录旁的artifacts，先上传APK再原子替换清单。准备包使用 `tools/package_android_update.py`，必须与既有APK同包名/同签名且版本递增。见[自动更新与发布](../docs/implementation/android-updates.md)。
+`GET /app/update.json` 返回最新版本清单（no-store），`GET /app/releases/{filename}` 提供带版本/哈希文件名的APK；发布文件位于数据目录旁的artifacts，先上传APK再原子替换清单。准备包使用 `tools/package_android_update.py`，必须与既有APK同包名/同签名且版本递增。见[自动更新与发布](../docs/implementation/android-updates.md)。后台上传、校验、发布和回退见[管理后台与版本管理](../docs/implementation/admin-console-version-management.md)。

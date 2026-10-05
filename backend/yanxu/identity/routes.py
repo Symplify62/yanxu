@@ -103,7 +103,10 @@ def remove_user(person_id: str, request: Request):
 def roles(request: Request):
     require_permission(request, "roles")
     with request.app.state.store.connect() as db:
-        return {"items": [directory.role_response(row) for row in db.execute("SELECT * FROM identity_roles ORDER BY builtin DESC,name")]}
+        rows = db.execute("""SELECT r.*, (SELECT count(*) FROM identity_accounts a JOIN identity_people p ON p.id=a.person_id
+            WHERE a.role_id=r.id AND a.active=1 AND p.active=1 AND p.deleted_at IS NULL) AS account_count
+            FROM identity_roles r ORDER BY builtin DESC,name""")
+        return {"items": [{**directory.role_response(row), "accountCount": row["account_count"]} for row in rows]}
 
 
 @router.post("/api/admin/roles")

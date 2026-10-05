@@ -85,10 +85,17 @@ def list_profiles(request: Request):
     store = request.app.state.store
     with store.connect() as db:
         rows = db.execute('''SELECT p.id,v.revision,v.active_id,v.candidate_id,v.revoked_at,
-          e.status,e.created_at,e.error,c.status AS candidate_status,c.error AS candidate_error
+          e.status,e.created_at,e.error,e.consent_at,e.creator_id,
+          c.status AS candidate_status,c.error AS candidate_error,
+          c.consent_at AS candidate_consent_at,c.creator_id AS candidate_creator_id,
+          a.username AS registered_by,a.person_id AS registered_person_id,
+          ca.username AS candidate_registered_by,ca.person_id AS candidate_registered_person_id
           FROM identity_people p LEFT JOIN voice_profiles v ON v.person_id=p.id
           LEFT JOIN voice_enrollments e ON e.id=v.active_id
-          LEFT JOIN voice_enrollments c ON c.id=v.candidate_id WHERE p.active=1 ORDER BY p.name,p.id''').fetchall()
+          LEFT JOIN voice_enrollments c ON c.id=v.candidate_id
+          LEFT JOIN identity_accounts a ON a.id=e.creator_id
+          LEFT JOIN identity_accounts ca ON ca.id=c.creator_id
+          WHERE p.active=1 ORDER BY p.name,p.id''').fetchall()
     items = []
     for row in rows:
         if not any(x in actor['permissions'] for x in ('voices', 'record')) and row['id'] != actor.get('personId'):
@@ -96,7 +103,10 @@ def list_profiles(request: Request):
         state = 'revoked' if row['revoked_at'] else 'ready' if row['active_id'] else row['candidate_status'] or 'missing'
         items.append({'personId': row['id'], 'status': state, 'version': row['revision'] or 0,
                       'recordedAt': round(row['created_at'] * 1000) if row['created_at'] else None,
-                      'error': row['candidate_error'] or row['error'], 'pendingStatus': row['candidate_status']})
+                      'error': row['candidate_error'] or row['error'], 'pendingStatus': row['candidate_status'],
+                      'registeredBy': row['candidate_registered_by'] or row['registered_by'],
+                      'registeredBySelf': (row['candidate_registered_person_id'] or row['registered_person_id']) == row['id'],
+                      'consentRecordedAt': round((row['candidate_consent_at'] or row['consent_at']) * 1000) if (row['candidate_consent_at'] or row['consent_at']) else None})
     return {'items': items}
 
 

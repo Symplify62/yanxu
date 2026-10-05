@@ -10,6 +10,7 @@ const roles = ref<Role[]>([]),
   error = ref(""),
   formError = ref("");
 const editing = ref<Role | null>(null),
+  original = ref(""),
   form = reactive({
     name: "",
     description: "",
@@ -35,6 +36,7 @@ function edit(role: Role | null) {
     permissions: [...(role?.permissions || [])],
   });
   formError.value = "";
+  original.value = JSON.stringify(form);
   open.value = true;
 }
 async function save() {
@@ -42,6 +44,27 @@ async function save() {
   if (!form.name.trim()) {
     formError.value = "请填写角色名称";
     return;
+  }
+  if (
+    editing.value &&
+    !editing.value.builtin &&
+    JSON.stringify([...form.permissions].sort()) !==
+      JSON.stringify([...editing.value.permissions].sort()) &&
+    editing.value.accountCount
+  ) {
+    try {
+      await ElMessageBox.confirm(
+        `修改后将立即影响 ${editing.value.accountCount} 个启用账号的权限。`,
+        "确认角色权限变更",
+        {
+          type: "warning",
+          confirmButtonText: "继续保存",
+          cancelButtonText: "取消",
+        },
+      );
+    } catch {
+      return;
+    }
   }
   saving.value = true;
   formError.value = "";
@@ -83,6 +106,10 @@ async function remove(role: Role) {
 }
 async function close(done: () => void) {
   if (saving.value) return;
+  if (JSON.stringify(form) === original.value) {
+    done();
+    return;
+  }
   try {
     await ElMessageBox.confirm("放弃本次编辑？", "关闭编辑", {
       confirmButtonText: "放弃",
@@ -126,6 +153,10 @@ onMounted(load);
             row.permissions
               .map((p: Permission) => permissionLabels[p])
               .join("、") || "本人声音档案"
+          }}</template></el-table-column
+        ><el-table-column label="启用账号" width="95"
+          ><template #default="{ row }">{{
+            row.accountCount ?? 0
           }}</template></el-table-column
         ><el-table-column
           prop="description"

@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from "vue";
 import { ElMessageBox } from "element-plus";
-import { errorMessage, request } from "./api";
-import type { Department } from "./types";
+import { errorMessage, hasPermission, request } from "./api";
+import type { Department, Person } from "./types";
 const items = ref<Department[]>([]),
+  people = ref<Person[]>([]),
   selected = ref<Department | null>(null),
   loading = ref(false),
   saving = ref(false),
@@ -47,12 +48,16 @@ async function load() {
     items.value = (
       await request<{ items: Department[] }>("/api/admin/departments")
     ).items;
+    people.value = hasPermission("users")
+      ? (await request<{ items: Person[] }>("/api/admin/users")).items
+      : [];
     selected.value =
       items.value.find((d) => d.id === selected.value?.id) ||
       items.value[0] ||
       null;
   } catch (e) {
     items.value = [];
+    people.value = [];
     selected.value = null;
     error.value = errorMessage(e);
   } finally {
@@ -117,6 +122,13 @@ async function remove() {
 }
 async function close(done: () => void) {
   if (saving.value) return;
+  if (
+    form.name === (editing.value?.name || "") &&
+    form.parentId === (editing.value?.parentId || "")
+  ) {
+    done();
+    return;
+  }
   try {
     await ElMessageBox.confirm("放弃本次编辑？", "关闭编辑", {
       confirmButtonText: "放弃",
@@ -166,6 +178,12 @@ onMounted(load);
             上级部门：{{
               items.find((d) => d.id === selected?.parentId)?.name || "无"
             }}
+          </p>
+          <p v-if="hasPermission('users')" class="status-text">
+            部门成员：{{
+              people.filter((p) => p.departmentId === selected?.id).length
+            }}
+            人
           </p>
           <el-button @click="edit(selected)">编辑部门</el-button
           ><el-button @click="edit(null, selected.id)">添加子部门</el-button
