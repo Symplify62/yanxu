@@ -65,7 +65,8 @@ ACCOUNT_SELECT = """SELECT a.id,a.username,a.person_id,a.password_hash,a.role_id
 
 def principal(row):
     return {"id": row["id"], "username": row["username"], "personId": row["person_id"],
-            "displayName": row["name"], "permissions": json.loads(row["permissions"])}
+            "displayName": row["name"], "permissions": json.loads(row["permissions"]),
+            "systemAdmin": row["role_id"] == "admin"}
 
 
 def current_account(request: Request):
@@ -84,6 +85,13 @@ def require_permission(request: Request, permission):
     account = current_account(request)
     if permission not in account["permissions"]:
         raise HTTPException(403, "没有此操作权限")
+    return account
+
+
+def require_system_admin(request: Request):
+    account = current_account(request)
+    if not account["systemAdmin"]:
+        raise HTTPException(403, "仅系统管理员可管理版本")
     return account
 
 

@@ -53,7 +53,7 @@ def test_login_hash_storage_expiry_and_logout(env):
     me = c.get("/api/auth/me", headers=h)
     assert me.status_code == 200 and me.json()["personId"] == admin["personId"]
     assert me.headers["cache-control"] == "no-store"
-    assert set(me.json()) == {"id", "username", "personId", "displayName", "permissions"}
+    assert set(me.json()) == {"id", "username", "personId", "displayName", "permissions", "systemAdmin"}
     with store.connect() as db:
         account = dict(db.execute("SELECT * FROM identity_accounts").fetchone())
         sessions = json.dumps([dict(r) for r in db.execute("SELECT * FROM identity_sessions")])

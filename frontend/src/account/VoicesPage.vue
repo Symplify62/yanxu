@@ -178,7 +178,7 @@ onUnmounted(() => {
         >关闭试听</el-button
       >
     </div>
-    <div class="workspace-surface">
+    <div class="workspace-surface desktop-people">
       <el-table v-loading="loading" :data="rows" empty-text="暂无声音档案"
         ><el-table-column label="人员" min-width="190"
           ><template #default="{ row }"
@@ -210,6 +210,13 @@ onUnmounted(() => {
                 })
               : "—"
           }}</template></el-table-column
+        ><el-table-column label="登记来源" min-width="170"
+          ><template #default="{ row }"
+            ><span v-if="row.profile?.registeredBy"
+              >{{ row.profile.registeredBy }} ·
+              {{ row.profile.registeredBySelf ? "本人登记" : "代为登记" }}</span
+            ><span v-else>—</span></template
+          ></el-table-column
         ><el-table-column label="操作" width="240" fixed="right"
           ><template #default="{ row }"
             ><el-button
@@ -236,6 +243,61 @@ onUnmounted(() => {
           ></el-table-column
         ></el-table
       >
+    </div>
+    <div class="workspace-surface mobile-people">
+      <div v-if="!rows.length" class="mobile-person status-text">
+        暂无声音档案
+      </div>
+      <div v-for="person in rows" :key="person.id" class="mobile-person">
+        <div class="mobile-person-head">
+          <span class="account-avatar">{{ person.name.slice(0, 1) }}</span
+          ><strong>{{ person.name }}</strong
+          ><span class="toolbar-spacer" /><span
+            class="status-text"
+            :class="person.profile?.status"
+            >{{
+              voiceLabels[person.profile?.status || "missing"] ||
+              person.profile?.status
+            }}</span
+          >
+        </div>
+        <div class="mobile-person-meta">
+          <span>{{ person.departmentName || "未分配部门" }}</span
+          ><span v-if="person.profile?.registeredBy"
+            >{{ person.profile.registeredBy }} ·
+            {{
+              person.profile.registeredBySelf ? "本人登记" : "代为登记"
+            }}</span
+          ><span v-if="person.profile?.recordedAt">{{
+            new Date(person.profile.recordedAt).toLocaleDateString("zh-CN")
+          }}</span>
+        </div>
+        <p v-if="person.profile?.error" class="panel-note">
+          {{ person.profile.error }}
+        </p>
+        <div class="mobile-person-actions">
+          <el-button
+            v-if="mayEnroll(person)"
+            size="small"
+            @click="editing = person"
+            >{{
+              person.profile?.status === "ready" ? "更新" : "登记"
+            }}</el-button
+          ><el-button
+            v-if="mayRevoke(person)"
+            size="small"
+            :disabled="person.profile?.status !== 'ready'"
+            @click="play(person)"
+            >试听</el-button
+          ><el-button
+            v-if="mayRevoke(person)"
+            size="small"
+            :disabled="!person.profile || person.profile.status === 'revoked'"
+            @click="revoke(person)"
+            >撤回</el-button
+          >
+        </div>
+      </div>
     </div>
     <el-dialog
       :model-value="Boolean(editing)"

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, watch } from "vue";
-import { errorMessage, request } from "./api";
+import { account, errorMessage, request } from "./api";
 import type { Person } from "./types";
 const props = defineProps<{ person: Person }>();
 const emit = defineEmits<{ saved: []; busy: [value: boolean] }>();
@@ -132,14 +132,20 @@ onUnmounted(() => {
     />
     <div class="voice-checks">
       <el-checkbox v-model="nameConfirmed" :disabled="saving"
-        >本人确认姓名为“{{ person.name }}”</el-checkbox
+        >我已核对姓名为“{{ person.name }}”</el-checkbox
       ><el-checkbox v-model="voiceConfirmed" :disabled="!file || saving"
-        >已试听，确认是本人声音</el-checkbox
+        >我已试听，确认是此人的声音</el-checkbox
       ><el-checkbox v-model="cloudConsent" :disabled="saving"
-        >本人同意将此声音保存为云端档案，用于会议发言识别</el-checkbox
+        >我已取得本人同意，将声音保存为云端档案用于发言识别</el-checkbox
       >
     </div>
-    <p class="panel-note">登记样本私有保存，可在声音档案中撤回。</p>
+    <p class="panel-note">
+      {{
+        person.id === account?.personId
+          ? "登记样本私有保存，可随时撤回。"
+          : "代为登记会记录当前账号的确认声明；请先当面取得本人同意。"
+      }}
+    </p>
     <el-button
       type="primary"
       :disabled="!allowed"

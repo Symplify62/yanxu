@@ -52,16 +52,17 @@ def valid_role(db, role_id, actor):
     permissions(json.loads(row["permissions"]), actor)
 
 
-USER_SELECT = """SELECT p.*,d.name AS department_name,a.id AS account_id,a.username,a.role_id
+USER_SELECT = """SELECT p.*,d.name AS department_name,a.id AS account_id,a.username,a.role_id,r.name AS role_name
  FROM identity_people p LEFT JOIN identity_departments d ON d.id=p.department_id
- LEFT JOIN identity_accounts a ON a.person_id=p.id"""
+ LEFT JOIN identity_accounts a ON a.person_id=p.id
+ LEFT JOIN identity_roles r ON r.id=a.role_id"""
 
 
 def person_response(row, account=False):
     value = {"id": row["id"], "name": row["name"], "detail": row["detail"],
              "departmentId": row["department_id"], "departmentName": row["department_name"], "active": bool(row["active"])}
     if account:
-        value.update(accountId=row["account_id"], username=row["username"], roleId=row["role_id"])
+        value.update(accountId=row["account_id"], username=row["username"], roleId=row["role_id"], roleName=row["role_name"])
     return value
 
 

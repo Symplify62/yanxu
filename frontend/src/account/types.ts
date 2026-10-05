@@ -6,6 +6,7 @@ export interface Account {
   personId: string;
   displayName: string;
   permissions: Permission[];
+  systemAdmin?: boolean;
 }
 export interface Person {
   id: string;
@@ -17,6 +18,7 @@ export interface Person {
   accountId?: string | null;
   username?: string | null;
   roleId?: string | null;
+  roleName?: string | null;
 }
 export interface Department {
   id: string;
@@ -29,6 +31,7 @@ export interface Role {
   description: string;
   permissions: Permission[];
   builtin: boolean;
+  accountCount?: number;
 }
 export interface VoiceProfile {
   personId: string;
@@ -36,6 +39,9 @@ export interface VoiceProfile {
   version: number;
   recordedAt: number | null;
   error?: string | null;
+  registeredBy?: string | null;
+  registeredBySelf?: boolean;
+  consentRecordedAt?: number | null;
 }
 export interface Recording {
   speakerStatus?: "none" | "waiting" | "complete" | "failed";
@@ -56,7 +62,20 @@ export interface Recording {
       speaker: string | null;
     }[];
   } | null;
-  analysis?: { summary: string } | null;
+  analysis?: {
+    summary: string;
+    points?: string[];
+    decisions?: string[];
+    tasks?: { text: string; owner?: string | null; due?: string | null }[];
+  } | null;
+}
+export interface AdminRecording extends Recording {
+  hasAudio: boolean;
+  interrupted: boolean;
+  source: "guest" | "account";
+  ownerName: string | null;
+  ownerUsername: string | null;
+  sha256?: string;
 }
 export const permissionLabels: Record<Permission, string> = {
   record: "发起录音",

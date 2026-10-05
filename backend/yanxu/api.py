@@ -39,9 +39,11 @@ def create_app(settings=None):
     from .identity import router as identity_router
     from .voice import router as voice_router
     from .managed_recordings import router as managed_router
+    from .admin_recordings import router as admin_recordings_router
     app.include_router(identity_router)
     app.include_router(voice_router)
     app.include_router(managed_router)
+    app.include_router(admin_recordings_router)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["http://127.0.0.1:5178", "http://localhost:5178"],
@@ -261,5 +263,8 @@ def create_app(settings=None):
 
     from .app_updates import router as updates_router
     app.include_router(updates_router)
+    from .admin_app_versions import router as admin_app_versions_router, overview_router
+    app.include_router(admin_app_versions_router)
+    app.include_router(overview_router)
 
     return app
