@@ -13,6 +13,12 @@ export interface PublicRecord {
   error?: string | null;
   transcript?: {
     text: string;
+    context?: {
+      meetingTime?: string;
+      location?: string;
+      weather?: string;
+      sourceName?: string;
+    };
     segments: Array<{
       id: string;
       start: number;

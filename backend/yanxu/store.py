@@ -40,6 +40,15 @@ class Store:
               recording_id TEXT PRIMARY KEY, bucket TEXT NOT NULL, object_key TEXT NOT NULL,
               status TEXT NOT NULL DEFAULT 'pending', attempts INTEGER NOT NULL DEFAULT 0,
               next_at REAL NOT NULL DEFAULT 0, error TEXT, verified_at REAL);
+            CREATE TABLE IF NOT EXISTS recording_briefings(
+              id TEXT PRIMARY KEY, recording_id TEXT NOT NULL, created_at REAL NOT NULL,
+              sections TEXT NOT NULL, context TEXT NOT NULL, markdown TEXT NOT NULL,
+              engine TEXT NOT NULL);
+            CREATE INDEX IF NOT EXISTS recording_briefings_recording
+              ON recording_briefings(recording_id, created_at DESC);
+            CREATE TABLE IF NOT EXISTS briefing_templates(
+              id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL,
+              sections TEXT NOT NULL, created_at REAL NOT NULL, updated_at REAL NOT NULL);
             """)
         with self.connect(True) as db:
             db.execute("CREATE TABLE IF NOT EXISTS feature_schema(module TEXT PRIMARY KEY, version INTEGER NOT NULL)")
@@ -142,6 +151,39 @@ class Store:
             )
             row = db.execute("SELECT * FROM recordings WHERE id=?", (id,)).fetchone()
             return dict(row)
+
+    def create_text_record(self, value):
+        id = str(uuid.uuid4())
+        with self.connect(True) as db:
+            db.execute(
+                """
+                INSERT INTO recordings(
+                  id,client_id,upload_token,title,total_bytes,sha256,extension,
+                  created_at,duration,state,audio_path,media_type,transcript,
+                  analysis,error,interrupted
+                ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                """,
+                (
+                    id,
+                    value["client_id"],
+                    secrets.token_urlsafe(32),
+                    value["title"],
+                    value["total_bytes"],
+                    value["sha256"],
+                    "txt",
+                    time.time(),
+                    value["duration"],
+                    "complete",
+                    None,
+                    None,
+                    json.dumps(value["transcript"], ensure_ascii=False),
+                    json.dumps(value["analysis"], ensure_ascii=False),
+                    None,
+                    0,
+                ),
+            )
+            row = db.execute("SELECT * FROM recordings WHERE id=?", (id,)).fetchone()
+        return dict(row)
 
     def parts(self, id):
         with self.connect() as db:
@@ -293,13 +335,13 @@ class Store:
         )
         with self.connect() as db:
             rows = db.execute(
-                "SELECT * FROM recordings WHERE audio_path IS NOT NULL AND title LIKE ?"
+                "SELECT * FROM recordings WHERE (audio_path IS NOT NULL OR transcript IS NOT NULL) AND title LIKE ?"
                 + condition
                 + " ORDER BY created_at DESC,id DESC LIMIT ? OFFSET ?",
                 ("%" + q + "%", limit, offset),
             ).fetchall()
             count = db.execute(
-                "SELECT count(*) FROM recordings WHERE audio_path IS NOT NULL AND title LIKE ?"
+                "SELECT count(*) FROM recordings WHERE (audio_path IS NOT NULL OR transcript IS NOT NULL) AND title LIKE ?"
                 + condition,
                 ("%" + q + "%",),
             ).fetchone()[0]
@@ -319,9 +361,114 @@ class Store:
                 (id, time.time(), tokens),
             )
 
+    def save_briefing(self, recording_id, value):
+        digest = uuid.uuid5(
+            uuid.NAMESPACE_URL,
+            json.dumps(
+                {
+                    "recording_id": recording_id,
+                    "sections": value["sections"],
+                    "context": value["context"],
+                    "engine": value["engine"],
+                },
+                ensure_ascii=False,
+                sort_keys=True,
+            ),
+        )
+        id = str(digest)
+        created = time.time()
+        with self.connect(True) as db:
+            db.execute(
+                "INSERT OR IGNORE INTO recording_briefings(id,recording_id,created_at,sections,context,markdown,engine) VALUES(?,?,?,?,?,?,?)",
+                (
+                    id,
+                    recording_id,
+                    created,
+                    json.dumps(value["sections"], ensure_ascii=False),
+                    json.dumps(value["context"], ensure_ascii=False),
+                    value["markdown"],
+                    value["engine"],
+                ),
+            )
+            row = db.execute(
+                "SELECT * FROM recording_briefings WHERE id=? AND recording_id=?",
+                (id, recording_id),
+            ).fetchone()
+        return public_briefing(dict(row))
+
+    def list_briefings(self, recording_id):
+        with self.connect() as db:
+            rows = db.execute(
+                "SELECT * FROM recording_briefings WHERE recording_id=? ORDER BY created_at DESC",
+                (recording_id,),
+            ).fetchall()
+        return [public_briefing(dict(row)) for row in rows]
+
+    def get_briefing(self, recording_id, id):
+        with self.connect() as db:
+            row = db.execute(
+                "SELECT * FROM recording_briefings WHERE recording_id=? AND id=?",
+                (recording_id, id),
+            ).fetchone()
+        if not row:
+            raise Missing()
+        return public_briefing(dict(row))
+
+    def list_templates(self):
+        with self.connect() as db:
+            rows = db.execute(
+                "SELECT * FROM briefing_templates ORDER BY updated_at DESC,name"
+            ).fetchall()
+        return [public_template(dict(row)) for row in rows]
+
+    def save_template(self, value, id=None):
+        id = id or str(uuid.uuid4())
+        now = time.time()
+        with self.connect(True) as db:
+            old = db.execute(
+                "SELECT * FROM briefing_templates WHERE id=?", (id,)
+            ).fetchone()
+            if old:
+                db.execute(
+                    "UPDATE briefing_templates SET name=?,description=?,sections=?,updated_at=? WHERE id=?",
+                    (
+                        value["name"],
+                        value["description"],
+                        json.dumps(value["sections"], ensure_ascii=False),
+                        now,
+                        id,
+                    ),
+                )
+            else:
+                db.execute(
+                    "INSERT INTO briefing_templates(id,name,description,sections,created_at,updated_at) VALUES(?,?,?,?,?,?)",
+                    (
+                        id,
+                        value["name"],
+                        value["description"],
+                        json.dumps(value["sections"], ensure_ascii=False),
+                        now,
+                        now,
+                    ),
+                )
+            row = db.execute(
+                "SELECT * FROM briefing_templates WHERE id=?", (id,)
+            ).fetchone()
+        return public_template(dict(row))
+
+    def delete_template(self, id):
+        with self.connect(True) as db:
+            result = db.execute("DELETE FROM briefing_templates WHERE id=?", (id,))
+        if not result.rowcount:
+            raise Missing()
+
 
 def public_record(row):
     from .voice import public_transcript
+    raw_transcript = json.loads(row["transcript"]) if row["transcript"] else None
+    transcript = public_transcript(raw_transcript) if raw_transcript else None
+    if transcript is not None and isinstance(raw_transcript, dict) and raw_transcript.get("context"):
+        transcript["context"] = raw_transcript["context"]
     return {
         "id": row["id"],
         "title": row["title"],
@@ -333,6 +480,30 @@ def public_record(row):
         "interrupted": bool(row["interrupted"]),
         "error": row["error"],
         "sha256": row["sha256"],
-        "transcript": public_transcript(json.loads(row["transcript"])) if row["transcript"] else None,
+        "transcript": transcript,
         "analysis": json.loads(row["analysis"]) if row["analysis"] else None,
+    }
+
+
+def public_briefing(row):
+    return {
+        "id": row["id"],
+        "recordingId": row["recording_id"],
+        "createdAt": round(row["created_at"] * 1000),
+        "sections": json.loads(row["sections"]),
+        "context": json.loads(row["context"]),
+        "markdown": row["markdown"],
+        "engine": row["engine"],
+    }
+
+
+def public_template(row):
+    return {
+        "id": row["id"],
+        "name": row["name"],
+        "description": row["description"],
+        "sections": json.loads(row["sections"]),
+        "createdAt": round(row["created_at"] * 1000),
+        "updatedAt": round(row["updated_at"] * 1000),
+        "source": "custom",
     }

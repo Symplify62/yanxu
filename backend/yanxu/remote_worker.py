@@ -1,6 +1,5 @@
 """Mac ASR client: outbound HTTPS only; no public port on the Mac."""
 
-import fcntl
 import hashlib
 import json
 import logging
@@ -12,6 +11,7 @@ import httpx
 from .config import Settings
 from .worker import transcribe
 from .deepseek import ProviderError
+from .locks import lock_file
 
 logger = logging.getLogger("yanxu.remote_worker")
 
@@ -172,7 +172,7 @@ def main():
     cfg.data_dir.mkdir(parents=True, exist_ok=True)
     with (cfg.data_dir / "remote-worker.lock").open("a") as lock:
         try:
-            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            lock_file(lock, blocking=False)
         except BlockingIOError:
             raise SystemExit("已有远程转写进程运行")
         with httpx.Client(

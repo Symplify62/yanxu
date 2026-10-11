@@ -13,6 +13,12 @@ import {
 } from "@lucide/vue";
 import { duration } from "../domain/presentation";
 import { stageOf, stageLabels, type PublicRecord } from "./model";
+import CustomBriefingPanel from "./CustomBriefingPanel.vue";
+import {
+  createBriefingContext,
+  type BriefingSegment,
+  type BriefingTemplate,
+} from "./briefing";
 const props = defineProps<{
   record: PublicRecord | null;
   now: number;
@@ -29,6 +35,7 @@ const props = defineProps<{
     }>;
   };
   demoTranscript?: Array<{ time: string; speaker: string; text: string }>;
+  briefingTemplates?: BriefingTemplate[];
 }>();
 defineEmits<{ back: [] }>();
 const tab = ref("analysis"),
@@ -65,11 +72,42 @@ const segments = computed(() =>
       }))
     : props.demoTranscript || [],
 );
+const briefingReady = computed(
+  () => stage.value === "complete" && !noSpeech.value,
+);
+const briefingSegments = computed<BriefingSegment[]>(() =>
+  segments.value.map((segment, index) => ({
+    id:
+      "id" in segment && typeof segment.id === "string"
+        ? segment.id
+        : `seg-demo-${String(index + 1).padStart(3, "0")}`,
+    time: segment.time,
+    speaker: segment.speaker,
+    text: segment.text,
+  })),
+);
+const briefingContext = computed(() =>
+  createBriefingContext({
+    record: props.record || {
+      id: "empty",
+      title: "会议记录",
+      createdAt: Date.now(),
+      duration: 0,
+      scenario: "normal",
+      readyAt: Date.now(),
+    },
+    durationLabel: duration(props.record?.duration || 0),
+    segments: briefingSegments.value,
+    analysis: analysisData.value || null,
+    context: props.live ? props.record?.transcript?.context || null : null,
+  }),
+);
 const detailTabs = computed(() =>
   noSpeech.value
     ? [["audio", "原始录音"]]
     : [
         ["analysis", "AI 分析"],
+        ...(briefingReady.value ? [["briefing", "个性化纪要"]] : []),
         ["transcript", "逐字稿"],
         ["tasks", "行动事项"],
         ...(props.live ? [["audio", "原始录音"]] : []),
@@ -200,6 +238,9 @@ async function copy() {
               <Sparkles v-if="t[0] === 'analysis'" :size="15" /><FileText
                 v-else-if="t[0] === 'transcript'"
                 :size="15"
+              /><Sparkles
+                v-else-if="t[0] === 'briefing'"
+                :size="15"
               /><Headphones
                 v-else-if="t[0] === 'audio'"
                 :size="15"
@@ -207,8 +248,8 @@ async function copy() {
             </button>
           </nav>
           <div class="p1-reading-body">
-            <template v-if="tab === 'analysis' && analysisReady"
-              ><p class="p1-content-kicker">会议摘要</p>
+            <template v-if="tab === 'analysis' && analysisReady">
+              <p class="p1-content-kicker">会议摘要</p>
               <p class="p1-summary">{{ analysisData?.summary }}</p>
               <h2>讨论重点</h2>
               <ul class="p1-points">
@@ -220,9 +261,17 @@ async function copy() {
               </p>
               <ol class="p1-decisions">
                 <li v-for="p in analysisData?.decisions" :key="p">{{ p }}</li>
-              </ol></template
-            ><template v-else-if="tab === 'transcript' && textReady"
-              ><h2>逐字稿</h2>
+              </ol>
+            </template>
+            <CustomBriefingPanel
+              v-else-if="tab === 'briefing' && briefingReady"
+              :context="briefingContext"
+              :record-id="record.id"
+              :live="live"
+              :templates="briefingTemplates"
+            />
+            <template v-else-if="tab === 'transcript' && textReady">
+              <h2>逐字稿</h2>
               <p
                 v-if="record?.speakerStatus === 'waiting'"
                 class="p1-secondary"
@@ -245,9 +294,10 @@ async function copy() {
                   <strong>{{ t.speaker }}</strong>
                   <p>{{ t.text }}</p>
                 </div>
-              </article></template
-            ><template v-else-if="tab === 'tasks' && analysisReady"
-              ><h2>行动事项</h2>
+              </article>
+            </template>
+            <template v-else-if="tab === 'tasks' && analysisReady">
+              <h2>行动事项</h2>
               <p v-if="!analysisData?.tasks.length" class="p1-secondary">
                 未提取到行动事项
               </p>
@@ -265,8 +315,8 @@ async function copy() {
                   </p>
                   <small>依据：{{ evidenceLabel(t.evidence) }}</small>
                 </div>
-              </article></template
-            >
+              </article>
+            </template>
             <div v-else-if="tab === 'audio' || noSpeech" class="live-audio">
               <h2>原始录音</h2>
               <audio

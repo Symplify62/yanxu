@@ -1,8 +1,9 @@
-import fcntl, json, os, subprocess, threading, time, logging
+import json, os, subprocess, threading, time, logging
 from pathlib import Path
 from .config import Settings
 from .store import Store
 from .deepseek import DeepSeek, ProviderError
+from .locks import lock_file
 
 logger = logging.getLogger("yanxu.worker")
 
@@ -115,7 +116,7 @@ def main():
     store = Store(cfg)
     with (cfg.data_dir / "worker.lock").open("a") as lock:
         try:
-            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            lock_file(lock, blocking=False)
         except BlockingIOError:
             raise SystemExit("已有本地worker运行")
         logger.info("worker ready")

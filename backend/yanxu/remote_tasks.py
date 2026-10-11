@@ -36,6 +36,7 @@ def backup(store=Depends(backup_authorized)):
     import os
     import sqlite3
     import tempfile
+    from contextlib import closing
     from pathlib import Path
 
     folder = store.settings.data_dir / "backups"
@@ -43,7 +44,7 @@ def backup(store=Depends(backup_authorized)):
     fd, name = tempfile.mkstemp(prefix="download-", suffix=".sqlite3", dir=folder)
     os.close(fd)
     path = Path(name)
-    with store.connect() as source, sqlite3.connect(path) as dest:
+    with store.connect() as source, closing(sqlite3.connect(path)) as dest:
         source.backup(dest)
     return FileResponse(
         path,

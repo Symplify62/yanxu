@@ -4,6 +4,7 @@ import datetime
 import json
 import sqlite3
 import time
+from contextlib import closing
 from pathlib import Path
 from .config import Settings
 from .store import Store
@@ -19,7 +20,7 @@ def run(cfg, days=7):
     private_backup = create_bundle(store, backups / (stamp + ".tar"))
     private_evidence = validate_bundle(private_backup)
     backup = backups / (stamp + ".sqlite3")
-    with store.connect() as source, sqlite3.connect(backup) as dest:
+    with store.connect() as source, closing(sqlite3.connect(backup)) as dest:
         source.backup(dest)
     backup.chmod(0o600)
     deleted = 0

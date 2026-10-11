@@ -14,6 +14,7 @@ import sqlite3
 import stat
 import tarfile
 import tempfile
+from contextlib import closing
 from pathlib import Path
 
 MAX_DATABASE_BYTES = 512 * 1024**2
@@ -44,7 +45,9 @@ def _sample_rows(db):
 def _copy_checked(source, destination, size, digest):
     # Reject symlinks, including a swapped final component. Parent is checked by
     # the caller against the private directory and canonical enrollment UUID.
-    fd = os.open(source, os.O_RDONLY | os.O_NOFOLLOW)
+    if Path(source).is_symlink():
+        raise ValueError('私有样本路径不允许符号链接')
+    fd = os.open(source, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0))
     try:
         metadata = os.fstat(fd)
         if not stat.S_ISREG(metadata.st_mode) or metadata.st_size != size:
@@ -84,12 +87,12 @@ def create_bundle(store, output):
                 # A second connection can backup the committed snapshot while the
                 # first holds the write reservation. Backup on the writing
                 # connection itself would wait for its own transaction.
-                with store.connect() as source, sqlite3.connect(database) as copied:
+                with store.connect() as source, closing(sqlite3.connect(database)) as copied:
                     source.backup(copied)
                 database.chmod(0o600)
                 if not 0 < database.stat().st_size <= MAX_DATABASE_BYTES:
                     raise ValueError('数据库超过私有备份限制')
-                with sqlite3.connect(database) as snapshot:
+                with closing(sqlite3.connect(database)) as snapshot:
                     if snapshot.execute('PRAGMA quick_check').fetchone()[0] != 'ok':
                         raise ValueError('数据库备份校验失败')
                     rows = _sample_rows(snapshot)
@@ -134,7 +137,7 @@ def create_bundle(store, output):
             if temporary_archive.stat().st_size > MAX_BUNDLE_BYTES:
                 raise ValueError('私有备份超过大小限制')
             validate_bundle(temporary_archive)
-            with temporary_archive.open('rb') as stream:
+            with temporary_archive.open('r+b') as stream:
                 os.fsync(stream.fileno())
             os.replace(temporary_archive, output)
             return output
@@ -197,22 +200,23 @@ def _restore_into(bundle, target, mapped_target):
         if seen != set(entries):
             raise ValueError('私有备份文件不完整')
     database = target / 'yanxu.sqlite3'
-    with sqlite3.connect(database) as db:
-        db.execute('PRAGMA trusted_schema=OFF')
-        if db.execute('PRAGMA quick_check').fetchone()[0] != 'ok':
-            raise ValueError('私有备份数据库损坏')
-        rows = _sample_rows(db)
-        required = {'private-voices/' + row['id'] + '.wav': row for row in rows}
-        if set(required) != seen - {'yanxu.sqlite3'}:
-            raise ValueError('私有备份文件与数据库引用不一致')
-        for name, row in required.items():
-            if entries[name]['sha256'] != row['sha256'] or entries[name]['bytes'] != row['total_bytes']:
-                raise ValueError('私有备份样本与数据库校验信息不一致')
-        # Absolute source paths cannot be reused during restoration. Revoked and
-        # incomplete rows deliberately receive no audio pointer.
-        db.execute('UPDATE voice_enrollments SET audio_path=NULL')
-        for name, row in required.items():
-            db.execute('UPDATE voice_enrollments SET audio_path=? WHERE id=?', (str(mapped_target / name), row['id']))
+    with closing(sqlite3.connect(database)) as db:
+        with db:
+            db.execute('PRAGMA trusted_schema=OFF')
+            if db.execute('PRAGMA quick_check').fetchone()[0] != 'ok':
+                raise ValueError('私有备份数据库损坏')
+            rows = _sample_rows(db)
+            required = {'private-voices/' + row['id'] + '.wav': row for row in rows}
+            if set(required) != seen - {'yanxu.sqlite3'}:
+                raise ValueError('私有备份文件与数据库引用不一致')
+            for name, row in required.items():
+                if entries[name]['sha256'] != row['sha256'] or entries[name]['bytes'] != row['total_bytes']:
+                    raise ValueError('私有备份样本与数据库校验信息不一致')
+            # Absolute source paths cannot be reused during restoration. Revoked and
+            # incomplete rows deliberately receive no audio pointer.
+            db.execute('UPDATE voice_enrollments SET audio_path=NULL')
+            for name, row in required.items():
+                db.execute('UPDATE voice_enrollments SET audio_path=? WHERE id=?', (str(mapped_target / name), row['id']))
     return {'samples': len(rows), 'files': len(entries), 'database': str(mapped_target / 'yanxu.sqlite3')}
 
 

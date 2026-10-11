@@ -1,17 +1,6 @@
-import os, json, subprocess, fcntl
+import os, json, subprocess, wave
 from pathlib import Path
-from contextlib import contextmanager
-
-
-@contextmanager
-def file_lock(path):
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a") as f:
-        fcntl.flock(f, fcntl.LOCK_EX)
-        try:
-            yield
-        finally:
-            fcntl.flock(f, fcntl.LOCK_UN)
+from .locks import file_lock
 
 
 def media_env():
@@ -58,13 +47,35 @@ def inspect_audio(path, extension=None):
         if not 0 < duration < 365 * 86400:
             raise ValueError()
         return duration
-    except (ValueError, KeyError, subprocess.SubprocessError):
+    except (ValueError, KeyError, FileNotFoundError, subprocess.SubprocessError):
+        try:
+            return inspect_wav(path, extension)
+        except ValueError:
+            pass
         raise ValueError("音频不可读取，请保留本地文件后重试") from None
+
+
+def inspect_wav(path, extension=None):
+    if extension and extension != "wav":
+        raise ValueError()
+    try:
+        with wave.open(str(path), "rb") as audio:
+            frames = audio.getnframes()
+            rate = audio.getframerate()
+            channels = audio.getnchannels()
+            width = audio.getsampwidth()
+        duration = frames / rate
+        if channels < 1 or width < 1 or not 0 < duration < 365 * 86400:
+            raise ValueError()
+        return duration
+    except (wave.Error, OSError, ZeroDivisionError):
+        raise ValueError() from None
 
 
 def write_json(path, value):
     temp = path.with_suffix(".tmp")
-    temp.write_text(json.dumps(value, ensure_ascii=False))
-    with temp.open("rb") as f:
+    with temp.open("w", encoding="utf-8") as f:
+        f.write(json.dumps(value, ensure_ascii=False))
+        f.flush()
         os.fsync(f.fileno())
     os.replace(temp, path)
