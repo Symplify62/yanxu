@@ -99,38 +99,8 @@ def text_transcript(value: TextRecordingCreate):
     }
 
 
-def text_analysis(transcript):
-    segments = transcript["segments"]
-    content = " ".join(segment["text"] for segment in segments)
-    summary = content[:220] + ("..." if len(content) > 220 else "")
-    points = [segment["text"] for segment in segments[:5]]
-    decisions = [
-        segment["text"]
-        for segment in segments
-        if any(keyword in segment["text"] for keyword in ["决定", "确认", "同意", "明确"])
-    ][:10]
-    tasks = []
-    for segment in segments:
-        if any(
-            keyword in segment["text"]
-            for keyword in ["待办", "需要", "负责", "完成", "下周", "本周", "明天"]
-        ):
-            tasks.append(
-                {
-                    "text": segment["text"][:240],
-                    "owner": None,
-                    "due": None,
-                    "evidence": [segment["id"]],
-                }
-            )
-        if len(tasks) >= 10:
-            break
-    return {
-        "summary": summary or "导入文本已保存，可继续生成模板化纪要。",
-        "points": points,
-        "decisions": decisions,
-        "tasks": tasks,
-    }
+def text_analysis(_transcript):
+    return None
 
 
 def create_app(settings=None):

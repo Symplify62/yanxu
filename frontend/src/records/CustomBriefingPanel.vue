@@ -24,6 +24,24 @@ import {
   type GeneratedBriefingSection,
 } from "./briefing";
 
+interface CachedBriefingPreview {
+  sections: GeneratedBriefingSection[];
+  engine: string;
+  archivedId: string;
+  selected: BriefingSectionId[];
+  selectedTemplateId: string;
+}
+
+type BriefingPreviewGlobal = typeof globalThis & {
+  __yanxuBriefingPreviewCache?: Map<string, CachedBriefingPreview>;
+};
+
+function previewCache() {
+  const holder = globalThis as BriefingPreviewGlobal;
+  holder.__yanxuBriefingPreviewCache ||= new Map();
+  return holder.__yanxuBriefingPreviewCache;
+}
+
 const props = defineProps<{
   context: BriefingContext;
   recordId?: string;
@@ -54,14 +72,20 @@ const archivedBriefings = ref<ArchivedBriefing[]>([]);
 const archiveListBusy = ref(false);
 const busy = ref(false);
 const archivedId = ref("");
+let restoringCachedPreview = false;
 
 const localSections = computed(() => {
   refreshedAt.value;
+  if (props.live) return [];
   return generatePersonalizedBriefing(props.context, selected.value);
 });
-const generated = computed(() => remoteSections.value || localSections.value);
+const generated = computed(() => remoteSections.value ?? localSections.value);
+const hasGenerated = computed(() => generated.value.length > 0);
 const markdown = computed(
-  () => `# ${props.context.title}\n\n${toMarkdown(generated.value)}`,
+  () =>
+    hasGenerated.value
+      ? `# ${props.context.title}\n\n${toMarkdown(generated.value)}`
+      : "",
 );
 const orderedSelectedOptions = computed(() =>
   selected.value
@@ -109,21 +133,21 @@ watch(
 );
 
 watch(selectedTemplateId, (id) => {
+  if (restoringCachedPreview) {
+    restoringCachedPreview = false;
+    return;
+  }
   const template = templateList.value.find((item) => item.id === id);
   if (!template) return;
   selected.value = [...template.sections];
-  remoteSections.value = null;
-  remoteEngine.value = "";
-  archivedId.value = "";
+  clearGeneratedState();
   copyMessage.value = `已应用模板：${template.name}`;
 });
 
 watch(
   () => props.recordId,
   () => {
-    remoteSections.value = null;
-    remoteEngine.value = "";
-    archivedId.value = "";
+    restoreGeneratedState() || clearGeneratedState(false);
     copyMessage.value = "";
     void loadArchivedBriefings();
   },
@@ -150,10 +174,53 @@ function move(id: BriefingSectionId, delta: -1 | 1) {
   copyMessage.value = "";
 }
 
-function clearGeneratedState() {
+function clearGeneratedState(dropCache = true) {
   remoteSections.value = null;
   remoteEngine.value = "";
   archivedId.value = "";
+  if (dropCache) {
+    const key = cacheKey();
+    if (key) previewCache().delete(key);
+  }
+}
+
+function cacheKey() {
+  return props.live && props.recordId ? props.recordId : "";
+}
+
+function cloneSections(sections: GeneratedBriefingSection[]) {
+  return sections.map((section) => ({
+    ...section,
+    lines: [...section.lines],
+    evidence: section.evidence ? [...section.evidence] : undefined,
+  }));
+}
+
+function saveGeneratedState() {
+  const key = cacheKey();
+  if (!key || !remoteSections.value) return;
+  previewCache().set(key, {
+    sections: cloneSections(remoteSections.value),
+    engine: remoteEngine.value,
+    archivedId: archivedId.value,
+    selected: [...selected.value],
+    selectedTemplateId: selectedTemplateId.value,
+  });
+}
+
+function restoreGeneratedState() {
+  const key = cacheKey();
+  if (!key) return false;
+  const cached = previewCache().get(key);
+  if (!cached) return false;
+  restoringCachedPreview = selectedTemplateId.value !== cached.selectedTemplateId;
+  selectedTemplateId.value = cached.selectedTemplateId;
+  selected.value = [...cached.selected];
+  remoteSections.value = cloneSections(cached.sections);
+  remoteEngine.value = cached.engine;
+  archivedId.value = cached.archivedId;
+  if (!restoringCachedPreview) restoringCachedPreview = false;
+  return true;
 }
 
 function sectionLabel(id: BriefingSectionId) {
@@ -266,6 +333,7 @@ function viewArchived(briefing: ArchivedBriefing) {
   remoteEngine.value = briefing.engine;
   archivedId.value = briefing.id;
   selected.value = briefing.sections.map((section) => section.id);
+  saveGeneratedState();
   copyMessage.value = `已打开归档纪要：${new Date(
     briefing.createdAt,
   ).toLocaleString("zh-CN")}`;
@@ -291,9 +359,6 @@ function exportArchived(briefing: ArchivedBriefing) {
 
 async function regenerate() {
   refreshedAt.value = Date.now();
-  remoteSections.value = null;
-  remoteEngine.value = "";
-  archivedId.value = "";
   if (!props.live || !props.recordId) {
     copyMessage.value = "已按当前板块重新生成";
     return;
@@ -312,9 +377,13 @@ async function regenerate() {
     const data = await response.json();
     remoteSections.value = data.sections;
     remoteEngine.value = data.engine || "";
+    archivedId.value = "";
+    saveGeneratedState();
     copyMessage.value = generatedMessage("预览");
   } catch {
-    copyMessage.value = "后端预览暂不可用，已保留前端演示结果。";
+    copyMessage.value = props.live
+      ? "后端预览暂不可用，未生成纪要。"
+      : "后端预览暂不可用，已保留前端演示结果。";
   } finally {
     busy.value = false;
   }
@@ -341,6 +410,7 @@ async function archiveBriefing() {
     remoteSections.value = data.sections;
     remoteEngine.value = data.engine || "";
     archivedId.value = data.id;
+    saveGeneratedState();
     copyMessage.value = generatedMessage("归档");
     await loadArchivedBriefings();
   } catch {
@@ -351,6 +421,10 @@ async function archiveBriefing() {
 }
 
 async function copyMarkdown() {
+  if (!hasGenerated.value) {
+    copyMessage.value = "请先预览生成纪要后再复制。";
+    return;
+  }
   try {
     await navigator.clipboard.writeText(markdown.value);
     copyMessage.value = "纪要 Markdown 已复制";
@@ -360,6 +434,10 @@ async function copyMarkdown() {
 }
 
 function exportMarkdown() {
+  if (!hasGenerated.value) {
+    copyMessage.value = "请先预览生成纪要后再导出。";
+    return;
+  }
   downloadText(markdown.value, `${safeFilename(props.context.title)}-纪要.md`);
   copyMessage.value = "当前纪要 Markdown 已导出";
 }
@@ -386,10 +464,10 @@ function exportMarkdown() {
         <el-button :disabled="busy" @click="archiveBriefing"
           ><Archive :size="15" />归档纪要</el-button
         >
-        <el-button type="primary" @click="copyMarkdown"
+        <el-button type="primary" :disabled="!hasGenerated" @click="copyMarkdown"
           ><Clipboard :size="15" />复制纪要</el-button
         >
-        <el-button @click="exportMarkdown"
+        <el-button :disabled="!hasGenerated" @click="exportMarkdown"
           ><Download :size="15" />导出 Markdown</el-button
         >
       </div>
@@ -505,7 +583,13 @@ function exportMarkdown() {
             <span>{{ context.meetingTime }} · {{ context.location }}</span>
           </div>
         </div>
+        <div v-if="live && !hasGenerated" class="p1-briefing-empty">
+          <Sparkles :size="22" />
+          <h3>尚未生成纪要</h3>
+          <p>选择板块后点击“预览纪要”，系统才会生成内容。</p>
+        </div>
         <article
+          v-else
           v-for="section in generated"
           :key="section.id"
           class="p1-briefing-section"

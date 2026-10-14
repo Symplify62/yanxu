@@ -968,6 +968,25 @@
   color: var(--p1-muted);
   font-size: 11px;
 }
+.p1-briefing-empty {
+  min-height: 260px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  color: #8a9b7c;
+  text-align: center;
+  padding: 32px 12px;
+}
+.p1-briefing-empty h3 {
+  margin: 0;
+  color: var(--p1-ink);
+  font-size: 16px;
+}
+.p1-briefing-empty p {
+  margin: 0;
+  font-size: 13px;
+}
 .p1-briefing-section {
   padding: 18px 0;
   border-bottom: 1px solid var(--p1-line);
