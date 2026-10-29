@@ -38,13 +38,13 @@ const props = defineProps<{
   briefingTemplates?: BriefingTemplate[];
 }>();
 defineEmits<{ back: [] }>();
-const tab = ref("analysis"),
+const tab = ref("briefing"),
   linkDialog = ref(false),
   copyMessage = ref("");
 watch(
   () => props.record?.id,
   () => {
-    tab.value = "analysis";
+    tab.value = "briefing";
     linkDialog.value = false;
     copyMessage.value = "";
   },
@@ -106,13 +106,15 @@ const detailTabs = computed(() =>
   noSpeech.value
     ? [["audio", "原始录音"]]
     : [
-        ["analysis", "AI 分析"],
         ...(briefingReady.value ? [["briefing", "个性化纪要"]] : []),
         ["transcript", "逐字稿"],
         ["tasks", "行动事项"],
         ...(props.live ? [["audio", "原始录音"]] : []),
       ],
 );
+watch(detailTabs, (tabs) => {
+  if (!tabs.some(([id]) => id === tab.value)) tab.value = tabs[0]?.[0] || "transcript";
+}, { immediate: true });
 const progress = computed(() =>
   stage.value === "complete"
     ? 4
@@ -248,23 +250,8 @@ async function copy() {
             </button>
           </nav>
           <div class="p1-reading-body">
-            <template v-if="tab === 'analysis' && analysisReady">
-              <p class="p1-content-kicker">会议摘要</p>
-              <p class="p1-summary">{{ analysisData?.summary }}</p>
-              <h2>讨论重点</h2>
-              <ul class="p1-points">
-                <li v-for="p in analysisData?.points" :key="p">{{ p }}</li>
-              </ul>
-              <h2>主要决定</h2>
-              <p v-if="!analysisData?.decisions.length" class="p1-secondary">
-                未提取到明确决定
-              </p>
-              <ol class="p1-decisions">
-                <li v-for="p in analysisData?.decisions" :key="p">{{ p }}</li>
-              </ol>
-            </template>
             <CustomBriefingPanel
-              v-else-if="tab === 'briefing' && briefingReady"
+              v-if="tab === 'briefing' && briefingReady"
               :context="briefingContext"
               :record-id="record.id"
               :live="live"

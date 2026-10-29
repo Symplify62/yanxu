@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from "vue";
 import { Copy, FileText, Plus, RotateCcw, Save, Trash2 } from "@lucide/vue";
+import SectionOrder from "./SectionOrder.vue";
 import {
   briefingSectionOptions,
   defaultBriefingTemplates,
@@ -13,6 +14,7 @@ const props = defineProps<{ templates: BriefingTemplate[]; live?: boolean }>();
 const emit = defineEmits<{ update: [templates: BriefingTemplate[]] }>();
 
 const editingId = ref("");
+const sourceTemplateId = ref("");
 const message = ref("");
 const busy = ref(false);
 const form = reactive({
@@ -24,13 +26,6 @@ const form = reactive({
 const customTemplates = computed(() =>
   props.templates.filter((template) => template.source === "custom"),
 );
-const selectedOptions = computed(() =>
-  form.sections
-    .map((id) => briefingSectionOptions.find((option) => option.id === id))
-    .filter((option): option is (typeof briefingSectionOptions)[number] =>
-      Boolean(option),
-    ),
-);
 
 watch(
   () => props.templates,
@@ -41,6 +36,7 @@ watch(
 );
 
 function startNew() {
+  sourceTemplateId.value = "";
   editingId.value = "";
   form.name = "";
   form.description = "";
@@ -49,6 +45,7 @@ function startNew() {
 }
 
 function edit(template: BriefingTemplate, duplicate = false) {
+  sourceTemplateId.value = template.id;
   editingId.value =
     duplicate || template.source === "builtin" ? "" : template.id;
   form.name =
@@ -61,20 +58,21 @@ function edit(template: BriefingTemplate, duplicate = false) {
     duplicate || template.source === "builtin" ? "已复制为可编辑草稿" : "";
 }
 
+function restoreTemplate() {
+  const source = props.templates.find(
+    (item) => item.id === sourceTemplateId.value,
+  );
+  if (!source) return startNew();
+  form.sections = [...source.sections];
+  form.description = source.description;
+  message.value = "已恢复模板板块和说明";
+}
+
 function toggle(id: BriefingSectionId) {
   if (form.sections.includes(id)) {
     if (form.sections.length === 1) return;
     form.sections = form.sections.filter((value) => value !== id);
   } else form.sections = [...form.sections, id];
-}
-
-function move(id: BriefingSectionId, delta: -1 | 1) {
-  const index = form.sections.indexOf(id);
-  const target = index + delta;
-  if (index < 0 || target < 0 || target >= form.sections.length) return;
-  const next = [...form.sections];
-  [next[index], next[target]] = [next[target], next[index]];
-  form.sections = next;
 }
 
 function normalizeRemoteTemplate(value: unknown): BriefingTemplate | null {
@@ -272,36 +270,20 @@ async function resetCustom() {
         <div class="p1-template-section-picker">
           <h3>板块选项</h3>
           <button
-            v-for="option in briefingSectionOptions"
+            v-for="(option, index) in briefingSectionOptions"
             :key="option.id"
             type="button"
             :class="{ selected: form.sections.includes(option.id) }"
             @click="toggle(option.id)"
           >
-            <strong>{{ option.label }}</strong>
+            <strong>{{ index + 1 }}. {{ option.label }}</strong>
             <small>{{ option.description }}</small>
           </button>
         </div>
 
         <div class="p1-template-order">
           <h3>生成顺序</h3>
-          <article v-for="(option, index) in selectedOptions" :key="option.id">
-            <span>{{ index + 1 }}. {{ option.label }}</span>
-            <span>
-              <el-button
-                size="small"
-                :disabled="index === 0"
-                @click="move(option.id, -1)"
-                >上移</el-button
-              >
-              <el-button
-                size="small"
-                :disabled="index === selectedOptions.length - 1"
-                @click="move(option.id, 1)"
-                >下移</el-button
-              >
-            </span>
-          </article>
+          <SectionOrder v-model="form.sections" :disabled="busy" />
         </div>
 
         <div class="p1-template-actions">
@@ -310,6 +292,12 @@ async function resetCustom() {
           >
           <el-button :disabled="busy" @click="startNew"
             ><RotateCcw :size="15" />重置表单</el-button
+          >
+          <el-button
+            v-if="sourceTemplateId"
+            :disabled="busy"
+            @click="restoreTemplate"
+            ><RotateCcw :size="15" />恢复模板组合</el-button
           >
           <p v-if="message" role="status">{{ message }}</p>
         </div>
@@ -332,16 +320,11 @@ async function resetCustom() {
           </div>
           <h3>{{ template.name }}</h3>
           <p>{{ template.description || "暂无说明" }}</p>
-          <small>{{
-            template.sections
-              .map(
-                (id) =>
-                  briefingSectionOptions.find((option) => option.id === id)
-                    ?.label,
-              )
-              .filter(Boolean)
-              .join(" / ")
-          }}</small>
+          <div class="p1-briefing-template-tags">
+            <span v-for="id in template.sections" :key="id">{{
+              briefingSectionOptions.find((option) => option.id === id)?.label
+            }}</span>
+          </div>
           <div class="p1-template-card-actions">
             <el-button size="small" :disabled="busy" @click="edit(template)">
               {{ template.source === "builtin" ? "套用" : "编辑" }}

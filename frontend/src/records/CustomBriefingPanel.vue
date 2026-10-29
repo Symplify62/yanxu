@@ -1,17 +1,15 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import {
-  ArrowDown,
-  ArrowUp,
   Archive,
   Clipboard,
   Download,
   FileText,
   RefreshCw,
-  RotateCcw,
   Settings2,
   Sparkles,
 } from "@lucide/vue";
+import SectionOrder from "./SectionOrder.vue";
 import {
   briefingSectionOptions,
   defaultBriefingTemplates,
@@ -29,6 +27,7 @@ interface CachedBriefingPreview {
   engine: string;
   archivedId: string;
   selected: BriefingSectionId[];
+  displayed?: BriefingSectionId[];
   selectedTemplateId: string;
 }
 
@@ -65,6 +64,7 @@ const selected = ref<BriefingSectionId[]>(
       .map((option) => option.id),
 );
 const copyMessage = ref("");
+const displayed = ref<BriefingSectionId[]>([...selected.value]);
 const refreshedAt = ref(Date.now());
 const remoteSections = ref<GeneratedBriefingSection[] | null>(null);
 const remoteEngine = ref("");
@@ -77,15 +77,19 @@ let restoringCachedPreview = false;
 const localSections = computed(() => {
   refreshedAt.value;
   if (props.live) return [];
-  return generatePersonalizedBriefing(props.context, selected.value);
+  return generatePersonalizedBriefing(props.context, displayed.value);
 });
-const generated = computed(() => remoteSections.value ?? localSections.value);
+const generated = computed(() => {
+  if (!remoteSections.value) return localSections.value;
+  return displayed.value.flatMap((id) =>
+    remoteSections.value!.filter((section) => section.id === id),
+  );
+});
 const hasGenerated = computed(() => generated.value.length > 0);
-const markdown = computed(
-  () =>
-    hasGenerated.value
-      ? `# ${props.context.title}\n\n${toMarkdown(generated.value)}`
-      : "",
+const markdown = computed(() =>
+  hasGenerated.value
+    ? `# ${props.context.title}\n\n${toMarkdown(generated.value)}`
+    : "",
 );
 const orderedSelectedOptions = computed(() =>
   selected.value
@@ -97,11 +101,6 @@ const orderedSelectedOptions = computed(() =>
 const selectedSectionNames = computed(() =>
   orderedSelectedOptions.value.map((option) => option.label),
 );
-const templateSectionNames = computed(() =>
-  selectedTemplate.value
-    ? selectedTemplate.value.sections.map(sectionLabel).filter(Boolean)
-    : [],
-);
 const templateAdjusted = computed(() => {
   const template = selectedTemplate.value;
   if (!template) return false;
@@ -110,9 +109,6 @@ const templateAdjusted = computed(() => {
     template.sections.some((id, index) => selected.value[index] !== id)
   );
 });
-const templateStatus = computed(() =>
-  templateAdjusted.value ? "已按当前记录调整" : "使用模板默认组合",
-);
 const activeTemplateName = computed(() => {
   if (!selectedTemplate.value) return "自定义组合";
   return templateAdjusted.value
@@ -144,6 +140,8 @@ watch(selectedTemplateId, (id) => {
   copyMessage.value = `已应用模板：${template.name}`;
 });
 
+watch(selected, () => saveGeneratedState(), { deep: true });
+
 watch(
   () => props.recordId,
   () => {
@@ -163,18 +161,11 @@ function toggle(id: BriefingSectionId) {
   } else selected.value = [...selected.value, id];
 }
 
-function move(id: BriefingSectionId, delta: -1 | 1) {
-  const index = selected.value.indexOf(id);
-  const target = index + delta;
-  if (index < 0 || target < 0 || target >= selected.value.length) return;
-  const next = [...selected.value];
-  [next[index], next[target]] = [next[target], next[index]];
-  selected.value = next;
-  clearGeneratedState();
-  copyMessage.value = "";
-}
-
 function clearGeneratedState(dropCache = true) {
+  if (dropCache && remoteSections.value) {
+    saveGeneratedState();
+    return;
+  }
   remoteSections.value = null;
   remoteEngine.value = "";
   archivedId.value = "";
@@ -204,6 +195,7 @@ function saveGeneratedState() {
     engine: remoteEngine.value,
     archivedId: archivedId.value,
     selected: [...selected.value],
+    displayed: [...displayed.value],
     selectedTemplateId: selectedTemplateId.value,
   });
 }
@@ -213,9 +205,11 @@ function restoreGeneratedState() {
   if (!key) return false;
   const cached = previewCache().get(key);
   if (!cached) return false;
-  restoringCachedPreview = selectedTemplateId.value !== cached.selectedTemplateId;
+  restoringCachedPreview =
+    selectedTemplateId.value !== cached.selectedTemplateId;
   selectedTemplateId.value = cached.selectedTemplateId;
   selected.value = [...cached.selected];
+  displayed.value = [...(cached.displayed ?? cached.selected)];
   remoteSections.value = cloneSections(cached.sections);
   remoteEngine.value = cached.engine;
   archivedId.value = cached.archivedId;
@@ -225,13 +219,6 @@ function restoreGeneratedState() {
 
 function sectionLabel(id: BriefingSectionId) {
   return briefingSectionOptions.find((option) => option.id === id)?.label || id;
-}
-
-function resetToTemplate() {
-  if (!selectedTemplate.value) return;
-  selected.value = [...selectedTemplate.value.sections];
-  clearGeneratedState();
-  copyMessage.value = `已恢复模板：${selectedTemplate.value.name}`;
 }
 
 function selectDefaultSections() {
@@ -333,6 +320,7 @@ function viewArchived(briefing: ArchivedBriefing) {
   remoteEngine.value = briefing.engine;
   archivedId.value = briefing.id;
   selected.value = briefing.sections.map((section) => section.id);
+  displayed.value = [...selected.value];
   saveGeneratedState();
   copyMessage.value = `已打开归档纪要：${new Date(
     briefing.createdAt,
@@ -358,24 +346,42 @@ function exportArchived(briefing: ArchivedBriefing) {
 }
 
 async function regenerate() {
+  if (busy.value) return;
+  const requestedSelection = [...selected.value];
   refreshedAt.value = Date.now();
   if (!props.live || !props.recordId) {
+    displayed.value = requestedSelection;
     copyMessage.value = "已按当前板块重新生成";
     return;
   }
   busy.value = true;
   try {
+    if (
+      briefingSectionOptions.every((option) =>
+        remoteSections.value?.some((section) => section.id === option.id),
+      )
+    ) {
+      displayed.value = requestedSelection;
+      archivedId.value = "";
+      saveGeneratedState();
+      copyMessage.value = "已按当前板块更新预览";
+      return;
+    }
     const response = await fetch(
       `/api/recordings/${encodeURIComponent(props.recordId)}/briefings/preview`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(briefingRequestBody()),
+        body: JSON.stringify({
+          ...briefingRequestBody(),
+          sections: briefingSectionOptions.map((option) => option.id),
+        }),
       },
     );
     if (!response.ok) throw new Error("preview");
     const data = await response.json();
     remoteSections.value = data.sections;
+    displayed.value = requestedSelection;
     remoteEngine.value = data.engine || "";
     archivedId.value = "";
     saveGeneratedState();
@@ -390,6 +396,8 @@ async function regenerate() {
 }
 
 async function archiveBriefing() {
+  if (busy.value) return;
+  const requestedSelection = [...selected.value];
   if (!props.live || !props.recordId) {
     archivedId.value = "demo";
     copyMessage.value = "演示归档完成；真实保存将在后端接口中完成。";
@@ -407,7 +415,9 @@ async function archiveBriefing() {
     );
     if (!response.ok) throw new Error("archive");
     const data = await response.json();
-    remoteSections.value = data.sections;
+    // Keep the complete preview available when archiving a selected subset.
+    if (!remoteSections.value) remoteSections.value = data.sections;
+    displayed.value = requestedSelection;
     remoteEngine.value = data.engine || "";
     archivedId.value = data.id;
     saveGeneratedState();
@@ -452,7 +462,7 @@ function exportMarkdown() {
         <p class="p1-secondary">
           {{
             live
-              ? "真实记录会请求后端按当前模板生成；后端配置 DeepSeek 后将使用 AI 分析转写文本。"
+              ? "选择需要展示和归档的板块。"
               : "当前为前端演示生成：使用模拟逐字稿、会议时间、地点和天气信息，不调用真实录音或 AI 服务。"
           }}
         </p>
@@ -464,7 +474,10 @@ function exportMarkdown() {
         <el-button :disabled="busy" @click="archiveBriefing"
           ><Archive :size="15" />归档纪要</el-button
         >
-        <el-button type="primary" :disabled="!hasGenerated" @click="copyMarkdown"
+        <el-button
+          type="primary"
+          :disabled="!hasGenerated"
+          @click="copyMarkdown"
           ><Clipboard :size="15" />复制纪要</el-button
         >
         <el-button :disabled="!hasGenerated" @click="exportMarkdown"
@@ -490,34 +503,6 @@ function exportMarkdown() {
             />
           </el-select>
         </label>
-        <div class="p1-briefing-template-summary">
-          <div class="p1-briefing-template-summary-head">
-            <div>
-              <strong>{{ selectedTemplate?.name || "自定义组合" }}</strong>
-              <span>{{ templateStatus }}</span>
-            </div>
-            <el-button
-              size="small"
-              :disabled="!selectedTemplate || !templateAdjusted"
-              @click="resetToTemplate"
-              ><RotateCcw :size="13" />恢复</el-button
-            >
-          </div>
-          <p>
-            {{
-              selectedTemplate?.description ||
-              "使用当前勾选板块生成一次性的纪要组合。"
-            }}
-          </p>
-          <div
-            v-if="templateSectionNames.length"
-            class="p1-briefing-template-tags"
-          >
-            <span v-for="name in templateSectionNames" :key="name">{{
-              name
-            }}</span>
-          </div>
-        </div>
         <div class="p1-briefing-current-flow">
           <div>
             <strong>当前生成组合</strong>
@@ -547,31 +532,7 @@ function exportMarkdown() {
         </button>
         <div class="p1-briefing-order">
           <p>生成顺序</p>
-          <div
-            v-for="(option, index) in orderedSelectedOptions"
-            :key="option.id"
-            class="p1-briefing-order-row"
-          >
-            <span>{{ index + 1 }}. {{ option.label }}</span>
-            <span>
-              <button
-                type="button"
-                :disabled="index === 0"
-                aria-label="上移板块"
-                @click.stop="move(option.id, -1)"
-              >
-                <ArrowUp :size="13" />
-              </button>
-              <button
-                type="button"
-                :disabled="index === orderedSelectedOptions.length - 1"
-                aria-label="下移板块"
-                @click.stop="move(option.id, 1)"
-              >
-                <ArrowDown :size="13" />
-              </button>
-            </span>
-          </div>
+          <SectionOrder v-model="selected" :disabled="busy" />
         </div>
       </aside>
 

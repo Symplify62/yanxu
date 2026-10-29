@@ -45,13 +45,14 @@ class BriefingAI:
     def generate(self, record, section_ids, override=None, template=None):
         section_ids = validate_section_ids(section_ids)
         context = build_context(record, override, demo_fallback=False)
-        analytic_ids = [section_id for section_id in section_ids if section_id != "meta"]
+        # Selection and ordering affect presentation, not the cached AI analysis.
+        analytic_ids = [option["id"] for option in SECTION_OPTIONS if option["id"] != "meta"]
         ai_sections = []
         if analytic_ids:
             if not context["segments"]:
                 raise ProviderError("没有可分析的转写文本", False)
             cache_root = self.cfg.data_dir / "briefing-cache" / record["id"]
-            folder = cache_root / self._fingerprint(context, analytic_ids, template)
+            folder = cache_root / self._fingerprint(context, analytic_ids, None)
             folder.mkdir(parents=True, exist_ok=True)
             allowed_ids = {segment["id"] for segment in context["segments"]}
             batches = _batches(context["segments"])
@@ -59,7 +60,7 @@ class BriefingAI:
                 self.call(
                     {
                         "context": _public_context(context),
-                        "template": template,
+                        "template": None,
                         "requested_sections": _requested_sections(analytic_ids),
                         "segments": batch,
                     },
@@ -76,7 +77,7 @@ class BriefingAI:
                 ai_sections = self.call(
                     {
                         "context": _public_context(context),
-                        "template": template,
+                        "template": None,
                         "requested_sections": _requested_sections(analytic_ids),
                         "partial_briefings": partials,
                         "instruction": "合并分段纪要，去重、保留事实和依据，不要只取第一段。",
